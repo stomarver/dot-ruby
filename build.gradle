@@ -1,0 +1,90 @@
+import java.text.SimpleDateFormat
+
+plugins {
+    id 'java'
+    // Плагин для создания "толстого" JAR со всеми библиотеками внутри
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'com.rubydung'
+version = '1'
+
+// Настройка кодировки для корректного отображения кириллицы
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://maven.firstdark.dev/releases' }
+}
+
+dependencies {
+    // LWJGL
+    implementation platform('org.lwjgl:lwjgl-bom:3.4.0')
+    implementation 'org.lwjgl:lwjgl'
+    implementation 'org.lwjgl:lwjgl-glfw'
+    implementation 'org.lwjgl:lwjgl-opengl'
+    implementation 'org.lwjgl:lwjgl-stb'
+
+    // Нативные библиотеки для Linux и Windows
+    runtimeOnly "org.lwjgl:lwjgl::natives-linux"
+    runtimeOnly "org.lwjgl:lwjgl-glfw::natives-linux"
+    runtimeOnly "org.lwjgl:lwjgl-opengl::natives-linux"
+    runtimeOnly "org.lwjgl:lwjgl-stb::natives-linux"
+
+    runtimeOnly "org.lwjgl:lwjgl::natives-windows"
+    runtimeOnly "org.lwjgl:lwjgl-glfw::natives-windows"
+    runtimeOnly "org.lwjgl:lwjgl-opengl::natives-windows"
+    runtimeOnly "org.lwjgl:lwjgl-stb::natives-windows"
+
+    // Discord RPC (локальный файл) и JNA
+    implementation files('libs/java-discord-rpc-2.0.1-all.jar')
+    implementation 'net.java.dev.jna:jna:5.12.0'
+}
+
+// Форматирование даты для версии
+def date = new SimpleDateFormat("MMddHHmm").format(new Date())
+
+// Задача для создания файла с версией
+task generateVersionProperties {
+    doLast {
+        def resDir = new File(project.buildDir, "resources/main")
+        resDir.mkdirs()
+        def versionFile = new File(resDir, "version.properties")
+
+        // Определяем: это запуск из IDE или сборка JAR?
+        def isRelease = gradle.startParameter.taskNames.contains("shadowJar") ||
+                gradle.startParameter.taskNames.contains("build")
+
+        def finalVersion = isRelease ? "rd-rts-${date}" : "rd-rts-dev"
+
+        versionFile.text = "version=${finalVersion}"
+        println "[Build] Version set to: ${finalVersion}"
+    }
+}
+
+// Привязываем генерацию версии к стандартному процессу сборки ресурсов
+processResources.dependsOn generateVersionProperties
+
+shadowJar {
+    manifest {
+        attributes 'Main-Class': 'SwordsGame.core.Base'
+    }
+
+    // Имя выходного файла: rd-rts-MMddHHmm.jar
+    archiveBaseName.set("rd-rts")
+    archiveClassifier.set(date)
+    archiveVersion.set("")
+
+    // Стратегия дубликатов (чтобы не было конфликтов внутри JAR)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // Удаляем подписи библиотек, чтобы JAR не ругался на безопасность
+    exclude "META-INF/*.SF"
+    exclude "META-INF/*.DSA"
+    exclude "META-INF/*.RSA"
+}
+
+// Чтобы при обычном 'build' всегда создавался и shadowJar
+build.dependsOn shadowJar
