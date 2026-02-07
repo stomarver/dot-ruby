@@ -14,7 +14,6 @@ public class Discord {
 
     public static void init() {
         try {
-            // Загружаем версию из файла, созданного Gradle
             loadVersion();
 
             startTime = System.currentTimeMillis() / 1000;
@@ -45,7 +44,6 @@ public class Discord {
                 prop.load(input);
                 gameVersion = prop.getProperty("version");
             } else {
-                // Если файла нет (например, первый запуск в IDE без ресурсов)
                 gameVersion = "rd-rts-dev";
             }
         } catch (Exception e) {
@@ -56,7 +54,6 @@ public class Discord {
     public static void updateStatus() {
         try {
             DiscordRichPresence presence = new DiscordRichPresence();
-            // Название приложения (Ruby RTS) берется из настроек Discord Developer Portal
             presence.details = gameVersion;
             presence.startTimestamp = startTime;
             presence.largeImageKey = "logo";

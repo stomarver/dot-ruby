@@ -1,6 +1,6 @@
 package SwordsGame.server;
 
-import SwordsGame.graphics.blocks.Type;
+import SwordsGame.client.blocks.BlockType;
 
 public class Terrain {
     private static double rawNoise(int x, int z) {
@@ -53,21 +53,21 @@ public class Terrain {
                 for (int y = 0; y < Chunk.HEIGHT; y++) {
                     if (isPillar) {
                         if (y == pillarTopY) {
-                            chunk.setBlock(x, y, z, Type.GRASS.id);
+                            chunk.setBlock(x, y, z, BlockType.GRASS.id);
                         } else if (y < pillarTopY && y > groundY) {
-                            chunk.setBlock(x, y, z, Type.COBBLE.id);
+                            chunk.setBlock(x, y, z, BlockType.COBBLE.id);
                         } else if (y <= groundY) {
-                            chunk.setBlock(x, y, z, Type.STONE.id);
+                            chunk.setBlock(x, y, z, BlockType.STONE.id);
                         } else {
-                            chunk.setBlock(x, y, z, Type.AIR.id);
+                            chunk.setBlock(x, y, z, BlockType.AIR.id);
                         }
                     } else {
                         if (y == groundY) {
-                            chunk.setBlock(x, y, z, Type.GRASS.id);
+                            chunk.setBlock(x, y, z, BlockType.GRASS.id);
                         } else if (y < groundY) {
-                            chunk.setBlock(x, y, z, Type.STONE.id);
+                            chunk.setBlock(x, y, z, BlockType.STONE.id);
                         } else {
-                            chunk.setBlock(x, y, z, Type.AIR.id);
+                            chunk.setBlock(x, y, z, BlockType.AIR.id);
                         }
                     }
                 }

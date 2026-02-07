@@ -1,7 +1,9 @@
 package SwordsGame.server;
 
+import SwordsGame.server.Terrain;
+
 public class ChunkManager {
-    private final int worldSizeInChunks = 64; // 64 * 16 = 1024 блока
+    private final int worldSizeInChunks = 64;
     private final Chunk[][] chunks;
 
     public ChunkManager() {

@@ -1,4 +1,4 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
 import org.lwjgl.system.MemoryStack;
 import java.io.InputStream;
@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*; // Для GL_CLAMP_TO_EDGE
+import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.stb.STBImage.*;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
@@ -56,25 +56,18 @@ public class TextureLoader {
             int id = glGenTextures();
             glBindTexture(GL_TEXTURE_2D, id);
 
-            // 1. Устанавливаем данные текстуры
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
-            // 2. Генерируем MipMap'ы
             glGenerateMipmap(GL_TEXTURE_2D);
 
-            // 3. Настройка фильтрации (MipMap для уменьшения, Linear для увеличения)
-            // Используем GL_NEAREST_MIPMAP_LINEAR для сохранения пиксельности, но плавного перехода
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-            // Убираем швы на краях текстур
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-            // 4. Включаем анизотропную фильтрацию (если поддерживается)
             if (glGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT) > 0) {
                 float maxAnisotropy = glGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-                // Ставим 4.0 или 8.0 для баланса качества и скорости
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8.0f, maxAnisotropy));
             }
 

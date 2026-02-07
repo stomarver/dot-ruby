@@ -1,4 +1,4 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -17,9 +17,8 @@ public class Camera {
     private double lastRotationTime = 0;
     private final double baseRotationDelay = 0.1;
 
-    // Настройки edge scrolling
-    private static final float EDGE_SCROLL_ZONE = 30.0f; // Пикселей от края
-    private static final float EDGE_SCROLL_SPEED = 15.0f; // Скорость прокрутки (было 6.0f, стало 15.0f)
+    private static final float EDGE_SCROLL_ZONE = 30.0f;
+    private static final float EDGE_SCROLL_SPEED = 15.0f;
 
     public float getX() { return x; }
     public float getZ() { return z; }
@@ -40,35 +39,28 @@ public class Camera {
             x = 0; z = 0; targetRotationY = 45.0f; currentRotationY = 45.0f; zoom = 0.5f;
         }
 
-        // Управление клавишами
         if (glfwGetKey(windowHandle, GLFW_KEY_UP) == GLFW_PRESS)    { x -= currentMoveSpeed * sin; z += currentMoveSpeed * cos; }
         if (glfwGetKey(windowHandle, GLFW_KEY_DOWN) == GLFW_PRESS)  { x += currentMoveSpeed * sin; z -= currentMoveSpeed * cos; }
         if (glfwGetKey(windowHandle, GLFW_KEY_LEFT) == GLFW_PRESS)  { x += currentMoveSpeed * cos; z += currentMoveSpeed * sin; }
         if (glfwGetKey(windowHandle, GLFW_KEY_RIGHT) == GLFW_PRESS) { x -= currentMoveSpeed * cos; z -= currentMoveSpeed * sin; }
 
-        // Edge scrolling (прокрутка мышью у краёв экрана)
         float mouseX = window.getMouseRelX(windowHandle);
         float mouseY = window.getMouseRelY(windowHandle);
         int virtualWidth = window.getVirtualWidth();
         int virtualHeight = window.getVirtualHeight();
 
-        // Проверяем, находится ли курсор в зоне прокрутки
         if (mouseX < EDGE_SCROLL_ZONE) {
-            // Левый край
             x += EDGE_SCROLL_SPEED * cos;
             z += EDGE_SCROLL_SPEED * sin;
         } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
-            // Правый край
             x -= EDGE_SCROLL_SPEED * cos;
             z -= EDGE_SCROLL_SPEED * sin;
         }
 
         if (mouseY < EDGE_SCROLL_ZONE) {
-            // Верхний край
             x -= EDGE_SCROLL_SPEED * sin;
             z += EDGE_SCROLL_SPEED * cos;
         } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
-            // Нижний край
             x += EDGE_SCROLL_SPEED * sin;
             z -= EDGE_SCROLL_SPEED * cos;
         }
@@ -82,13 +74,11 @@ public class Camera {
         float currentStep = isShiftPressed ? 45.0f : 15.0f;
         double currentDelay = isShiftPressed ? (baseRotationDelay * 2) : baseRotationDelay;
 
-        // Обработка вращения клавишами Q/E
         if (currentTime - lastRotationTime >= currentDelay) {
             if (glfwGetKey(windowHandle, GLFW_KEY_E) == GLFW_PRESS) { targetRotationY -= currentStep; lastRotationTime = currentTime; }
             if (glfwGetKey(windowHandle, GLFW_KEY_Q) == GLFW_PRESS) { targetRotationY += currentStep; lastRotationTime = currentTime; }
         }
 
-        // Обработка вращения колесом мыши
         double scrollY = window.getScrollY();
         if (scrollY != 0) {
             targetRotationY += (float) scrollY * (isShiftPressed ? 45.0f : 15.0f);
@@ -99,7 +89,6 @@ public class Camera {
     }
 
     public int[] getTargetBlockFromMouse(Window window, int worldSizeInChunks, ChunkManager cm) {
-        // Координаты от центра 3D-вьюпорта
         float mouseX = (float) window.getMouseRelX(window.getHandle()) - 120 - 360;
         float mouseY = 270 - (float) window.getMouseRelY(window.getHandle());
 

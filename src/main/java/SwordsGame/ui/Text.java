@@ -1,6 +1,6 @@
 package SwordsGame.ui;
 
-import SwordsGame.graphics.Font;
+import SwordsGame.client.Font;
 
 import static org.lwjgl.opengl.GL11.*;
 import java.util.Random;
@@ -19,8 +19,6 @@ public class Text {
         this.screenH = (float)h;
     }
 
-    // --- АДАПТЕРЫ ДЛЯ УДОБСТВА ---
-
     public void draw(String t, Anchor.TypeX ax, Anchor.TypeX ay, float x, float y, float s) {
         Anchor.TypeY vy = (ay == Anchor.TypeX.CENTER) ? Anchor.TypeY.CENTER : Anchor.TypeY.TOP;
         draw(t, ax, vy, x, y, s);
@@ -32,28 +30,21 @@ public class Text {
     }
 
     public void draw(String t, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float s) {
-        float bx = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
-        float by = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
-        drawInternal(t, new Anchor(ax, ay, bx, by), x, y, s, true, Shake.NONE, Wave.NONE, Crit.NONE, 0);
+        drawInternal(t, buildAnchor(ax, ay), x, y, s, true, Shake.NONE, Wave.NONE, Crit.NONE, 0);
     }
 
     public void draw(String t, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float s, Wave wv) {
-        float bx = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
-        float by = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
-        drawInternal(t, new Anchor(ax, ay, bx, by), x, y, s, true, Shake.NONE, wv, Crit.NONE, 0);
+        drawInternal(t, buildAnchor(ax, ay), x, y, s, true, Shake.NONE, wv, Crit.NONE, 0);
     }
 
     public void draw(String t, Anchor a, float x, float y, float s) {
         drawInternal(t, a, x, y, s, true, Shake.NONE, Wave.NONE, Crit.NONE, 0);
     }
 
-    // --- ГЛАВНЫЙ МЕТОД ОТРИСОВКИ ---
-
     private void drawInternal(String txt, Anchor a, float ox, float oy, float scale,
                               boolean shad, Shake shk, Wave wav, Crit crt, float spc) {
         if (txt == null || txt.isEmpty()) return;
 
-        // Получаем текущий цвет и прозрачность из OpenGL (установленные внешне)
         float[] startCol = new float[4];
         glGetFloatv(GL_CURRENT_COLOR, startCol);
         float currentAlpha = startCol[3];
@@ -84,18 +75,15 @@ public class Text {
                 cry = (c < 0.25 || (c >= 0.5 && c < 0.75)) ? -s/2f : (c >= 0.25 && c < 0.5) ? -s : 0;
             }
 
-            // 1. Тень (умножаем альфу тени на текущую альфу текста)
             if (shad) {
                 glColor4f(0, 0, 0, currentAlpha * 0.5f);
                 drIn(lines[i], rx + shadowOffset, cy + cry + shadowOffset, s, shk, wav, spc, true, currentAlpha);
             }
 
-            // 2. Основной текст
             glColor4f(startCol[0], startCol[1], startCol[2], currentAlpha);
             drIn(lines[i], rx, cy + cry, s, shk, wav, spc, false, currentAlpha);
         }
 
-        // Возвращаем исходный цвет OpenGL
         glColor4f(startCol[0], startCol[1], startCol[2], startCol[3]);
     }
 
@@ -167,6 +155,12 @@ public class Text {
             w += (adv + sp) * sc;
         }
         return w;
+    }
+
+    private Anchor buildAnchor(Anchor.TypeX ax, Anchor.TypeY ay) {
+        float bx = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
+        float by = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
+        return new Anchor(ax, ay, bx, by);
     }
 
     private void drQ(Font.CharData d, float x, float y, float s) {
