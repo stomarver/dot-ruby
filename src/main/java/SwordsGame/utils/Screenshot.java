@@ -30,14 +30,11 @@ public class Screenshot {
     }
 
     public static void takeScreenshot(int fboId, int width, int height) {
-        // 1. Привязываем наш FBO, чтобы прочитать именно из него
         glBindFramebuffer(GL_FRAMEBUFFER, fboId);
 
         ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
-        // Читаем пиксели из FBO (там всегда 960x540)
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 
-        // 2. Отвязываем FBO, чтобы не мешать отрисовке
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);

@@ -1,9 +1,11 @@
-package SwordsGame.server;
+package SwordsGame.server.functions;
 
-import SwordsGame.graphics.blocks.Type;
-import SwordsGame.graphics.World;
+import SwordsGame.client.blocks.Type;
+import SwordsGame.client.World;
+import SwordsGame.server.Chunk;
+import SwordsGame.server.ChunkManager;
 
-public class Explode {
+public class Explosion {
     public static void createSphere(ChunkManager cm, World world, int centerX, int centerY, int centerZ) {
         if (!canExplode(cm, centerX, centerY, centerZ)) return;
 

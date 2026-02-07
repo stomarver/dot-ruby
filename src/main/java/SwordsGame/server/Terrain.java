@@ -1,6 +1,6 @@
 package SwordsGame.server;
 
-import SwordsGame.graphics.blocks.Type;
+import SwordsGame.client.blocks.Type;
 
 public class Terrain {
     private static double rawNoise(int x, int z) {

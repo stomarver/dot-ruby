@@ -1,4 +1,4 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
 public class BlockProperties {
     private boolean randomRotation = false;
@@ -10,7 +10,6 @@ public class BlockProperties {
 
     public BlockProperties() {}
 
-    // Fluent API для настройки
     public BlockProperties randomRotation() { this.randomRotation = true; return this; }
     public BlockProperties randomColor() { this.randomColor = true; return this; }
     public BlockProperties emission() { this.emission = true; return this; }
@@ -18,7 +17,6 @@ public class BlockProperties {
     public BlockProperties nonSolid() { this.solid = false; return this; }
     public BlockProperties hardness(float value) { this.hardness = value; return this; }
 
-    // Геттеры
     public boolean hasRandomRotation() { return randomRotation; }
     public boolean hasRandomColor() { return randomColor; }
     public boolean hasEmission() { return emission; }
