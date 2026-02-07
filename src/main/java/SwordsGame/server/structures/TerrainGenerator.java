@@ -1,8 +1,9 @@
-package SwordsGame.server;
+package SwordsGame.server.structures;
 
-import SwordsGame.graphics.blocks.Type;
+import SwordsGame.client.blocks.BlockType;
+import SwordsGame.server.Chunk;
 
-public class Terrain {
+public class TerrainGenerator {
     private static double rawNoise(int x, int z) {
         int n = x + z * 1337;
         n = (n << 13) ^ n;
@@ -53,21 +54,21 @@ public class Terrain {
                 for (int y = 0; y < Chunk.HEIGHT; y++) {
                     if (isPillar) {
                         if (y == pillarTopY) {
-                            chunk.setBlock(x, y, z, Type.GRASS.id);
+                            chunk.setBlock(x, y, z, BlockType.GRASS.id);
                         } else if (y < pillarTopY && y > groundY) {
-                            chunk.setBlock(x, y, z, Type.COBBLE.id);
+                            chunk.setBlock(x, y, z, BlockType.COBBLE.id);
                         } else if (y <= groundY) {
-                            chunk.setBlock(x, y, z, Type.STONE.id);
+                            chunk.setBlock(x, y, z, BlockType.STONE.id);
                         } else {
-                            chunk.setBlock(x, y, z, Type.AIR.id);
+                            chunk.setBlock(x, y, z, BlockType.AIR.id);
                         }
                     } else {
                         if (y == groundY) {
-                            chunk.setBlock(x, y, z, Type.GRASS.id);
+                            chunk.setBlock(x, y, z, BlockType.GRASS.id);
                         } else if (y < groundY) {
-                            chunk.setBlock(x, y, z, Type.STONE.id);
+                            chunk.setBlock(x, y, z, BlockType.STONE.id);
                         } else {
-                            chunk.setBlock(x, y, z, Type.AIR.id);
+                            chunk.setBlock(x, y, z, BlockType.AIR.id);
                         }
                     }
                 }

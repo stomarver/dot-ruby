@@ -30,7 +30,6 @@ public class Window {
         glfwGetCursorPos(windowHandle, px, null);
         float relX = ((float) px.get(0) - physicalX) * VIRTUAL_WIDTH / physicalWidth;
 
-        // Ограничиваем значения в пределах виртуального экрана
         if (relX < 0) relX = 0;
         if (relX > VIRTUAL_WIDTH) relX = VIRTUAL_WIDTH;
 
@@ -42,7 +41,6 @@ public class Window {
         glfwGetCursorPos(windowHandle, null, py);
         float relY = ((float) py.get(0) - physicalY) * VIRTUAL_HEIGHT / physicalHeight;
 
-        // Ограничиваем значения в пределах виртуального экрана
         if (relY < 0) relY = 0;
         if (relY > VIRTUAL_HEIGHT) relY = VIRTUAL_HEIGHT;
 
@@ -95,7 +93,6 @@ public class Window {
         glfwGetFramebufferSize(windowHandle, fw, fh);
         updatePhysicalDimensions(fw[0], fh[0]);
 
-        // Скрываем системный курсор (но он всё ещё ограничен окном)
         glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
         System.out.println("[Input] System cursor hidden, using virtual cursor");
 
@@ -162,7 +159,6 @@ public class Window {
         glfwGetFramebufferSize(windowHandle, fw, fh);
         updatePhysicalDimensions(fw[0], fh[0]);
 
-        // Восстанавливаем скрытый курсор
         glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     }
 

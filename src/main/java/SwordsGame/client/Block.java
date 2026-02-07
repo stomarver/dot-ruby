@@ -1,31 +1,35 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
-import SwordsGame.graphics.blocks.Type;
+import SwordsGame.client.blocks.BlockType;
 
 import static org.lwjgl.opengl.GL11.*;
 
 public class Block {
     protected static final float MIN = 0.01f;
     protected static final float MAX = 0.99f;
+    private static final float[][] UV = {
+            {MIN, MIN, MAX, MIN, MAX, MAX, MIN, MAX},
+            {MIN, MAX, MIN, MIN, MAX, MIN, MAX, MAX},
+            {MAX, MAX, MIN, MAX, MIN, MIN, MAX, MIN},
+            {MAX, MIN, MAX, MAX, MIN, MAX, MIN, MIN}
+    };
 
-    private final TextureLoader.Texture[] textures; // [0]=все грани, [1]=верх, [2]=низ, [3]=бока
+    private final TextureLoader.Texture[] textures;
     private final BlockProperties properties;
-    private final Type type;
+    private final BlockType type;
 
-    // Конструктор для одной текстуры
-    public Block(Type type, String texturePath) {
+    public Block(BlockType type, String texturePath) {
         this(type, texturePath, new BlockProperties());
     }
 
-    public Block(Type type, String texturePath, BlockProperties props) {
+    public Block(BlockType type, String texturePath, BlockProperties props) {
         this.type = type;
         this.properties = props;
         this.textures = new TextureLoader.Texture[1];
         this.textures[0] = TextureLoader.loadTexture(texturePath, false);
     }
 
-    // Конструктор для разных текстур граней (как трава в Minecraft)
-    public Block(Type type, String topPath, String bottomPath, String sidePath, BlockProperties props) {
+    public Block(BlockType type, String topPath, String bottomPath, String sidePath, BlockProperties props) {
         this.type = type;
         this.properties = props;
         this.textures = new TextureLoader.Texture[3];
@@ -34,7 +38,7 @@ public class Block {
         this.textures[2] = TextureLoader.loadTexture(sidePath, false);
     }
 
-    public Type getType() { return type; }
+    public BlockType getType() { return type; }
     public BlockProperties getProperties() { return properties; }
 
     public void draw(int seed, boolean[] faces) {
@@ -91,15 +95,9 @@ public class Block {
 
     private void drawFace(float x1, float y1, float z1, float x2, float y2, float z2,
                           float x3, float y3, float z3, float x4, float y4, float z4, int rot) {
-        float[][] uv = {
-                {MIN, MIN, MAX, MIN, MAX, MAX, MIN, MAX},
-                {MIN, MAX, MIN, MIN, MAX, MIN, MAX, MAX},
-                {MAX, MAX, MIN, MAX, MIN, MIN, MAX, MIN},
-                {MAX, MIN, MAX, MAX, MIN, MAX, MIN, MIN}
-        };
-        glTexCoord2f(uv[rot][0], uv[rot][1]); glVertex3f(x1, y1, z1);
-        glTexCoord2f(uv[rot][2], uv[rot][3]); glVertex3f(x2, y2, z2);
-        glTexCoord2f(uv[rot][4], uv[rot][5]); glVertex3f(x3, y3, z3);
-        glTexCoord2f(uv[rot][6], uv[rot][7]); glVertex3f(x4, y4, z4);
+        glTexCoord2f(UV[rot][0], UV[rot][1]); glVertex3f(x1, y1, z1);
+        glTexCoord2f(UV[rot][2], UV[rot][3]); glVertex3f(x2, y2, z2);
+        glTexCoord2f(UV[rot][4], UV[rot][5]); glVertex3f(x3, y3, z3);
+        glTexCoord2f(UV[rot][6], UV[rot][7]); glVertex3f(x4, y4, z4);
     }
 }

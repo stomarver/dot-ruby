@@ -1,6 +1,6 @@
 package SwordsGame.ui;
 
-public class Anchor { // Просто public class, без static
+public class Anchor {
     public enum TypeX { LEFT, CENTER, RIGHT }
     public enum TypeY { TOP, CENTER, BOTTOM }
 
@@ -15,7 +15,6 @@ public class Anchor { // Просто public class, без static
         this.y = y;
     }
 
-    // Константы для удобного доступа
     public static final TypeX LEFT = TypeX.LEFT;
     public static final TypeX RIGHT = TypeX.RIGHT;
     public static final TypeX CENTER = TypeX.CENTER;

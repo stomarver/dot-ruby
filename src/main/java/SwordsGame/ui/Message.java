@@ -26,11 +26,9 @@ public class Message {
         long now = System.currentTimeMillis();
 
         synchronized (queue) {
-            // 1. Сначала удаляем все просроченные сообщения
             queue.removeIf(e -> (now - e.timestamp) > MAX_LIFE);
 
             int offset = 0;
-            // 2. Идем по списку СЗАДИ (от новых к старым)
             for (int i = queue.size() - 1; i >= 0; i--) {
                 Entry e = queue.get(i);
                 long age = now - e.timestamp;
@@ -42,8 +40,6 @@ public class Message {
 
                 glColor4f(1, 1, 1, alpha);
 
-                // Теперь самый новый (первый в этом цикле) будет на -10,
-                // а каждый следующий (более старый) будет выше на величину offset
                 renderer.draw(e.text, Anchor.LEFT, Anchor.BOTTOM, 130, -10 - offset, 1);
 
                 offset += 20;

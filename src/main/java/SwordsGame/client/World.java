@@ -1,6 +1,6 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
-import SwordsGame.graphics.blocks.Registry;
+import SwordsGame.client.blocks.BlockRegistry;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
 import java.util.ArrayList;
@@ -28,10 +28,10 @@ public class World {
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)); // Было 3.0f, стало 5.0f
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));  // Было 3.0f, стало 5.0f
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
 
-        int maxLoopDist = 12; // Было 10, увеличили до 12 для покрытия всех чанков
+        int maxLoopDist = 12;
 
         cleanupCache();
 
@@ -50,7 +50,6 @@ public class World {
             }
         }
 
-        // Рендерим и обновляем падающие блоки
         updateAndRenderFallingBlocks(worldSize);
     }
 
@@ -64,34 +63,29 @@ public class World {
         while (iterator.hasNext()) {
             FallingBlock block = iterator.next();
 
-            // Удаляем через 1 секунду
             if (currentTime - block.creationTime > 1.0) {
                 iterator.remove();
                 continue;
             }
 
-            // Обновляем физику (только падение вниз)
             block.update(deltaTime);
 
-            // Затухание альфы в последние 0.3 секунды
             float lifetime = (float) (currentTime - block.creationTime);
             float alpha = 1.0f;
             if (lifetime > 0.7f) {
                 alpha = 1.0f - ((lifetime - 0.7f) / 0.3f);
             }
 
-            // Рендерим
             glPushMatrix();
             glTranslatef((block.x - totalOffset) * offset, block.y * offset, (block.z - totalOffset) * offset);
             glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 
-            // Включаем прозрачность
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
             boolean[] allFaces = {true, true, true, true, true, true};
-            Registry.draw(block.type, block.seed, allFaces);
+            BlockRegistry.draw(block.type, block.seed, allFaces);
 
             glDisable(GL_BLEND);
             glColor3f(1.0f, 1.0f, 1.0f);
@@ -162,10 +156,7 @@ public class World {
                         faces[4] = isTransparent(cm, chunk, x + 1, y, z, type);
                         faces[5] = isTransparent(cm, chunk, x - 1, y, z, type);
 
-                        boolean visible = false;
-                        for (boolean f : faces) if (f) { visible = true; break; }
-
-                        if (visible) {
+                        if (isAnyFaceVisible(faces)) {
                             int wx = chunk.x * Chunk.SIZE + x;
                             int wz = chunk.z * Chunk.SIZE + z;
                             drawOptimizedBlock(wx, y, wz, totalOffset, offset, type, faces);
@@ -177,6 +168,15 @@ public class World {
             chunkCache.put(chunk, listId);
         }
         glCallList(chunkCache.get(chunk));
+    }
+
+    private boolean isAnyFaceVisible(boolean[] faces) {
+        for (boolean face : faces) {
+            if (face) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {
@@ -205,7 +205,7 @@ public class World {
         glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 
         int seed = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
-        Registry.draw(type, seed, faces);
+        BlockRegistry.draw(type, seed, faces);
 
         glPopMatrix();
     }
