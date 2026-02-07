@@ -53,6 +53,53 @@ public class World {
         updateAndRenderFallingBlocks(worldSize);
     }
 
+    public void renderChunkBounds(ChunkManager chunkManager, Camera camera) {
+        Chunk[][] chunks = chunkManager.getChunks();
+        int worldSize = chunkManager.getWorldSizeInChunks();
+        float chunkSizeInUnits = Chunk.SIZE * (BLOCK_SIZE * 2);
+
+        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
+        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
+
+        float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
+        float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
+
+        float baseDist = 4.0f / camera.getZoom();
+        float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+
+        int maxLoopDist = 12;
+
+        float offset = BLOCK_SIZE * 2;
+        float totalOffset = (worldSize * Chunk.SIZE) / 2f;
+
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glColor4f(0.2f, 0.9f, 0.9f, 0.7f);
+        glLineWidth(2.0f);
+
+        for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
+            for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
+                int cx = camChunkX + dx;
+                int cz = camChunkZ + dz;
+                if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
+                    float depth = dx * (-sinTheta) + dz * cosTheta;
+                    float lateral = dx * cosTheta + dz * sinTheta;
+
+                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
+                        drawChunkBounds(chunks[cx][cz], totalOffset, offset);
+                    }
+                }
+            }
+        }
+
+        glLineWidth(1.0f);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_TEXTURE_2D);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
     private void updateAndRenderFallingBlocks(int worldSize) {
         double currentTime = glfwGetTime();
         float deltaTime = 1.0f / 60.0f;
@@ -168,6 +215,36 @@ public class World {
             chunkCache.put(chunk, listId);
         }
         glCallList(chunkCache.get(chunk));
+    }
+
+    private void drawChunkBounds(Chunk chunk, float totalOffset, float offset) {
+        float x0 = (chunk.x * Chunk.SIZE - totalOffset) * offset;
+        float z0 = (chunk.z * Chunk.SIZE - totalOffset) * offset;
+        float x1 = (chunk.x * Chunk.SIZE + Chunk.SIZE - totalOffset) * offset;
+        float z1 = (chunk.z * Chunk.SIZE + Chunk.SIZE - totalOffset) * offset;
+        float y0 = 0;
+        float y1 = Chunk.HEIGHT * offset;
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(x0, y0, z0);
+        glVertex3f(x1, y0, z0);
+        glVertex3f(x1, y0, z1);
+        glVertex3f(x0, y0, z1);
+        glEnd();
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(x0, y1, z0);
+        glVertex3f(x1, y1, z0);
+        glVertex3f(x1, y1, z1);
+        glVertex3f(x0, y1, z1);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex3f(x0, y0, z0); glVertex3f(x0, y1, z0);
+        glVertex3f(x1, y0, z0); glVertex3f(x1, y1, z0);
+        glVertex3f(x1, y0, z1); glVertex3f(x1, y1, z1);
+        glVertex3f(x0, y0, z1); glVertex3f(x0, y1, z1);
+        glEnd();
     }
 
     private boolean isAnyFaceVisible(boolean[] faces) {

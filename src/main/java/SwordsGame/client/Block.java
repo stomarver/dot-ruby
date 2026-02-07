@@ -93,6 +93,14 @@ public class Block {
         if (properties.hasEmission()) glEnable(GL_LIGHTING);
     }
 
+    public void destroy() {
+        for (TextureLoader.Texture texture : textures) {
+            if (texture != null) {
+                TextureLoader.deleteTexture(texture.id);
+            }
+        }
+    }
+
     private void drawFace(float x1, float y1, float z1, float x2, float y2, float z2,
                           float x3, float y3, float z3, float x4, float y4, float z4, int rot) {
         glTexCoord2f(UV[rot][0], UV[rot][1]); glVertex3f(x1, y1, z1);

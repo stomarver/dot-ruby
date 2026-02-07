@@ -1,9 +1,8 @@
-package SwordsGame.server.structures;
+package SwordsGame.server;
 
 import SwordsGame.client.blocks.BlockType;
-import SwordsGame.server.Chunk;
 
-public class TerrainGenerator {
+public class Terrain {
     private static double rawNoise(int x, int z) {
         int n = x + z * 1337;
         n = (n << 13) ^ n;

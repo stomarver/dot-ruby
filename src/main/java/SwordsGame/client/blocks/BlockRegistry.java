@@ -7,8 +7,10 @@ import java.util.Map;
 
 public class BlockRegistry {
     private static final Map<BlockType, Block> registry = new HashMap<>();
+    private static boolean destroyed = false;
 
     public static void init() {
+        destroyed = false;
         registry.put(BlockType.AIR, null);
         registry.put(BlockType.COBBLE, new CobbleBlock());
         registry.put(BlockType.GRASS, new GrassBlock());
@@ -39,5 +41,17 @@ public class BlockRegistry {
     public static boolean isSolid(byte id) {
         Block block = get(id);
         return block != null && block.getProperties().isSolid();
+    }
+
+    public static void destroy() {
+        if (destroyed) {
+            return;
+        }
+        for (Block block : registry.values()) {
+            if (block != null) {
+                block.destroy();
+            }
+        }
+        destroyed = true;
     }
 }

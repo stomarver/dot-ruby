@@ -3,15 +3,15 @@ package SwordsGame.core;
 import SwordsGame.client.*;
 import SwordsGame.client.assets.TexturePaths;
 import SwordsGame.client.blocks.BlockRegistry;
-import SwordsGame.ui.HUD;
-import SwordsGame.ui.Cursor;
-import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.functions.Explosion;
+import SwordsGame.ui.Cursor;
+import SwordsGame.ui.HUD;
+import SwordsGame.utils.Discord;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
-public class Base {
+public class Debug {
     private Window window;
     private Renderer renderer;
     private Font font;
@@ -25,7 +25,7 @@ public class Base {
     private final double explosionCooldown = 0.2;
 
     public static void main(String[] args) {
-        new Base().start();
+        new Debug().start();
     }
 
     public void start() {
@@ -70,6 +70,7 @@ public class Base {
             camera.applyTransformations();
 
             world.render(chunkManager, camera);
+            world.renderChunkBounds(chunkManager, camera);
 
             if (target != null) {
                 world.renderSelection(target, chunkManager.getWorldSizeInChunks());
