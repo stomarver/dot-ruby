@@ -2,7 +2,7 @@ package SwordsGame.server;
 
 public class Chunk {
     public static final int SIZE = 16;
-    public static final int HEIGHT = 32; // Увеличили в два раза
+    public static final int HEIGHT = 32;
 
     private final byte[][][] blocks;
     public final int x, z;
@@ -20,7 +20,6 @@ public class Chunk {
     }
 
     public byte getBlock(int lx, int ly, int lz) {
-        // Защита: если просим блок выше неба, возвращаем воздух (0)
         if (ly < 0 || ly >= HEIGHT) return 0;
         return blocks[lx][ly][lz];
     }

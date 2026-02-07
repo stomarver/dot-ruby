@@ -1,8 +1,8 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
 public class FallingBlock {
     public float x, y, z;
-    public float vy; // Только вертикальная скорость
+    public float vy;
     public byte type;
     public double creationTime;
     public int seed;
@@ -15,15 +15,12 @@ public class FallingBlock {
         this.seed = seed;
         this.creationTime = creationTime;
 
-        // Начальная скорость = 0, блок просто начинает падать
         this.vy = 0;
     }
 
     public void update(float deltaTime) {
-        // Гравитация
         vy -= 0.98f * deltaTime;
 
-        // Обновляем только позицию по Y
         y += vy * deltaTime * 60;
     }
 }

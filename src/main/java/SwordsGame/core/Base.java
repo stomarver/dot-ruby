@@ -1,12 +1,13 @@
 package SwordsGame.core;
 
-import SwordsGame.graphics.*;
-import SwordsGame.graphics.blocks.Registry;
+import SwordsGame.client.*;
+import SwordsGame.client.assets.TexturePaths;
+import SwordsGame.client.blocks.BlockRegistry;
 import SwordsGame.ui.HUD;
 import SwordsGame.ui.Cursor;
 import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.server.Explode;
+import SwordsGame.server.functions.Explosion;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -37,11 +38,11 @@ public class Base {
         camera = new Camera();
 
         Discord.init();
-        Registry.init();
+        BlockRegistry.init();
 
-        font = new Font("fonts/font.png");
+        font = new Font(TexturePaths.FONT_MAIN);
         hud = new HUD(font, 960, 540);
-        cursor = new Cursor(); // Создаём виртуальный курсор
+        cursor = new Cursor();
 
         TextureLoader.finishLoading();
 
@@ -55,7 +56,7 @@ public class Base {
             double currentTime = glfwGetTime();
             if (glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
                 if (currentTime - lastExplosionTime >= explosionCooldown && target != null) {
-                    Explode.createSphere(chunkManager, world, target[0], target[1], target[2]);
+                    Explosion.createSphere(chunkManager, world, target[0], target[1], target[2]);
                     lastExplosionTime = currentTime;
                 }
             }
@@ -77,7 +78,6 @@ public class Base {
             renderer.setup2D(window);
             if (hud != null) hud.render();
 
-            // Обновляем и рендерим виртуальный курсор ПОВЕРХ всего
             float mouseX = window.getMouseRelX(window.getHandle());
             float mouseY = window.getMouseRelY(window.getHandle());
             cursor.updatePosition(mouseX, mouseY);
