@@ -3,6 +3,7 @@ package SwordsGame.core;
 import SwordsGame.graphics.*;
 import SwordsGame.graphics.blocks.Registry;
 import SwordsGame.ui.HUD;
+import SwordsGame.ui.Cursor;
 import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.Explode;
@@ -14,6 +15,7 @@ public class Base {
     private Renderer renderer;
     private Font font;
     private HUD hud;
+    private Cursor cursor;
     private World world;
     private Camera camera;
     private ChunkManager chunkManager;
@@ -39,11 +41,12 @@ public class Base {
 
         font = new Font("fonts/font.png");
         hud = new HUD(font, 960, 540);
+        cursor = new Cursor(); // Создаём виртуальный курсор
 
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
-            camera.update(window); // Передаём window вместо handle
+            camera.update(window);
 
             int[] target = camera.getTargetBlockFromMouse(window,
                     chunkManager.getWorldSizeInChunks(),
@@ -73,6 +76,13 @@ public class Base {
 
             renderer.setup2D(window);
             if (hud != null) hud.render();
+
+            // Обновляем и рендерим виртуальный курсор ПОВЕРХ всего
+            float mouseX = window.getMouseRelX(window.getHandle());
+            float mouseY = window.getMouseRelY(window.getHandle());
+            cursor.updatePosition(mouseX, mouseY);
+            cursor.render();
+
             window.endRenderToFBO();
 
             window.drawFBO();
@@ -83,6 +93,7 @@ public class Base {
 
     private void cleanup() {
         Discord.shutdown();
+        if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
         TextureLoader.finishCleanup();

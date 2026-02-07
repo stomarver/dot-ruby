@@ -28,10 +28,10 @@ public class World {
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(3.0f, steppedDist));
-        float vertDist = Math.max(1.0f, Math.min(3.0f, steppedDist));
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)); // Было 3.0f, стало 5.0f
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));  // Было 3.0f, стало 5.0f
 
-        int maxLoopDist = 10;
+        int maxLoopDist = 12; // Было 10, увеличили до 12 для покрытия всех чанков
 
         cleanupCache();
 
@@ -83,7 +83,7 @@ public class World {
             // Рендерим
             glPushMatrix();
             glTranslatef((block.x - totalOffset) * offset, block.y * offset, (block.z - totalOffset) * offset);
-            glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE); // Оставляем полный размер
+            glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 
             // Включаем прозрачность
             glEnable(GL_BLEND);

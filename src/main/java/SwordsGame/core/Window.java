@@ -20,7 +20,6 @@ public class Window {
 
     private double scrollX = 0;
     private double scrollY = 0;
-    private boolean cursorConfined = false;
 
     public long getHandle() { return windowHandle; }
 
@@ -96,8 +95,9 @@ public class Window {
         glfwGetFramebufferSize(windowHandle, fw, fh);
         updatePhysicalDimensions(fw[0], fh[0]);
 
-        // Включаем ограничение курсора окном (работает на Windows/Linux/macOS)
-        confineCursor(true);
+        // Скрываем системный курсор (но он всё ещё ограничен окном)
+        glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        System.out.println("[Input] System cursor hidden, using virtual cursor");
 
         glfwShowWindow(windowHandle);
     }
@@ -134,13 +134,6 @@ public class Window {
                 if (key == GLFW_KEY_F12 || isCtrlP) {
                     SwordsGame.utils.Screenshot.takeScreenshot(fboId, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
                 }
-
-                // Ctrl+L для переключения ограничения курсора (для отладки)
-                boolean isCtrlL = (key == GLFW_KEY_L && (mods & GLFW_MOD_CONTROL) != 0);
-                if (isCtrlL) {
-                    confineCursor(!cursorConfined);
-                    System.out.println("[Input] Cursor confined: " + cursorConfined);
-                }
             }
         });
 
@@ -152,30 +145,6 @@ public class Window {
             scrollX = xoffset;
             scrollY = yoffset;
         });
-    }
-
-    /**
-     * Ограничивает курсор окном (работает на Windows, Linux, macOS)
-     */
-    public void confineCursor(boolean confine) {
-        if (confine) {
-            // GLFW_CURSOR_CAPTURED доступен с GLFW 3.3+
-            // Курсор остаётся видимым, но не может покинуть окно
-            try {
-                // Пробуем использовать GLFW_CURSOR_CAPTURED (GLFW 3.3+)
-                glfwSetInputMode(windowHandle, GLFW_CURSOR, 0x00034003); // GLFW_CURSOR_CAPTURED = 0x00034003
-                cursorConfined = true;
-                System.out.println("[Input] Cursor confined to window (GLFW_CURSOR_CAPTURED)");
-            } catch (Exception e) {
-                // Если не поддерживается, используем fallback
-                System.out.println("[Input] GLFW_CURSOR_CAPTURED not supported, using GLFW_CURSOR_NORMAL");
-                glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                cursorConfined = false;
-            }
-        } else {
-            glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            cursorConfined = false;
-        }
     }
 
     public void toggleFullscreen() {
@@ -193,8 +162,8 @@ public class Window {
         glfwGetFramebufferSize(windowHandle, fw, fh);
         updatePhysicalDimensions(fw[0], fh[0]);
 
-        // Восстанавливаем ограничение курсора после переключения
-        confineCursor(true);
+        // Восстанавливаем скрытый курсор
+        glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     }
 
     public void beginRenderToFBO() {
