@@ -171,8 +171,7 @@ public class World {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        float pulse = (float) (0.6f + 0.4f * Math.sin(glfwGetTime() * 6.0));
-        drawSelectionOutline(pulse);
+        drawTopFaceOutline();
 
         glDisable(GL_BLEND);
         glEnable(GL_LIGHTING);
@@ -222,39 +221,20 @@ public class World {
         glEnd();
     }
 
-    private void drawSelectionOutline(float pulse) {
+    private void drawTopFaceOutline() {
         float s = 1.02f;
         float h = 1.02f;
-        float alpha = 0.65f + (0.25f * pulse);
+        glLineWidth(3.0f);
+        glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
 
-        glDisable(GL_DEPTH_TEST);
-        glLineWidth(2.0f);
-        glColor4f(1.0f, 1.0f, 1.0f, alpha);
-
-        glBegin(GL_LINES);
-        drawBoxEdge(-s, -s, -s, s, -s, -s);
-        drawBoxEdge(s, -s, -s, s, -s, s);
-        drawBoxEdge(s, -s, s, -s, -s, s);
-        drawBoxEdge(-s, -s, s, -s, -s, -s);
-
-        drawBoxEdge(-s, h, -s, s, h, -s);
-        drawBoxEdge(s, h, -s, s, h, s);
-        drawBoxEdge(s, h, s, -s, h, s);
-        drawBoxEdge(-s, h, s, -s, h, -s);
-
-        drawBoxEdge(-s, -s, -s, -s, h, -s);
-        drawBoxEdge(s, -s, -s, s, h, -s);
-        drawBoxEdge(s, -s, s, s, h, s);
-        drawBoxEdge(-s, -s, s, -s, h, s);
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(-s, h, -s);
+        glVertex3f(s, h, -s);
+        glVertex3f(s, h, s);
+        glVertex3f(-s, h, s);
         glEnd();
 
         glLineWidth(1.0f);
-        glEnable(GL_DEPTH_TEST);
-    }
-
-    private void drawBoxEdge(float x0, float y0, float z0, float x1, float y1, float z1) {
-        glVertex3f(x0, y0, z0);
-        glVertex3f(x1, y1, z1);
     }
 
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {
@@ -329,12 +309,6 @@ public class World {
 
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
-                    if (type == Type.STONE.id) {
-                        byte above = getBlockAtWorld(cm, wx, y + 1, wz);
-                        if (above == Type.COBBLE.id) {
-                            continue;
-                        }
-                    }
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
                     float[][] faceVertexColors = buildFaceVertexColors(cm, wx, y, wz, faces);
                     float tintR = 1.0f;

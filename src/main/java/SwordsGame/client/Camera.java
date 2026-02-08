@@ -169,6 +169,9 @@ public class Camera {
     }
 
     private int[] raycastTopFace(ChunkManager cm, float[] origin, float[] direction) {
+        if (direction[1] >= 0.0f) {
+            return null;
+        }
         float blockScale = World.BLOCK_SCALE;
         float totalOffsetBlocks = cm.getWorldSizeInBlocks() / 2.0f;
 
@@ -199,10 +202,7 @@ public class Camera {
         int maxSteps = cm.getWorldSizeInBlocks() * 2;
 
         for (int i = 0; i < maxSteps; i++) {
-            if (cm.isTopSurface(x, y, z)) {
-                return new int[]{x, y, z};
-            }
-
+            boolean steppedY = false;
             if (tMaxX < tMaxY) {
                 if (tMaxX < tMaxZ) {
                     x += stepX;
@@ -215,6 +215,7 @@ public class Camera {
                 if (tMaxY < tMaxZ) {
                     y += stepY;
                     tMaxY += tDeltaY;
+                    steppedY = true;
                 } else {
                     z += stepZ;
                     tMaxZ += tDeltaZ;
@@ -226,6 +227,12 @@ public class Camera {
             }
             if (y < 0 || y >= Chunk.HEIGHT) {
                 continue;
+            }
+
+            if (steppedY && stepY < 0) {
+                if (cm.isTopSurface(x, y, z)) {
+                    return new int[]{x, y, z};
+                }
             }
         }
 
