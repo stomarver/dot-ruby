@@ -125,17 +125,11 @@ public class Camera {
             int blockX = (int) Math.floor((worldX / blockSizeUnits) + totalOffsetBlocks);
             int blockZ = (int) Math.floor((worldZ / blockSizeUnits) + totalOffsetBlocks);
 
-            if (getBlockAt(cm, blockX, y, blockZ, worldSizeInChunks) != 0) {
+            if (cm.isTopSurface(blockX, y, blockZ)) {
                 return new int[]{blockX, y, blockZ};
             }
         }
         return null;
-    }
-
-    private byte getBlockAt(ChunkManager cm, int wx, int wy, int wz, int worldSizeInChunks) {
-        int limit = worldSizeInChunks * 16;
-        if (wx < 0 || wx >= limit || wz < 0 || wz >= limit || wy < 0 || wy >= Chunk.HEIGHT) return 0;
-        return cm.getChunks()[wx / 16][wz / 16].getBlock(wx % 16, wy, wz % 16);
     }
 
     public void applyTransformations() {

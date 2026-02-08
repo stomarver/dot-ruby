@@ -34,25 +34,17 @@ public class Explosion {
     }
 
     private static byte getBlockAtWorldPos(ChunkManager cm, int wx, int wy, int wz) {
-        if (wy < 0 || wy >= Chunk.HEIGHT) return Type.AIR.id;
-        int worldSize = cm.getWorldSizeInChunks() * Chunk.SIZE;
-        if (wx < 0 || wx >= worldSize || wz < 0 || wz >= worldSize) return Type.AIR.id;
-        int cx = wx / Chunk.SIZE;
-        int cz = wz / Chunk.SIZE;
-        return cm.getChunks()[cx][cz].getBlock(wx % Chunk.SIZE, wy, wz % Chunk.SIZE);
+        return cm.getBlockAtWorld(wx, wy, wz);
     }
 
     private static void removeBlock(ChunkManager cm, World world, int wx, int wy, int wz) {
-        if (wy < 0 || wy >= Chunk.HEIGHT) return;
-        int worldSize = cm.getWorldSizeInChunks() * Chunk.SIZE;
-        if (wx < 0 || wx >= worldSize || wz < 0 || wz >= worldSize) return;
-
-        Chunk chunk = cm.getChunks()[wx / Chunk.SIZE][wz / Chunk.SIZE];
+        Chunk chunk = cm.getChunkAtWorld(wx, wz);
+        if (chunk == null || wy < 0 || wy >= Chunk.HEIGHT) return;
         byte blockType = chunk.getBlock(wx % Chunk.SIZE, wy, wz % Chunk.SIZE);
 
         if (blockType == Type.COBBLE.id) {
             world.addFallingBlock(wx, wy, wz, blockType);
-            chunk.setBlock(wx % Chunk.SIZE, wy, wz % Chunk.SIZE, Type.AIR.id);
+            cm.setBlockAtWorld(wx, wy, wz, Type.AIR.id);
             world.markChunkDirty(chunk);
         }
     }
