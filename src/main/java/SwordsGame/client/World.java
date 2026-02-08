@@ -16,7 +16,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
 public class World {
     public static final float BLOCK_SIZE = 12.5f;
     public static final float BLOCK_SCALE = BLOCK_SIZE * 2.0f;
-    private static final float RENDER_RADIUS_PADDING = 3.0f;
+    private static final float RENDER_RADIUS_PADDING = 6.0f;
     private final Map<Chunk, ChunkRenderData> chunkCache = new HashMap<>();
     private final ArrayList<FallingBlock> fallingBlocks = new ArrayList<>();
 
