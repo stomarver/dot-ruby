@@ -2,11 +2,14 @@ package SwordsGame.core;
 
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -18,6 +21,9 @@ public class Window {
     private int fboId;
     private int textureId;
     private int depthId;
+    private int screenVaoId;
+    private int screenVboId;
+    private boolean useVao;
 
     // virtual resolution
     private static final int VIRTUAL_WIDTH = 960;
@@ -341,7 +347,42 @@ public class Window {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        initScreenQuad();
+
         System.out.println("[Vid] FBO created OK");
+    }
+
+    private void initScreenQuad() {
+        useVao = GL.getCapabilities().OpenGL30;
+        float[] quadVertices = {
+                0f, 0f, 0f, 0f,
+                1f, 0f, 1f, 0f,
+                1f, 1f, 1f, 1f,
+                0f, 1f, 0f, 1f
+        };
+
+        FloatBuffer quadBuffer = BufferUtils.createFloatBuffer(quadVertices.length);
+        quadBuffer.put(quadVertices).flip();
+
+        if (useVao) {
+            screenVaoId = glGenVertexArrays();
+            glBindVertexArray(screenVaoId);
+        }
+
+        screenVboId = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, screenVboId);
+        glBufferData(GL_ARRAY_BUFFER, quadBuffer, GL_STATIC_DRAW);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 4 * Float.BYTES, 0L);
+
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(2, GL_FLOAT, 4 * Float.BYTES, (long) (2 * Float.BYTES));
+
+        if (useVao) {
+            glBindVertexArray(0);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     // ===========================================
@@ -384,12 +425,15 @@ public class Window {
 
         glColor4f(1, 1, 1, 1);
 
-        glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2f(0, 0);
-        glTexCoord2f(1, 0); glVertex2f(1, 0);
-        glTexCoord2f(1, 1); glVertex2f(1, 1);
-        glTexCoord2f(0, 1); glVertex2f(0, 1);
-        glEnd();
+        if (useVao) {
+            glBindVertexArray(screenVaoId);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, screenVboId);
+        glDrawArrays(GL_QUADS, 0, 4);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        if (useVao) {
+            glBindVertexArray(0);
+        }
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_TEXTURE_2D);
@@ -418,6 +462,8 @@ public class Window {
         if (depthId != 0) glDeleteRenderbuffers(depthId);
         if (textureId != 0) glDeleteTextures(textureId);
         if (fboId != 0) glDeleteFramebuffers(fboId);
+        if (screenVboId != 0) glDeleteBuffers(screenVboId);
+        if (useVao && screenVaoId != 0) glDeleteVertexArrays(screenVaoId);
 
         glfwDestroyWindow(windowHandle);
         glfwTerminate();
