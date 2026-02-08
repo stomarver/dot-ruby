@@ -23,6 +23,10 @@ public class Debug {
     private World world;
     private Camera camera;
     private ChunkManager chunkManager;
+    private boolean showChunkBounds = true;
+    private boolean toggleBoundsHeld = false;
+    private float sunYaw = 45.0f;
+    private float sunPitch = 50.0f;
 
 
     public static void main(String[] args) {
@@ -49,15 +53,20 @@ public class Debug {
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
+            updateSunControls(window.getHandle());
+            updateBoundsToggle(window.getHandle());
 
             window.beginRenderToFBO();
             renderer.setup3D(window);
 
             glPushMatrix();
             camera.applyTransformations();
+            renderer.applySunLight();
 
             world.render(chunkManager, camera);
-            world.renderChunkBounds(chunkManager, camera);
+            if (showChunkBounds) {
+                world.renderChunkBounds(chunkManager, camera);
+            }
 
 
             glPopMatrix();
@@ -77,6 +86,34 @@ public class Debug {
             window.update();
         }
         cleanup();
+    }
+
+    private void updateSunControls(long windowHandle) {
+        float step = 1.5f;
+        if (glfwGetKey(windowHandle, GLFW_KEY_Y) == GLFW_PRESS) {
+            sunYaw -= step;
+        }
+        if (glfwGetKey(windowHandle, GLFW_KEY_U) == GLFW_PRESS) {
+            sunYaw += step;
+        }
+        sunYaw = normalizeAngle(sunYaw);
+        renderer.setSunDirectionFromAngles(sunYaw, sunPitch);
+    }
+
+    private void updateBoundsToggle(long windowHandle) {
+        boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_B) == GLFW_PRESS;
+        if (togglePressed && !toggleBoundsHeld) {
+            showChunkBounds = !showChunkBounds;
+        }
+        toggleBoundsHeld = togglePressed;
+    }
+
+    private float normalizeAngle(float angle) {
+        float result = angle % 360.0f;
+        if (result < 0) {
+            result += 360.0f;
+        }
+        return result;
     }
 
     private void cleanup() {

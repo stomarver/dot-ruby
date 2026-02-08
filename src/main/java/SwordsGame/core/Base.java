@@ -55,6 +55,7 @@ public class Base {
 
             glPushMatrix();
             camera.applyTransformations();
+            renderer.applySunLight();
 
             world.render(chunkManager, camera);
 

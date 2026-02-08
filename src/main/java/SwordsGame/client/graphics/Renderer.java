@@ -8,11 +8,20 @@ public class Renderer {
     private static final float CLEAR_R = 0.5f;
     private static final float CLEAR_G = 0.8f;
     private static final float CLEAR_B = 1.0f;
+    private static final float DEFAULT_SUN_YAW = 45.0f;
+    private static final float DEFAULT_SUN_PITCH = 50.0f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
     private int viewportWidth = 720;
     private int viewportHeight = 540;
+    private float sunDirX = 0.0f;
+    private float sunDirY = 1.0f;
+    private float sunDirZ = 0.0f;
+
+    public Renderer() {
+        setSunDirectionFromAngles(DEFAULT_SUN_YAW, DEFAULT_SUN_PITCH);
+    }
 
     public int getViewportX() { return viewportX; }
     public int getViewportY() { return viewportY; }
@@ -64,18 +73,43 @@ public class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
+    public void setSunDirection(float x, float y, float z) {
+        float length = (float) Math.sqrt(x * x + y * y + z * z);
+        if (length == 0.0f) {
+            sunDirX = 0.0f;
+            sunDirY = 1.0f;
+            sunDirZ = 0.0f;
+            return;
+        }
+        sunDirX = x / length;
+        sunDirY = y / length;
+        sunDirZ = z / length;
+    }
+
+    public void setSunDirectionFromAngles(float yawDegrees, float pitchDegrees) {
+        float yaw = (float) Math.toRadians(yawDegrees);
+        float pitch = (float) Math.toRadians(pitchDegrees);
+        float cosPitch = (float) Math.cos(pitch);
+        float x = (float) (Math.cos(yaw) * cosPitch);
+        float y = (float) Math.sin(pitch);
+        float z = (float) (Math.sin(yaw) * cosPitch);
+        setSunDirection(x, y, z);
+    }
+
+    public void applySunLight() {
+        float[] lightPosition = { sunDirX, sunDirY, sunDirZ, 0.0f };
+        glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+    }
+
     private void setupLighting() {
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         glEnable(GL_COLOR_MATERIAL);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
         glEnable(GL_NORMALIZE);
-
-        float[] lightPosition = { 15.0f, 25.0f, 10.0f, 0.0f };
         float[] ambientLight = { 0.35f, 0.35f, 0.35f, 1.0f };
         float[] diffuseLight = { 0.95f, 0.95f, 0.95f, 1.0f };
 
-        glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
         glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
     }
