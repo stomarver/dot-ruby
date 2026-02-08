@@ -1,10 +1,12 @@
 package SwordsGame.ui;
 
 import static org.lwjgl.opengl.GL11.*;
+
+import SwordsGame.client.assets.Paths;
 import SwordsGame.ui.Text.*;
-import SwordsGame.graphics.Font;
-import SwordsGame.graphics.Sprite;
-import SwordsGame.graphics.TextureLoader;
+import SwordsGame.client.Font;
+import SwordsGame.client.Sprite;
+import SwordsGame.client.TextureLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,16 +33,12 @@ public class HUD {
         this.sprite = new Sprite(w, h);
         this.messageSystem = new Message();
 
-        this.charFrameTex = load("ui/char-frame.png");
-        this.separatorTex = load("ui/separator.png");
+        this.charFrameTex = load(Paths.UI_CHAR_FRAME);
+        this.separatorTex = load(Paths.UI_SEPARATOR);
 
-        TextureLoader.finishLoading();
-
-        // Просто вызываем метод здесь
         startTerminalThread();
     }
 
-    // ВАЖНО: Этот метод должен стоять отдельно, после закрывающей скобки конструктора
     private void startTerminalThread() {
         Thread term = new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(
@@ -53,7 +51,6 @@ public class HUD {
                     }
                 }
             } catch (Exception e) {
-                // Игнорируем ошибки при закрытии
             }
         });
         term.setDaemon(true);

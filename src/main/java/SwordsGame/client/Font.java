@@ -1,14 +1,11 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Font {
-    // 1. Меняем тип поля с int на Texture
     private final TextureLoader.Texture texture;
 
-    // Эти значения теперь можно брать прямо из текстуры,
-    // но оставляем поля, если они используются в расчетах
     private final int charWidth = 6, charHeight = 8, spacing = 1;
 
     private final CharData[] fastMap = new CharData[1200];
@@ -30,16 +27,12 @@ public class Font {
     }
 
     public Font(String path) {
-        // 2. Исправляем загрузку: сохраняем весь объект целиком
         this.texture = TextureLoader.loadTexture(path, true);
         initCharMap();
         initDiacritics();
     }
 
-    // ... (методы initCharMap и initDiacritics без изменений) ...
-
     private void initCharMap() {
-        // Латиница (Ряд 0-2)
         addChar('A', 0, 0, 5); addChar('a', 1, 0, 5); addChar('B', 2, 0, 5); addChar('b', 3, 0, 5);
         addChar('C', 4, 0, 5); addChar('c', 5, 0, 5); addChar('D', 6, 0, 5); addChar('d', 7, 0, 5);
         addChar('E', 8, 0, 5); addChar('e', 9, 0, 5); addChar('F', 10, 0, 5); addChar('f', 11, 0, 4);
@@ -57,7 +50,6 @@ public class Font {
         addChar('W', 8, 2, 6); addChar('w', 9, 2, 6); addChar('X', 10, 2, 5); addChar('x', 11, 2, 5);
         addChar('Y', 12, 2, 5); addChar('y', 13, 2, 5); addChar('Z', 14, 2, 5); addChar('z', 15, 2, 5);
 
-        // Кириллица (Ряд 3-6)
         addChar('А', 0, 3, 5); addChar('а', 1, 3, 5); addChar('Б', 2, 3, 5); addChar('б', 3, 3, 5);
         addChar('В', 4, 3, 5); addChar('в', 5, 3, 5); addChar('Г', 6, 3, 5); addChar('г', 7, 3, 4);
         addChar('Д', 8, 3, 6); addChar('д', 9, 3, 5); addChar('Е', 10, 3, 5); addChar('е', 11, 3, 5);
@@ -78,13 +70,11 @@ public class Font {
 
         addChar('э', 0, 6, 5); addChar('Ю', 1, 6, 7); addChar('ю', 2, 6, 7); addChar('Я', 3, 6, 5); addChar('я', 4, 6, 5);
 
-        // Цифры и знаки (Ряд 7)
         addChar('0', 0, 7, 5); addChar('1', 1, 7, 4); addChar('2', 2, 7, 5); addChar('3', 3, 7, 5);
         addChar('4', 4, 7, 5); addChar('5', 5, 7, 5); addChar('6', 6, 7, 5); addChar('7', 7, 7, 5);
         addChar('8', 8, 7, 5); addChar('9', 9, 7, 5); addChar('.', 10, 7, 2); addChar(',', 11, 7, 2);
         addChar('_', 12, 7, 4); addChar('!', 13, 7, 2); addChar('?', 14, 7, 6);
 
-        // Спецсимволы
         addChar(' ', 0, 0, 3);
     }
 
@@ -111,7 +101,6 @@ public class Font {
         return diacriticMap.get(c);
     }
 
-    // 3. Обновляем геттеры: берем данные из объекта texture
     public int getTextureID() { return texture.id; }
     public int getTextureWidth() { return texture.width; }
     public int getTextureHeight() { return texture.height; }

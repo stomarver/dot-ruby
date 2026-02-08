@@ -1,6 +1,6 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
-import SwordsGame.graphics.blocks.Registry;
+import SwordsGame.client.blocks.Registry;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
 import java.util.ArrayList;
@@ -28,10 +28,10 @@ public class World {
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)); // Было 3.0f, стало 5.0f
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));  // Было 3.0f, стало 5.0f
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
 
-        int maxLoopDist = 12; // Было 10, увеличили до 12 для покрытия всех чанков
+        int maxLoopDist = 12;
 
         cleanupCache();
 
@@ -50,8 +50,54 @@ public class World {
             }
         }
 
-        // Рендерим и обновляем падающие блоки
         updateAndRenderFallingBlocks(worldSize);
+    }
+
+    public void renderChunkBounds(ChunkManager chunkManager, Camera camera) {
+        Chunk[][] chunks = chunkManager.getChunks();
+        int worldSize = chunkManager.getWorldSizeInChunks();
+        float chunkSizeInUnits = Chunk.SIZE * (BLOCK_SIZE * 2);
+
+        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
+        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
+
+        float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
+        float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
+
+        float baseDist = 4.0f / camera.getZoom();
+        float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+
+        int maxLoopDist = 12;
+
+        float offset = BLOCK_SIZE * 2;
+        float totalOffset = (worldSize * Chunk.SIZE) / 2f;
+
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glColor4f(0.2f, 0.9f, 0.9f, 0.7f);
+        glLineWidth(2.0f);
+
+        for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
+            for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
+                int cx = camChunkX + dx;
+                int cz = camChunkZ + dz;
+                if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
+                    float depth = dx * (-sinTheta) + dz * cosTheta;
+                    float lateral = dx * cosTheta + dz * sinTheta;
+
+                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
+                        drawChunkBounds(chunks[cx][cz], totalOffset, offset);
+                    }
+                }
+            }
+        }
+
+        glLineWidth(1.0f);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_TEXTURE_2D);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     private void updateAndRenderFallingBlocks(int worldSize) {
@@ -64,28 +110,23 @@ public class World {
         while (iterator.hasNext()) {
             FallingBlock block = iterator.next();
 
-            // Удаляем через 1 секунду
             if (currentTime - block.creationTime > 1.0) {
                 iterator.remove();
                 continue;
             }
 
-            // Обновляем физику (только падение вниз)
             block.update(deltaTime);
 
-            // Затухание альфы в последние 0.3 секунды
             float lifetime = (float) (currentTime - block.creationTime);
             float alpha = 1.0f;
             if (lifetime > 0.7f) {
                 alpha = 1.0f - ((lifetime - 0.7f) / 0.3f);
             }
 
-            // Рендерим
             glPushMatrix();
             glTranslatef((block.x - totalOffset) * offset, block.y * offset, (block.z - totalOffset) * offset);
             glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 
-            // Включаем прозрачность
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glColor4f(1.0f, 1.0f, 1.0f, alpha);
@@ -162,10 +203,7 @@ public class World {
                         faces[4] = isTransparent(cm, chunk, x + 1, y, z, type);
                         faces[5] = isTransparent(cm, chunk, x - 1, y, z, type);
 
-                        boolean visible = false;
-                        for (boolean f : faces) if (f) { visible = true; break; }
-
-                        if (visible) {
+                        if (isAnyFaceVisible(faces)) {
                             int wx = chunk.x * Chunk.SIZE + x;
                             int wz = chunk.z * Chunk.SIZE + z;
                             drawOptimizedBlock(wx, y, wz, totalOffset, offset, type, faces);
@@ -177,6 +215,46 @@ public class World {
             chunkCache.put(chunk, listId);
         }
         glCallList(chunkCache.get(chunk));
+    }
+
+    private void drawChunkBounds(Chunk chunk, float totalOffset, float offset) {
+        float half = BLOCK_SIZE;
+        float x0 = ((chunk.x * Chunk.SIZE - totalOffset) * offset) - half;
+        float z0 = ((chunk.z * Chunk.SIZE - totalOffset) * offset) - half;
+        float x1 = (((chunk.x * Chunk.SIZE + Chunk.SIZE - 1) - totalOffset) * offset) + half;
+        float z1 = (((chunk.z * Chunk.SIZE + Chunk.SIZE - 1) - totalOffset) * offset) + half;
+        float y0 = -half;
+        float y1 = ((Chunk.HEIGHT - 1) * offset) + half;
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(x0, y0, z0);
+        glVertex3f(x1, y0, z0);
+        glVertex3f(x1, y0, z1);
+        glVertex3f(x0, y0, z1);
+        glEnd();
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(x0, y1, z0);
+        glVertex3f(x1, y1, z0);
+        glVertex3f(x1, y1, z1);
+        glVertex3f(x0, y1, z1);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex3f(x0, y0, z0); glVertex3f(x0, y1, z0);
+        glVertex3f(x1, y0, z0); glVertex3f(x1, y1, z0);
+        glVertex3f(x1, y0, z1); glVertex3f(x1, y1, z1);
+        glVertex3f(x0, y0, z1); glVertex3f(x0, y1, z1);
+        glEnd();
+    }
+
+    private boolean isAnyFaceVisible(boolean[] faces) {
+        for (boolean face : faces) {
+            if (face) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {

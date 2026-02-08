@@ -1,17 +1,18 @@
 package SwordsGame.ui;
 
-import SwordsGame.graphics.TextureLoader;
+import SwordsGame.client.TextureLoader;
+import SwordsGame.client.assets.Paths;
+
 import static org.lwjgl.opengl.GL11.*;
 
 public class Cursor {
     private final TextureLoader.Texture texture;
     private float x, y;
-    private final int width = 16;  // Размер курсора
+    private final int width = 16;
     private final int height = 16;
 
     public Cursor() {
-        this.texture = TextureLoader.loadTexture("ui/cursor.png", true);
-        System.out.println("[UI] Custom cursor loaded");
+        this.texture = TextureLoader.loadTexture(Paths.UI_CURSOR, true);
     }
 
     public void updatePosition(float mouseX, float mouseY) {
@@ -22,7 +23,6 @@ public class Cursor {
     public void render() {
         if (texture == null) return;
 
-        // Сохраняем текущее состояние OpenGL
         glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
 
         glDisable(GL_DEPTH_TEST);
@@ -34,7 +34,6 @@ public class Cursor {
         glBindTexture(GL_TEXTURE_2D, texture.id);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-        // Рисуем курсор с hotspot в левом верхнем углу
         glBegin(GL_QUADS);
         glTexCoord2f(0, 0); glVertex2f(x, y);
         glTexCoord2f(1, 0); glVertex2f(x + width, y);
@@ -44,7 +43,6 @@ public class Cursor {
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        // Восстанавливаем состояние
         glPopAttrib();
     }
 

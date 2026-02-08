@@ -1,4 +1,4 @@
-package SwordsGame.graphics;
+package SwordsGame.client;
 
 import SwordsGame.ui.Anchor;
 
@@ -12,8 +12,6 @@ public class Sprite {
         this.screenH = (float)h;
     }
 
-    // --- ПЕРЕХОДНИКИ (Синтаксис как у Text) ---
-
     /**
      * Отрисовка с указанием выравнивания через Enum (например, Anchor.LEFT, Anchor.TOP).
      * @param tex Текстура (объект с ID и размерами)
@@ -24,9 +22,7 @@ public class Sprite {
      * @param s Масштаб (1.0 = исходный размер)
      */
     public void draw(TextureLoader.Texture tex, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float s) {
-        float bx = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
-        float by = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
-        drawInternal(tex, new Anchor(ax, ay, bx, by), x, y, s);
+        drawInternal(tex, buildAnchor(ax, ay), x, y, s);
     }
 
     /**
@@ -44,26 +40,19 @@ public class Sprite {
         drawInternal(tex, a, x, y, s);
     }
 
-    // --- ОСНОВНОЕ ЯДРО ---
-
     private void drawInternal(TextureLoader.Texture tex, Anchor a, float ox, float oy, float scale) {
         if (tex == null) return;
 
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, tex.id);
-        glColor3f(1, 1, 1); // Сбрасываем цвет на белый, чтобы картинка не красилась
+        glColor3f(1, 1, 1);
 
-        // Вычисляем размеры с учетом масштаба
         float w = tex.width * scale;
         float h = tex.height * scale;
 
-        // Базовая позиция якоря + смещение
         float rx = a.x + ox;
         float ry = a.y + oy;
 
-        // Корректировка в зависимости от типа якоря
-        // Если CENTER - сдвигаем назад на половину ширины
-        // Если RIGHT/BOTTOM - сдвигаем на всю ширину/высоту
         if (a.tx == Anchor.TypeX.CENTER) rx -= w / 2f;
         else if (a.tx == Anchor.TypeX.RIGHT) rx -= w;
 
@@ -78,5 +67,11 @@ public class Sprite {
         glEnd();
 
         glDisable(GL_TEXTURE_2D);
+    }
+
+    private Anchor buildAnchor(Anchor.TypeX ax, Anchor.TypeY ay) {
+        float bx = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
+        float by = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
+        return new Anchor(ax, ay, bx, by);
     }
 }
