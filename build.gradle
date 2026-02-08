@@ -44,40 +44,56 @@ dependencies {
 
 // ===== VERSION GENERATION =====
 
-def now = LocalDateTime.now()
-def datePart = now.format(DateTimeFormatter.ofPattern("MMdd"))
-def timePart = now.format(DateTimeFormatter.ofPattern("HHmm"))
-
 def versionFile = file("src/main/resources/version.properties")
-
-def versionString = ".ruby-${datePart}"
-
-// если в этот день уже делали сборку -> добавляем HHmm
-if (versionFile.exists() && versionFile.text.contains(".ruby-${datePart}")) {
-    versionString = ".ruby-${datePart}-${timePart}"
-}
 
 tasks.register("generateVersionProperties") {
     doLast {
+        def now = LocalDateTime.now()
+        def datePart = now.format(DateTimeFormatter.ofPattern("MMdd"))
+        def timePart = now.format(DateTimeFormatter.ofPattern("HHmm"))
+
+        def libsDir = file("${buildDir}/libs")
+        libsDir.mkdirs()
+
+        // базовая версия
+        def versionString = ".ruby-${datePart}"
+
+        // если jar с таким MMdd уже есть -> добавляем время
+        def jarBase = new File(libsDir, "rd-rts-${datePart}.jar")
+        if (jarBase.exists()) {
+            versionString = ".ruby-${datePart}-${timePart}"
+        }
+
         versionFile.parentFile.mkdirs()
         versionFile.text = "version=${versionString}\n"
+
         println "[Build] Version set to: ${versionString}"
+
+        // сохраняем в extra чтобы shadowJar мог использовать
+        project.ext.generatedVersion = versionString
     }
 }
 
 processResources.dependsOn("generateVersionProperties")
-shadowJar.dependsOn("generateVersionProperties")
 
 // ===== SHADOWJAR SETTINGS =====
 
 shadowJar {
+    dependsOn("generateVersionProperties")
+
     manifest {
         attributes 'Main-Class': 'SwordsGame.core.Base'
     }
 
-    archiveBaseName.set("rd-rts")
-    archiveClassifier.set(versionString.replace(".ruby-", ""))
-    archiveVersion.set("")
+    doFirst {
+        def v = project.ext.generatedVersion ?: ".ruby-unknown"
+
+        archiveBaseName.set("dot-ruby")
+        archiveClassifier.set(v.replace(".ruby-", ""))
+        archiveVersion.set("")
+
+        println "[Build] ShadowJar filename: rd-rts-" + v.replace(".ruby-", "") + ".jar"
+    }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -86,5 +102,4 @@ shadowJar {
     exclude "META-INF/*.RSA"
 }
 
-// чтобы build всегда собирал shadowJar
 build.dependsOn shadowJar

@@ -79,8 +79,9 @@ public class Debug {
             renderer.setup2D(window);
             if (hud != null) hud.render();
 
-            float mouseX = window.getMouseRelX(window.getHandle());
-            float mouseY = window.getMouseRelY(window.getHandle());
+            float mouseX = window.getMouseRelX();
+            float mouseY = window.getMouseRelY();
+
             cursor.updatePosition(mouseX, mouseY);
             cursor.render();
 
