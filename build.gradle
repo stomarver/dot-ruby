@@ -87,12 +87,12 @@ shadowJar {
 
     doFirst {
         def v = project.ext.generatedVersion ?: ".ruby-unknown"
+        def classifier = v.replace(".ruby-", "")
+        def fileName = "dot-ruby-${classifier}.jar"  // будет dot-ruby-0208.jar или dot-ruby-0208-1234.jar
 
-        archiveBaseName.set("dot-ruby")
-        archiveClassifier.set(v.replace(".ruby-", ""))
-        archiveVersion.set("")
+        archiveFileName.set(fileName)
 
-        println "[Build] ShadowJar filename: dot-ruby-" + v.replace(".ruby-", "") + ".jar"
+        println "[Build] ShadowJar filename: ${fileName}"
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
