@@ -7,7 +7,6 @@ import java.util.Map;
 import SwordsGame.client.graphics.BlockRenderer;
 import SwordsGame.client.graphics.ChunkMesh;
 import SwordsGame.client.graphics.MeshBuilder;
-import SwordsGame.client.Target;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
 import static org.lwjgl.opengl.GL11.*;
@@ -54,14 +53,9 @@ public class World {
         int worldSize = chunkManager.getWorldSizeInChunks();
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
-        Target focus = Target.focus(camera, chunkManager);
-        int focusBlockX = focus.getX();
-        int focusBlockZ = focus.getZ();
-        if (!focus.hasHit()) {
-            float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
-            focusBlockX = (int) Math.floor((-camera.getX() / BLOCK_SCALE) + totalOffsetBlocks);
-            focusBlockZ = (int) Math.floor((-camera.getZ() / BLOCK_SCALE) + totalOffsetBlocks);
-        }
+        float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
+        int focusBlockX = (int) Math.floor((-camera.getX() / BLOCK_SCALE) + totalOffsetBlocks);
+        int focusBlockZ = (int) Math.floor((-camera.getZ() / BLOCK_SCALE) + totalOffsetBlocks);
         int focusChunkX = clamp(focusBlockX / Chunk.SIZE, 0, worldSize - 1);
         int focusChunkZ = clamp(focusBlockZ / Chunk.SIZE, 0, worldSize - 1);
 
@@ -155,38 +149,6 @@ public class World {
         fallingBlocks.add(new FallingBlock(wx, wy, wz, type, seed, glfwGetTime()));
     }
 
-    public void renderSelection(Target target, int worldSize) {
-        if (target == null || !target.hasHit()) return;
-
-        float offset = BLOCK_SCALE;
-        float totalOffset = (worldSize * Chunk.SIZE) / 2f;
-
-        glPushMatrix();
-        float tx = (target.getX() - totalOffset) * offset;
-        float ty = target.getY() * offset;
-        float tz = (target.getZ() - totalOffset) * offset;
-
-        glTranslatef(tx, ty, tz);
-        glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_LIGHTING);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_POLYGON_OFFSET_LINE);
-        glPolygonOffset(-1.5f, -1.5f);
-
-        drawSelectionOutline();
-        drawSelectionFace(target.getFaceX(), target.getFaceY(), target.getFaceZ());
-
-        glDisable(GL_POLYGON_OFFSET_LINE);
-        glEnable(GL_CULL_FACE);
-        glDisable(GL_BLEND);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_TEXTURE_2D);
-        glPopMatrix();
-    }
 
     private void renderChunkCached(ChunkManager cm, Chunk chunk, int worldSize, int lod) {
         if (lod >= 2) {
@@ -230,82 +192,6 @@ public class World {
         glEnd();
     }
 
-    private void drawSelectionOutline() {
-        float s = 1.02f;
-        float min = -s;
-        float max = s;
-        float low = -s;
-        float high = s;
-        glLineWidth(2.5f);
-        glColor4f(1.0f, 1.0f, 1.0f, 0.85f);
-
-        glBegin(GL_LINE_LOOP);
-        glVertex3f(min, low, min);
-        glVertex3f(max, low, min);
-        glVertex3f(max, low, max);
-        glVertex3f(min, low, max);
-        glEnd();
-
-        glBegin(GL_LINE_LOOP);
-        glVertex3f(min, high, min);
-        glVertex3f(max, high, min);
-        glVertex3f(max, high, max);
-        glVertex3f(min, high, max);
-        glEnd();
-
-        glBegin(GL_LINES);
-        glVertex3f(min, low, min); glVertex3f(min, high, min);
-        glVertex3f(max, low, min); glVertex3f(max, high, min);
-        glVertex3f(max, low, max); glVertex3f(max, high, max);
-        glVertex3f(min, low, max); glVertex3f(min, high, max);
-        glEnd();
-
-        glLineWidth(1.0f);
-    }
-
-    private void drawSelectionFace(int faceX, int faceY, int faceZ) {
-        if (faceX == 0 && faceY == 0 && faceZ == 0) return;
-        float s = 1.01f;
-        float min = -s;
-        float max = s;
-        float low = -s;
-        float high = s;
-        glColor4f(0.5f, 0.85f, 1.0f, 0.25f);
-
-        glBegin(GL_QUADS);
-        if (faceY == 1) {
-            glVertex3f(min, high, min);
-            glVertex3f(max, high, min);
-            glVertex3f(max, high, max);
-            glVertex3f(min, high, max);
-        } else if (faceY == -1) {
-            glVertex3f(min, low, min);
-            glVertex3f(max, low, min);
-            glVertex3f(max, low, max);
-            glVertex3f(min, low, max);
-        } else if (faceX == 1) {
-            glVertex3f(max, low, min);
-            glVertex3f(max, high, min);
-            glVertex3f(max, high, max);
-            glVertex3f(max, low, max);
-        } else if (faceX == -1) {
-            glVertex3f(min, low, min);
-            glVertex3f(min, high, min);
-            glVertex3f(min, high, max);
-            glVertex3f(min, low, max);
-        } else if (faceZ == 1) {
-            glVertex3f(min, low, max);
-            glVertex3f(max, low, max);
-            glVertex3f(max, high, max);
-            glVertex3f(min, high, max);
-        } else if (faceZ == -1) {
-            glVertex3f(min, low, min);
-            glVertex3f(max, low, min);
-            glVertex3f(max, high, min);
-            glVertex3f(min, high, min);
-        }
-        glEnd();
-    }
 
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {
         if (y < 0) return false;

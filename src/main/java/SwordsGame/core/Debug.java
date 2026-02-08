@@ -1,7 +1,6 @@
 package SwordsGame.core;
 
 import SwordsGame.client.Camera;
-import SwordsGame.client.Target;
 import SwordsGame.client.World;
 import SwordsGame.client.assets.Paths;
 import SwordsGame.client.blocks.Registry;
@@ -9,7 +8,6 @@ import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.server.functions.Explosion;
 import SwordsGame.ui.Cursor;
 import SwordsGame.ui.HUD;
 import SwordsGame.utils.Discord;
@@ -26,8 +24,6 @@ public class Debug {
     private Camera camera;
     private ChunkManager chunkManager;
 
-    private double lastExplosionTime = 0;
-    private final double explosionCooldown = 0.2;
 
     public static void main(String[] args) {
         new Debug().start();
@@ -54,16 +50,6 @@ public class Debug {
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
 
-            Target target = Target.fromMouse(window, camera, renderer, chunkManager);
-
-            double currentTime = glfwGetTime();
-            if (glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-                if (currentTime - lastExplosionTime >= explosionCooldown && target.hasHit()) {
-                    Explosion.createSphere(chunkManager, world, target.getX(), target.getY(), target.getZ());
-                    lastExplosionTime = currentTime;
-                }
-            }
-
             window.beginRenderToFBO();
             renderer.setup3D(window);
 
@@ -73,7 +59,6 @@ public class Debug {
             world.render(chunkManager, camera);
             world.renderChunkBounds(chunkManager, camera);
 
-            world.renderSelection(target, chunkManager.getWorldSizeInChunks());
 
             glPopMatrix();
 
