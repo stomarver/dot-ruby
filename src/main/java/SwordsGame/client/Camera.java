@@ -4,7 +4,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import SwordsGame.core.Window;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.server.Chunk;
 import SwordsGame.client.World;
 
 public class Camera {
@@ -30,6 +29,9 @@ public class Camera {
     public float getZ() { return z; }
     public float getZoom() { return zoom; }
     public float getRotation() { return currentRotationY; }
+    public float getPitch() { return PITCH; }
+    public float getOrthoWidth() { return ORTHO_WIDTH; }
+    public float getOrthoHeight() { return ORTHO_HEIGHT; }
 
     public void update(Window window, ChunkManager chunkManager, Renderer renderer) {
         long windowHandle = window.getHandle();

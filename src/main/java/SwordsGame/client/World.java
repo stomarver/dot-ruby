@@ -1,95 +1,101 @@
 package SwordsGame.client;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.Map;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 public class World {
     public static final float BLOCK_SIZE = 12.5f;
     public static final float BLOCK_SCALE = BLOCK_SIZE * 2.0f;
+    private static final float CULLING_MARGIN_CHUNKS = 2.5f;
     private final Map<Chunk, ChunkRenderData> chunkCache = new HashMap<>();
     private final ArrayList<FallingBlock> fallingBlocks = new ArrayList<>();
 
     public void render(ChunkManager chunkManager, Camera camera) {
-        int worldSize = chunkManager.getWorldSizeInChunks();
-        float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
-
-        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
-        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
-
-        float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
-        float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
-
-        float baseDist = 4.0f / camera.getZoom();
-        float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-
-        int maxLoopDist = 12;
+        ViewCulling culling = buildCulling(chunkManager, camera);
 
         cleanupCache();
 
-        for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
-            for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = camChunkX + dx;
-                int cz = camChunkZ + dz;
-                if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float depth = dx * (-sinTheta) + dz * cosTheta;
-                    float lateral = dx * cosTheta + dz * sinTheta;
-
-                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
-                        Chunk chunk = chunkManager.getChunk(cx, cz);
-                        if (chunk != null) {
-                            int lod = selectLod(dx, dz);
-                            renderChunkCached(chunkManager, chunk, worldSize, lod);
-                        }
-                    }
-                }
-            }
-        }
-
-        updateAndRenderFallingBlocks(worldSize);
+        renderVisibleChunks(chunkManager, culling);
+        updateAndRenderFallingBlocks(culling.worldSize);
     }
 
     public void renderChunkBounds(ChunkManager chunkManager, Camera camera) {
-        int worldSize = chunkManager.getWorldSizeInChunks();
-        float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
-
-        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
-        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
-
-        float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
-        float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
-
-        float baseDist = 4.0f / camera.getZoom();
-        float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-
-        int maxLoopDist = 12;
-
+        ViewCulling culling = buildCulling(chunkManager, camera);
         float offset = BLOCK_SCALE;
-        float totalOffset = (worldSize * Chunk.SIZE) / 2f;
+        float totalOffset = (culling.worldSize * Chunk.SIZE) / 2f;
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glColor4f(0.2f, 0.9f, 0.9f, 0.7f);
         glLineWidth(2.0f);
 
-        for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
-            for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = camChunkX + dx;
-                int cz = camChunkZ + dz;
-                if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float depth = dx * (-sinTheta) + dz * cosTheta;
-                    float lateral = dx * cosTheta + dz * sinTheta;
+        renderVisibleChunkBounds(chunkManager, culling, totalOffset, offset);
 
-                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
+        glLineWidth(1.0f);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_TEXTURE_2D);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    private ViewCulling buildCulling(ChunkManager chunkManager, Camera camera) {
+        int worldSize = chunkManager.getWorldSizeInChunks();
+        float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
+
+        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
+        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
+
+        float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
+        float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
+
+        float halfWidthUnits = (camera.getOrthoWidth() / 2.0f) / camera.getZoom();
+        float halfHeightUnits = (camera.getOrthoHeight() / 2.0f) / camera.getZoom();
+        float pitchCos = (float) Math.cos(Math.toRadians(camera.getPitch()));
+        float depthUnits = pitchCos == 0.0f ? halfHeightUnits : (halfHeightUnits / pitchCos);
+
+        float halfWidthChunks = (halfWidthUnits / chunkSizeInUnits) + CULLING_MARGIN_CHUNKS;
+        float halfDepthChunks = (depthUnits / chunkSizeInUnits) + CULLING_MARGIN_CHUNKS;
+        int maxLoopDist = (int) Math.ceil(Math.max(halfWidthChunks, halfDepthChunks));
+
+        return new ViewCulling(worldSize, camChunkX, camChunkZ, sinTheta, cosTheta, halfWidthChunks, halfDepthChunks, maxLoopDist);
+    }
+
+    private void renderVisibleChunks(ChunkManager chunkManager, ViewCulling culling) {
+        for (int dx = -culling.maxLoopDist; dx <= culling.maxLoopDist; dx++) {
+            for (int dz = -culling.maxLoopDist; dz <= culling.maxLoopDist; dz++) {
+                int cx = culling.camChunkX + dx;
+                int cz = culling.camChunkZ + dz;
+                if (cx >= 0 && cx < culling.worldSize && cz >= 0 && cz < culling.worldSize) {
+                    float depth = dx * (-culling.sinTheta) + dz * culling.cosTheta;
+                    float lateral = dx * culling.cosTheta + dz * culling.sinTheta;
+
+                    if (Math.abs(depth) <= culling.halfDepthChunks && Math.abs(lateral) <= culling.halfWidthChunks) {
+                        Chunk chunk = chunkManager.getChunk(cx, cz);
+                        if (chunk != null) {
+                            int lod = selectLod(dx, dz);
+                            renderChunkCached(chunkManager, chunk, culling.worldSize, lod);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void renderVisibleChunkBounds(ChunkManager chunkManager, ViewCulling culling, float totalOffset, float offset) {
+        for (int dx = -culling.maxLoopDist; dx <= culling.maxLoopDist; dx++) {
+            for (int dz = -culling.maxLoopDist; dz <= culling.maxLoopDist; dz++) {
+                int cx = culling.camChunkX + dx;
+                int cz = culling.camChunkZ + dz;
+                if (cx >= 0 && cx < culling.worldSize && cz >= 0 && cz < culling.worldSize) {
+                    float depth = dx * (-culling.sinTheta) + dz * culling.cosTheta;
+                    float lateral = dx * culling.cosTheta + dz * culling.sinTheta;
+
+                    if (Math.abs(depth) <= culling.halfDepthChunks && Math.abs(lateral) <= culling.halfWidthChunks) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             drawChunkBounds(chunk, totalOffset, offset);
@@ -98,11 +104,6 @@ public class World {
                 }
             }
         }
-
-        glLineWidth(1.0f);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_TEXTURE_2D);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     private void updateAndRenderFallingBlocks(int worldSize) {
@@ -263,6 +264,29 @@ public class World {
         if (dist <= 2) return 0;
         if (dist <= 4) return 1;
         return 2;
+    }
+
+    private static class ViewCulling {
+        private final int worldSize;
+        private final int camChunkX;
+        private final int camChunkZ;
+        private final float sinTheta;
+        private final float cosTheta;
+        private final float halfWidthChunks;
+        private final float halfDepthChunks;
+        private final int maxLoopDist;
+
+        private ViewCulling(int worldSize, int camChunkX, int camChunkZ, float sinTheta, float cosTheta,
+                            float halfWidthChunks, float halfDepthChunks, int maxLoopDist) {
+            this.worldSize = worldSize;
+            this.camChunkX = camChunkX;
+            this.camChunkZ = camChunkZ;
+            this.sinTheta = sinTheta;
+            this.cosTheta = cosTheta;
+            this.halfWidthChunks = halfWidthChunks;
+            this.halfDepthChunks = halfDepthChunks;
+            this.maxLoopDist = maxLoopDist;
+        }
     }
 
     private class ChunkRenderData {
