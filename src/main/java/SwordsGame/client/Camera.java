@@ -1,10 +1,9 @@
 package SwordsGame.client;
 
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 import SwordsGame.core.Window;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.client.World;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
 public class Camera {
     private static final float ORTHO_WIDTH = 720.0f;
