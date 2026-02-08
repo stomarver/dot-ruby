@@ -96,10 +96,22 @@ public class Camera {
     }
 
     public int[] getTargetBlockFromMouse(Window window, int worldSizeInChunks, ChunkManager cm, Renderer renderer) {
-        float centerX = renderer.getViewportX() + renderer.getViewportWidth() / 2.0f;
-        float centerY = renderer.getViewportY() + renderer.getViewportHeight() / 2.0f;
-        float mouseX = (float) window.getMouseRelX() - centerX;
-        float mouseY = centerY - (float) window.getMouseRelY();
+        float mouseScreenX = (float) window.getMouseRelX();
+        float mouseScreenY = (float) window.getMouseRelY();
+        float viewportLeft = renderer.getViewportX();
+        float viewportTop = renderer.getViewportY();
+        float viewportRight = viewportLeft + renderer.getViewportWidth();
+        float viewportBottom = viewportTop + renderer.getViewportHeight();
+
+        if (mouseScreenX < viewportLeft || mouseScreenX > viewportRight
+                || mouseScreenY < viewportTop || mouseScreenY > viewportBottom) {
+            return null;
+        }
+
+        float centerX = viewportLeft + renderer.getViewportWidth() / 2.0f;
+        float centerY = viewportTop + renderer.getViewportHeight() / 2.0f;
+        float mouseX = mouseScreenX - centerX;
+        float mouseY = centerY - mouseScreenY;
 
         float viewX = (mouseX / renderer.getViewportWidth()) * ORTHO_WIDTH;
         float viewY = (mouseY / renderer.getViewportHeight()) * ORTHO_HEIGHT;

@@ -23,8 +23,10 @@ public class World {
         int worldSize = chunkManager.getWorldSizeInChunks();
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
-        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
-        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
+        float camChunkX = ((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2.0f);
+        float camChunkZ = ((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2.0f);
+        int baseChunkX = (int) Math.floor(camChunkX);
+        int baseChunkZ = (int) Math.floor(camChunkZ);
 
         float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
         float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
@@ -40,10 +42,12 @@ public class World {
 
         for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
             for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = camChunkX + dx;
-                int cz = camChunkZ + dz;
+                int cx = baseChunkX + dx;
+                int cz = baseChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    if (Culling.isChunkVisible(dx, dz, sinTheta, cosTheta, horizDist, vertDist)) {
+                    float relX = Culling.relX(camChunkX, cx);
+                    float relZ = Culling.relZ(camChunkZ, cz);
+                    if (Culling.isChunkVisible(relX, relZ, sinTheta, cosTheta, horizDist, vertDist)) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             int lod = selectLod(dx, dz);
@@ -61,8 +65,10 @@ public class World {
         int worldSize = chunkManager.getWorldSizeInChunks();
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
-        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
-        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
+        float camChunkX = ((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2.0f);
+        float camChunkZ = ((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2.0f);
+        int baseChunkX = (int) Math.floor(camChunkX);
+        int baseChunkZ = (int) Math.floor(camChunkZ);
 
         float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
         float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
@@ -84,10 +90,12 @@ public class World {
 
         for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
             for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = camChunkX + dx;
-                int cz = camChunkZ + dz;
+                int cx = baseChunkX + dx;
+                int cz = baseChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    if (Culling.isChunkVisible(dx, dz, sinTheta, cosTheta, horizDist, vertDist)) {
+                    float relX = Culling.relX(camChunkX, cx);
+                    float relZ = Culling.relZ(camChunkZ, cz);
+                    if (Culling.isChunkVisible(relX, relZ, sinTheta, cosTheta, horizDist, vertDist)) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             drawChunkBounds(chunk, totalOffset, offset);
