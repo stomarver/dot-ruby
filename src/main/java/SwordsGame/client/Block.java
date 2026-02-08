@@ -2,8 +2,6 @@ package SwordsGame.client;
 
 import SwordsGame.client.blocks.Type;
 
-import static org.lwjgl.opengl.GL11.*;
-
 public class Block {
     protected static final float MIN = 0.01f;
     protected static final float MAX = 0.99f;
@@ -41,56 +39,20 @@ public class Block {
     public Type getType() { return type; }
     public BlockProperties getProperties() { return properties; }
 
+    public int getTextureId(int face) {
+        if (textures[0] == null) return 0;
+        if (textures.length == 1) return textures[0].id;
+        if (face == 2) return textures[0].id;
+        if (face == 3) return textures[1].id;
+        return textures[2].id;
+    }
+
+    public float[] getUv(int rotation) {
+        return UV[rotation % 4];
+    }
+
     public void draw(int seed, boolean[] faces) {
-        if (textures[0] == null) return;
-
-        if (properties.hasEmission()) glDisable(GL_LIGHTING);
-
-        if (properties.hasRandomColor()) {
-            float colorMod = 0.9f + (Math.abs(seed % 10) / 100f);
-            glColor3f(colorMod, colorMod, colorMod);
-        } else {
-            glColor3f(1.0f, 1.0f, 1.0f);
-        }
-
-        int rot = properties.hasRandomRotation() ? (Math.abs(seed) % 4) : 0;
-        if (textures.length == 1) {
-            glBindTexture(GL_TEXTURE_2D, textures[0].id);
-            glBegin(GL_QUADS);
-            if (faces[0]) { glNormal3f(0,0,1);  drawFace(-1,-1, 1,  1,-1, 1,  1, 1, 1, -1, 1, 1, rot); }
-            if (faces[1]) { glNormal3f(0,0,-1); drawFace(-1,-1,-1, -1, 1,-1,  1, 1,-1,  1,-1,-1, rot); }
-            if (faces[2]) { glNormal3f(0,1,0);  drawFace(-1, 1,-1, -1, 1, 1,  1, 1, 1,  1, 1,-1, rot); }
-            if (faces[3]) { glNormal3f(0,-1,0); drawFace(-1,-1,-1,  1,-1,-1,  1,-1, 1, -1,-1, 1, rot); }
-            if (faces[4]) { glNormal3f(1,0,0);  drawFace( 1,-1,-1,  1, 1,-1,  1, 1, 1,  1,-1, 1, rot); }
-            if (faces[5]) { glNormal3f(-1,0,0); drawFace(-1,-1,-1, -1,-1, 1, -1, 1, 1, -1, 1,-1, rot); }
-            glEnd();
-        } else {
-            if (faces[2]) {
-                glBindTexture(GL_TEXTURE_2D, textures[0].id);
-                glBegin(GL_QUADS);
-                glNormal3f(0,1,0);
-                drawFace(-1, 1,-1, -1, 1, 1,  1, 1, 1,  1, 1,-1, rot);
-                glEnd();
-            }
-            if (faces[3]) {
-                glBindTexture(GL_TEXTURE_2D, textures[1].id);
-                glBegin(GL_QUADS);
-                glNormal3f(0,-1,0);
-                drawFace(-1,-1,-1,  1,-1,-1,  1,-1, 1, -1,-1, 1, rot);
-                glEnd();
-            }
-            if (faces[0] || faces[1] || faces[4] || faces[5]) {
-                glBindTexture(GL_TEXTURE_2D, textures[2].id);
-                glBegin(GL_QUADS);
-                if (faces[0]) { glNormal3f(0,0,1);  drawFace(-1,-1, 1,  1,-1, 1,  1, 1, 1, -1, 1, 1, rot); }
-                if (faces[1]) { glNormal3f(0,0,-1); drawFace(-1,-1,-1, -1, 1,-1,  1, 1,-1,  1,-1,-1, rot); }
-                if (faces[4]) { glNormal3f(1,0,0);  drawFace( 1,-1,-1,  1, 1,-1,  1, 1, 1,  1,-1, 1, rot); }
-                if (faces[5]) { glNormal3f(-1,0,0); drawFace(-1,-1,-1, -1,-1, 1, -1, 1, 1, -1, 1,-1, rot); }
-                glEnd();
-            }
-        }
-
-        if (properties.hasEmission()) glEnable(GL_LIGHTING);
+        BlockRenderer.renderBlock(this, seed, faces);
     }
 
     public void destroy() {
@@ -101,11 +63,7 @@ public class Block {
         }
     }
 
-    private void drawFace(float x1, float y1, float z1, float x2, float y2, float z2,
-                          float x3, float y3, float z3, float x4, float y4, float z4, int rot) {
-        glTexCoord2f(UV[rot][0], UV[rot][1]); glVertex3f(x1, y1, z1);
-        glTexCoord2f(UV[rot][2], UV[rot][3]); glVertex3f(x2, y2, z2);
-        glTexCoord2f(UV[rot][4], UV[rot][5]); glVertex3f(x3, y3, z3);
-        glTexCoord2f(UV[rot][6], UV[rot][7]); glVertex3f(x4, y4, z4);
+    public boolean hasTexture() {
+        return textures[0] != null;
     }
 }

@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -17,6 +19,7 @@ public class TextureLoader {
 
     private static int loadCount = 0;
     private static boolean isReleasing = false;
+    private static final Map<String, Texture> cache = new HashMap<>();
 
     public static class Texture {
         public final int id;
@@ -30,6 +33,8 @@ public class TextureLoader {
     }
 
     public static Texture loadTexture(String path, boolean removeBlack) {
+        Texture cached = cache.get(path);
+        if (cached != null) return cached;
         if (loadCount == 0) {
             System.out.println("[Sys] Textures Loading:");
         }
@@ -74,7 +79,9 @@ public class TextureLoader {
             stbi_image_free(image);
             System.out.printf("[ID: %d] | %-15s | [%dx%d]%n", id, path, width, height);
 
-            return new Texture(id, width, height);
+            Texture texture = new Texture(id, width, height);
+            cache.put(path, texture);
+            return texture;
         }
     }
 
@@ -101,6 +108,7 @@ public class TextureLoader {
             System.out.println("[Sys] Textures Released");
             isReleasing = false;
         }
+        cache.clear();
     }
 
     private static void processTransparency(ByteBuffer buf, int pixels) {

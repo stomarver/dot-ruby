@@ -1,6 +1,5 @@
 package SwordsGame.client;
 
-import SwordsGame.client.blocks.Registry;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
 public class World {
     public static final float BLOCK_SIZE = 12.5f;
     public static final float BLOCK_SCALE = BLOCK_SIZE * 2.0f;
-    private final Map<Chunk, Integer> chunkCache = new HashMap<>();
+    private final Map<Chunk, ChunkRenderData> chunkCache = new HashMap<>();
     private final ArrayList<FallingBlock> fallingBlocks = new ArrayList<>();
 
     public void render(ChunkManager chunkManager, Camera camera) {
@@ -46,7 +45,8 @@ public class World {
                     if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
-                            renderChunkCached(chunkManager, chunk, worldSize);
+                            int lod = selectLod(dx, dz);
+                            renderChunkCached(chunkManager, chunk, worldSize, lod);
                         }
                     }
                 }
@@ -130,14 +130,12 @@ public class World {
 
             glPushMatrix();
             glTranslatef((block.x - totalOffset) * offset, block.y * offset, (block.z - totalOffset) * offset);
-            glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
             boolean[] allFaces = {true, true, true, true, true, true};
-            Registry.draw(block.type, block.seed, allFaces);
+            BlockRenderer.renderBlock(block.type, block.seed, allFaces, alpha);
 
             glDisable(GL_BLEND);
             glColor3f(1.0f, 1.0f, 1.0f);
@@ -177,39 +175,15 @@ public class World {
         glPopMatrix();
     }
 
-    private void renderChunkCached(ChunkManager cm, Chunk chunk, int worldSize) {
-        if (!chunkCache.containsKey(chunk)) {
-            int listId = glGenLists(1);
-            glNewList(listId, GL_COMPILE);
-            float offset = BLOCK_SCALE;
-            float totalOffset = (worldSize * Chunk.SIZE) / 2f;
-
-            for (int x = 0; x < Chunk.SIZE; x++) {
-                for (int z = 0; z < Chunk.SIZE; z++) {
-                    for (int y = 0; y < Chunk.HEIGHT; y++) {
-                        byte type = chunk.getBlock(x, y, z);
-                        if (type == 0) continue;
-
-                        boolean[] faces = new boolean[6];
-                        faces[0] = isTransparent(cm, chunk, x, y, z + 1, type);
-                        faces[1] = isTransparent(cm, chunk, x, y, z - 1, type);
-                        faces[2] = isTransparent(cm, chunk, x, y + 1, z, type);
-                        faces[3] = isTransparent(cm, chunk, x, y - 1, z, type);
-                        faces[4] = isTransparent(cm, chunk, x + 1, y, z, type);
-                        faces[5] = isTransparent(cm, chunk, x - 1, y, z, type);
-
-                        if (isAnyFaceVisible(faces)) {
-                            int wx = chunk.x * Chunk.SIZE + x;
-                            int wz = chunk.z * Chunk.SIZE + z;
-                            drawOptimizedBlock(wx, y, wz, totalOffset, offset, type, faces);
-                        }
-                    }
-                }
-            }
-            glEndList();
-            chunkCache.put(chunk, listId);
+    private void renderChunkCached(ChunkManager cm, Chunk chunk, int worldSize, int lod) {
+        if (lod >= 2) {
+            return;
         }
-        glCallList(chunkCache.get(chunk));
+        ChunkRenderData data = chunkCache.computeIfAbsent(chunk, key -> new ChunkRenderData());
+        ChunkMesh mesh = data.getMesh(cm, chunk, worldSize, lod);
+        if (mesh != null) {
+            mesh.render();
+        }
     }
 
     private void drawChunkBounds(Chunk chunk, float totalOffset, float offset) {
@@ -259,15 +233,6 @@ public class World {
         glLineWidth(1.0f);
     }
 
-    private boolean isAnyFaceVisible(boolean[] faces) {
-        for (boolean face : faces) {
-            if (face) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {
         if (y < 0) return false;
         if (y >= Chunk.HEIGHT) return true;
@@ -278,27 +243,83 @@ public class World {
     }
 
     public void markChunkDirty(Chunk chunk) {
-        if (chunkCache.containsKey(chunk)) {
-            glDeleteLists(chunkCache.get(chunk), 1);
-            chunkCache.remove(chunk);
+        ChunkRenderData data = chunkCache.remove(chunk);
+        if (data != null) {
+            data.destroy();
         }
-    }
-
-    private void drawOptimizedBlock(int x, int y, int z, float totalOffset, float scale, byte type, boolean[] faces) {
-        glPushMatrix();
-        glTranslatef((x - totalOffset) * scale, y * scale, (z - totalOffset) * scale);
-        glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-
-        int seed = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
-        Registry.draw(type, seed, faces);
-
-        glPopMatrix();
     }
 
     public void cleanupCache() {
         if (chunkCache.size() > 512) {
-            for (Integer id : chunkCache.values()) glDeleteLists(id, 1);
+            for (ChunkRenderData data : chunkCache.values()) {
+                data.destroy();
+            }
             chunkCache.clear();
         }
+    }
+
+    private int selectLod(int dx, int dz) {
+        int dist = Math.max(Math.abs(dx), Math.abs(dz));
+        if (dist <= 2) return 0;
+        if (dist <= 4) return 1;
+        return 2;
+    }
+
+    private class ChunkRenderData {
+        private final ChunkMesh[] meshes = new ChunkMesh[2];
+
+        ChunkMesh getMesh(ChunkManager cm, Chunk chunk, int worldSize, int lod) {
+            if (lod >= meshes.length) return null;
+            if (meshes[lod] == null) {
+                meshes[lod] = buildMesh(cm, chunk, worldSize, lod == 1);
+            }
+            return meshes[lod];
+        }
+
+        void destroy() {
+            for (ChunkMesh mesh : meshes) {
+                if (mesh != null) mesh.destroy();
+            }
+        }
+    }
+
+    private ChunkMesh buildMesh(ChunkManager cm, Chunk chunk, int worldSize, boolean topOnly) {
+        MeshBuilder builder = new MeshBuilder(topOnly, true);
+        float totalOffset = (worldSize * Chunk.SIZE) / 2f;
+
+        for (int x = 0; x < Chunk.SIZE; x++) {
+            for (int z = 0; z < Chunk.SIZE; z++) {
+                for (int y = 0; y < Chunk.HEIGHT; y++) {
+                    byte type = chunk.getBlock(x, y, z);
+                    if (type == 0) continue;
+
+                    boolean[] faces = new boolean[6];
+                    faces[0] = isTransparent(cm, chunk, x, y, z + 1, type);
+                    faces[1] = isTransparent(cm, chunk, x, y, z - 1, type);
+                    faces[2] = isTransparent(cm, chunk, x, y + 1, z, type);
+                    faces[3] = isTransparent(cm, chunk, x, y - 1, z, type);
+                    faces[4] = isTransparent(cm, chunk, x + 1, y, z, type);
+                    faces[5] = isTransparent(cm, chunk, x - 1, y, z, type);
+
+                    if (!isAnyFaceVisible(faces)) continue;
+
+                    int wx = chunk.x * Chunk.SIZE + x;
+                    int wz = chunk.z * Chunk.SIZE + z;
+                    int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
+                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE);
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
+    private boolean isAnyFaceVisible(boolean[] faces) {
+        for (boolean face : faces) {
+            if (face) {
+                return true;
+            }
+        }
+        return false;
     }
 }
