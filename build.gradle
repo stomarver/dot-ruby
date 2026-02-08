@@ -59,7 +59,7 @@ tasks.register("generateVersionProperties") {
         def versionString = ".ruby-${datePart}"
 
         // если jar с таким MMdd уже есть -> добавляем время
-        def jarBase = new File(libsDir, "rd-rts-${datePart}.jar")
+        def jarBase = new File(libsDir, "dot-ruby-${datePart}.jar")
         if (jarBase.exists()) {
             versionString = ".ruby-${datePart}-${timePart}"
         }
@@ -92,7 +92,7 @@ shadowJar {
         archiveClassifier.set(v.replace(".ruby-", ""))
         archiveVersion.set("")
 
-        println "[Build] ShadowJar filename: rd-rts-" + v.replace(".ruby-", "") + ".jar"
+        println "[Build] ShadowJar filename: dot-ruby-" + v.replace(".ruby-", "") + ".jar"
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
