@@ -44,8 +44,9 @@ public class Camera {
         if (glfwGetKey(windowHandle, GLFW_KEY_LEFT) == GLFW_PRESS)  { x += currentMoveSpeed * cos; z += currentMoveSpeed * sin; }
         if (glfwGetKey(windowHandle, GLFW_KEY_RIGHT) == GLFW_PRESS) { x -= currentMoveSpeed * cos; z -= currentMoveSpeed * sin; }
 
-        float mouseX = window.getMouseRelX(windowHandle);
-        float mouseY = window.getMouseRelY(windowHandle);
+        float mouseX = window.getMouseRelX();
+        float mouseY = window.getMouseRelY();
+
         int virtualWidth = window.getVirtualWidth();
         int virtualHeight = window.getVirtualHeight();
 
@@ -89,8 +90,8 @@ public class Camera {
     }
 
     public int[] getTargetBlockFromMouse(Window window, int worldSizeInChunks, ChunkManager cm) {
-        float mouseX = (float) window.getMouseRelX(window.getHandle()) - 120 - 360;
-        float mouseY = 270 - (float) window.getMouseRelY(window.getHandle());
+        float mouseX = (float) window.getMouseRelX() - 120 - 360;
+        float mouseY = 270 - (float) window.getMouseRelY();
 
         float worldX_Iso = mouseX / zoom;
         float worldY_Iso = mouseY / zoom;
