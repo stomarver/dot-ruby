@@ -104,8 +104,9 @@ public class Camera {
         float viewX = (mouseX / renderer.getViewportWidth()) * ORTHO_WIDTH;
         float viewY = (mouseY / renderer.getViewportHeight()) * ORTHO_HEIGHT;
 
-        float[] rayOrigin = toWorldPoint(viewX, viewY);
-        float[] rayDir = getWorldRayDirection();
+        float[] rayOrigin = unprojectViewToWorld(viewX, viewY, 0.0f);
+        float[] rayFar = unprojectViewToWorld(viewX, viewY, 1.0f);
+        float[] rayDir = normalize(rayFar[0] - rayOrigin[0], rayFar[1] - rayOrigin[1], rayFar[2] - rayOrigin[2]);
 
         return raycastTopFace(cm, rayOrigin, rayDir);
     }
@@ -133,10 +134,10 @@ public class Camera {
         return Math.max(min, Math.min(max, value));
     }
 
-    private float[] toWorldPoint(float viewX, float viewY) {
+    private float[] unprojectViewToWorld(float viewX, float viewY, float viewZ) {
         float scaledX = viewX / zoom;
         float scaledY = viewY / zoom;
-        float scaledZ = 0.0f;
+        float scaledZ = viewZ / zoom;
 
         float[] afterPitch = rotateX(scaledX, scaledY, scaledZ, -PITCH);
         float[] afterYaw = rotateY(afterPitch[0], afterPitch[1], afterPitch[2], -currentRotationY);
@@ -147,11 +148,10 @@ public class Camera {
         return afterYaw;
     }
 
-    private float[] getWorldRayDirection() {
-        float[] afterPitch = rotateX(0.0f, 0.0f, -1.0f, -PITCH);
-        float[] afterYaw = rotateY(afterPitch[0], afterPitch[1], afterPitch[2], -currentRotationY);
-        float length = (float) Math.sqrt(afterYaw[0] * afterYaw[0] + afterYaw[1] * afterYaw[1] + afterYaw[2] * afterYaw[2]);
-        return new float[]{afterYaw[0] / length, afterYaw[1] / length, afterYaw[2] / length};
+    private float[] normalize(float x, float y, float z) {
+        float length = (float) Math.sqrt(x * x + y * y + z * z);
+        if (length == 0) return new float[]{0.0f, 0.0f, 0.0f};
+        return new float[]{x / length, y / length, z / length};
     }
 
     private float[] rotateX(float x, float y, float z, float degrees) {
