@@ -84,7 +84,7 @@ public class World {
                     if ((dx * dx) + (dz * dz) <= radiusSquared) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
-                            int lod = selectLod(dx, dz);
+                            int lod = selectLod(dx, dz, culling.radius);
                             renderChunkCached(chunkManager, chunk, culling.worldSize, lod);
                         }
                     }
@@ -264,10 +264,12 @@ public class World {
         }
     }
 
-    private int selectLod(int dx, int dz) {
-        int dist = Math.max(Math.abs(dx), Math.abs(dz));
-        if (dist <= 2) return 0;
-        if (dist <= 4) return 1;
+    private int selectLod(int dx, int dz, float radius) {
+        float distance = (float) Math.sqrt((dx * dx) + (dz * dz));
+        float nearThreshold = Math.max(2.0f, radius * 0.35f);
+        float midThreshold = Math.max(4.0f, radius * 0.7f);
+        if (distance <= nearThreshold) return 0;
+        if (distance <= midThreshold) return 1;
         return 2;
     }
 
