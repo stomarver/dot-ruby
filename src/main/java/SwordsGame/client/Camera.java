@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL11.*;
 import SwordsGame.core.Window;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.Chunk;
+import SwordsGame.client.World;
 
 public class Camera {
     private float x = 0, z = 0;
@@ -19,13 +20,18 @@ public class Camera {
 
     private static final float EDGE_SCROLL_ZONE = 30.0f;
     private static final float EDGE_SCROLL_SPEED = 15.0f;
+    private static final float MIN_ZOOM = 0.25f;
+    private static final float MAX_ZOOM = 2.5f;
+    private static final float PITCH = 35.264f;
+    private static final float ISO_COS = 0.8165f;
+    private static final float ISO_SIN = 0.5773f;
 
     public float getX() { return x; }
     public float getZ() { return z; }
     public float getZoom() { return zoom; }
     public float getRotation() { return currentRotationY; }
 
-    public void update(Window window) {
+    public void update(Window window, ChunkManager chunkManager, Renderer renderer) {
         long windowHandle = window.getHandle();
 
         float angleRad = (float) Math.toRadians(currentRotationY);
@@ -68,8 +74,7 @@ public class Camera {
 
         if (glfwGetKey(windowHandle, GLFW_KEY_EQUAL) == GLFW_PRESS) zoom += zoomSpeed;
         if (glfwGetKey(windowHandle, GLFW_KEY_MINUS) == GLFW_PRESS) zoom -= zoomSpeed;
-        if (zoom < 0.25f) zoom = 0.25f;
-        if (zoom > 2.5f) zoom = 2.5f;
+        zoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
 
         double currentTime = glfwGetTime();
         float currentStep = isShiftPressed ? 45.0f : 15.0f;
@@ -87,11 +92,14 @@ public class Camera {
         }
 
         currentRotationY += (targetRotationY - currentRotationY) * lerpSpeed;
+        clampPosition(chunkManager, renderer);
     }
 
-    public int[] getTargetBlockFromMouse(Window window, int worldSizeInChunks, ChunkManager cm) {
-        float mouseX = (float) window.getMouseRelX() - 120 - 360;
-        float mouseY = 270 - (float) window.getMouseRelY();
+    public int[] getTargetBlockFromMouse(Window window, int worldSizeInChunks, ChunkManager cm, Renderer renderer) {
+        float centerX = renderer.getViewportX() + renderer.getViewportWidth() / 2.0f;
+        float centerY = renderer.getViewportY() + renderer.getViewportHeight() / 2.0f;
+        float mouseX = (float) window.getMouseRelX() - centerX;
+        float mouseY = centerY - (float) window.getMouseRelY();
 
         float worldX_Iso = mouseX / zoom;
         float worldY_Iso = mouseY / zoom;
@@ -100,15 +108,12 @@ public class Camera {
         float cos = (float) Math.cos(angleRad);
         float sin = (float) Math.sin(angleRad);
 
-        float blockSizeUnits = 12.5f * 2.0f;
+        float blockSizeUnits = World.BLOCK_SIZE * 2.0f;
         float totalOffsetBlocks = (worldSizeInChunks * 16) / 2.0f;
-
-        float cos35 = 0.8165f;
-        float sin35 = 0.5773f;
 
         for (int y = Chunk.HEIGHT - 1; y >= 0; y--) {
             float yPos = (y + 1.0f) * blockSizeUnits;
-            float rotZ = (yPos * cos35 - worldY_Iso) / sin35;
+            float rotZ = (yPos * ISO_COS - worldY_Iso) / ISO_SIN;
             float rotX = worldX_Iso;
 
             float realX = rotX * cos + rotZ * sin;
@@ -120,23 +125,33 @@ public class Camera {
             int blockX = (int) Math.floor((worldX / blockSizeUnits) + totalOffsetBlocks);
             int blockZ = (int) Math.floor((worldZ / blockSizeUnits) + totalOffsetBlocks);
 
-            if (getBlockAt(cm, blockX, y, blockZ, worldSizeInChunks) != 0) {
+            if (cm.isTopSurface(blockX, y, blockZ)) {
                 return new int[]{blockX, y, blockZ};
             }
         }
         return null;
     }
 
-    private byte getBlockAt(ChunkManager cm, int wx, int wy, int wz, int worldSizeInChunks) {
-        int limit = worldSizeInChunks * 16;
-        if (wx < 0 || wx >= limit || wz < 0 || wz >= limit || wy < 0 || wy >= 32) return 0;
-        return cm.getChunks()[wx / 16][wz / 16].getBlock(wx % 16, wy, wz % 16);
-    }
-
     public void applyTransformations() {
         glScalef(zoom, zoom, zoom);
-        glRotatef(35.264f, 1, 0, 0);
+        glRotatef(PITCH, 1, 0, 0);
         glRotatef(currentRotationY, 0, 1, 0);
         glTranslatef(x, 0, z);
+    }
+
+    private void clampPosition(ChunkManager chunkManager, Renderer renderer) {
+        float blockSizeUnits = World.BLOCK_SIZE * 2.0f;
+        float halfWorld = (chunkManager.getWorldSizeInBlocks() / 2.0f) * blockSizeUnits;
+        float viewportHalfWidth = renderer.getViewportWidth() / 2.0f;
+        float viewportHalfHeight = renderer.getViewportHeight() / 2.0f;
+        float zoomFactor = Math.max(MIN_ZOOM, zoom);
+        float margin = Math.max(viewportHalfWidth, viewportHalfHeight) / zoomFactor;
+
+        x = clamp(x, -halfWorld + margin, halfWorld - margin);
+        z = clamp(z, -halfWorld + margin, halfWorld - margin);
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

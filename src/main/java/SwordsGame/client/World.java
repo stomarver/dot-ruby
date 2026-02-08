@@ -12,13 +12,13 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 public class World {
     public static final float BLOCK_SIZE = 12.5f;
+    public static final float BLOCK_SCALE = BLOCK_SIZE * 2.0f;
     private final Map<Chunk, Integer> chunkCache = new HashMap<>();
     private final ArrayList<FallingBlock> fallingBlocks = new ArrayList<>();
 
     public void render(ChunkManager chunkManager, Camera camera) {
-        Chunk[][] chunks = chunkManager.getChunks();
         int worldSize = chunkManager.getWorldSizeInChunks();
-        float chunkSizeInUnits = Chunk.SIZE * (BLOCK_SIZE * 2);
+        float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
         int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
         int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
@@ -44,7 +44,10 @@ public class World {
                     float lateral = dx * cosTheta + dz * sinTheta;
 
                     if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
-                        renderChunkCached(chunkManager, chunks[cx][cz], worldSize);
+                        Chunk chunk = chunkManager.getChunk(cx, cz);
+                        if (chunk != null) {
+                            renderChunkCached(chunkManager, chunk, worldSize);
+                        }
                     }
                 }
             }
@@ -54,9 +57,8 @@ public class World {
     }
 
     public void renderChunkBounds(ChunkManager chunkManager, Camera camera) {
-        Chunk[][] chunks = chunkManager.getChunks();
         int worldSize = chunkManager.getWorldSizeInChunks();
-        float chunkSizeInUnits = Chunk.SIZE * (BLOCK_SIZE * 2);
+        float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
         int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
         int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
@@ -71,7 +73,7 @@ public class World {
 
         int maxLoopDist = 12;
 
-        float offset = BLOCK_SIZE * 2;
+        float offset = BLOCK_SCALE;
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;
 
         glDisable(GL_TEXTURE_2D);
@@ -88,7 +90,10 @@ public class World {
                     float lateral = dx * cosTheta + dz * sinTheta;
 
                     if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
-                        drawChunkBounds(chunks[cx][cz], totalOffset, offset);
+                        Chunk chunk = chunkManager.getChunk(cx, cz);
+                        if (chunk != null) {
+                            drawChunkBounds(chunk, totalOffset, offset);
+                        }
                     }
                 }
             }
@@ -104,7 +109,7 @@ public class World {
         double currentTime = glfwGetTime();
         float deltaTime = 1.0f / 60.0f;
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;
-        float offset = BLOCK_SIZE * 2;
+        float offset = BLOCK_SCALE;
 
         Iterator<FallingBlock> iterator = fallingBlocks.iterator();
         while (iterator.hasNext()) {
@@ -148,7 +153,7 @@ public class World {
     public void renderSelection(int[] target, int worldSize) {
         if (target == null) return;
 
-        float offset = BLOCK_SIZE * 2;
+        float offset = BLOCK_SCALE;
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;
 
         glPushMatrix();
@@ -164,17 +169,7 @@ public class World {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glLineWidth(4.0f);
-        glColor4f(1.0f, 1.0f, 1.0f, 0.8f);
-
-        glBegin(GL_LINE_LOOP);
-        float s = 1.01f;
-        float h = 1.02f;
-        glVertex3f(-s, h, -s);
-        glVertex3f( s, h, -s);
-        glVertex3f( s, h,  s);
-        glVertex3f(-s, h,  s);
-        glEnd();
+        drawTopFaceOutline();
 
         glDisable(GL_BLEND);
         glEnable(GL_LIGHTING);
@@ -186,7 +181,7 @@ public class World {
         if (!chunkCache.containsKey(chunk)) {
             int listId = glGenLists(1);
             glNewList(listId, GL_COMPILE);
-            float offset = BLOCK_SIZE * 2;
+            float offset = BLOCK_SCALE;
             float totalOffset = (worldSize * Chunk.SIZE) / 2f;
 
             for (int x = 0; x < Chunk.SIZE; x++) {
@@ -248,6 +243,22 @@ public class World {
         glEnd();
     }
 
+    private void drawTopFaceOutline() {
+        float s = 1.02f;
+        float h = 1.02f;
+        glLineWidth(3.0f);
+        glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(-s, h, -s);
+        glVertex3f(s, h, -s);
+        glVertex3f(s, h, s);
+        glVertex3f(-s, h, s);
+        glEnd();
+
+        glLineWidth(1.0f);
+    }
+
     private boolean isAnyFaceVisible(boolean[] faces) {
         for (boolean face : faces) {
             if (face) {
@@ -262,11 +273,7 @@ public class World {
         if (y >= Chunk.HEIGHT) return true;
         int worldX = currentChunk.x * Chunk.SIZE + x;
         int worldZ = currentChunk.z * Chunk.SIZE + z;
-        int maxBlocks = cm.getWorldSizeInChunks() * Chunk.SIZE;
-        if (worldX < 0 || worldX >= maxBlocks || worldZ < 0 || worldZ >= maxBlocks) return true;
-        int targetChunkX = worldX / Chunk.SIZE;
-        int targetChunkZ = worldZ / Chunk.SIZE;
-        byte neighborType = cm.getChunks()[targetChunkX][targetChunkZ].getBlock(worldX % Chunk.SIZE, y, worldZ % Chunk.SIZE);
+        byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
         return neighborType == 0 || neighborType != currentType;
     }
 
