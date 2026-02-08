@@ -1,8 +1,8 @@
 package SwordsGame.core;
 
 import SwordsGame.client.*;
-import SwordsGame.client.assets.TexturePaths;
-import SwordsGame.client.blocks.BlockRegistry;
+import SwordsGame.client.assets.Paths;
+import SwordsGame.client.blocks.Registry;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.functions.Explosion;
 import SwordsGame.ui.Cursor;
@@ -38,12 +38,10 @@ public class Debug {
         camera = new Camera();
 
         Discord.init();
-        BlockRegistry.init();
+        Registry.init();
 
-        font = new Font(TexturePaths.FONT_MAIN);
+        font = new Font(Paths.FONT_MAIN);
         hud = new HUD(font, 960, 540);
-
-        TextureLoader.finishLoading();
 
         cursor = new Cursor();
         TextureLoader.finishLoading();
@@ -99,7 +97,7 @@ public class Debug {
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
-        BlockRegistry.destroy();
+        Registry.destroy();
         TextureLoader.finishCleanup();
         window.destroy();
         System.exit(0);

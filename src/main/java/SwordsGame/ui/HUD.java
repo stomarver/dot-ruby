@@ -1,11 +1,12 @@
 package SwordsGame.ui;
 
 import static org.lwjgl.opengl.GL11.*;
+
+import SwordsGame.client.assets.Paths;
 import SwordsGame.ui.Text.*;
 import SwordsGame.client.Font;
 import SwordsGame.client.Sprite;
 import SwordsGame.client.TextureLoader;
-import SwordsGame.client.assets.TexturePaths;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +33,8 @@ public class HUD {
         this.sprite = new Sprite(w, h);
         this.messageSystem = new Message();
 
-        this.charFrameTex = load(TexturePaths.UI_CHAR_FRAME);
-        this.separatorTex = load(TexturePaths.UI_SEPARATOR);
-
-        TextureLoader.finishLoading();
+        this.charFrameTex = load(Paths.UI_CHAR_FRAME);
+        this.separatorTex = load(Paths.UI_SEPARATOR);
 
         startTerminalThread();
     }

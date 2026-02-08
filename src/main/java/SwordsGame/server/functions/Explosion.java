@@ -1,6 +1,6 @@
 package SwordsGame.server.functions;
 
-import SwordsGame.client.blocks.BlockType;
+import SwordsGame.client.blocks.Type;
 import SwordsGame.client.World;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
@@ -27,16 +27,16 @@ public class Explosion {
         byte blockAtPos = getBlockAtWorldPos(cm, wx, wy, wz);
         byte blockBelow = getBlockAtWorldPos(cm, wx, wy - 1, wz);
 
-        boolean isCorrectTarget = (blockAtPos == BlockType.GRASS.id || blockAtPos == BlockType.STONE.id);
-        boolean isNotBlocked = (blockBelow != BlockType.COBBLE.id);
+        boolean isCorrectTarget = (blockAtPos == Type.GRASS.id || blockAtPos == Type.STONE.id);
+        boolean isNotBlocked = (blockBelow != Type.COBBLE.id);
 
         return isCorrectTarget && isNotBlocked;
     }
 
     private static byte getBlockAtWorldPos(ChunkManager cm, int wx, int wy, int wz) {
-        if (wy < 0 || wy >= Chunk.HEIGHT) return BlockType.AIR.id;
+        if (wy < 0 || wy >= Chunk.HEIGHT) return Type.AIR.id;
         int worldSize = cm.getWorldSizeInChunks() * Chunk.SIZE;
-        if (wx < 0 || wx >= worldSize || wz < 0 || wz >= worldSize) return BlockType.AIR.id;
+        if (wx < 0 || wx >= worldSize || wz < 0 || wz >= worldSize) return Type.AIR.id;
         int cx = wx / Chunk.SIZE;
         int cz = wz / Chunk.SIZE;
         return cm.getChunks()[cx][cz].getBlock(wx % Chunk.SIZE, wy, wz % Chunk.SIZE);
@@ -50,9 +50,9 @@ public class Explosion {
         Chunk chunk = cm.getChunks()[wx / Chunk.SIZE][wz / Chunk.SIZE];
         byte blockType = chunk.getBlock(wx % Chunk.SIZE, wy, wz % Chunk.SIZE);
 
-        if (blockType == BlockType.COBBLE.id) {
+        if (blockType == Type.COBBLE.id) {
             world.addFallingBlock(wx, wy, wz, blockType);
-            chunk.setBlock(wx % Chunk.SIZE, wy, wz % Chunk.SIZE, BlockType.AIR.id);
+            chunk.setBlock(wx % Chunk.SIZE, wy, wz % Chunk.SIZE, Type.AIR.id);
             world.markChunkDirty(chunk);
         }
     }

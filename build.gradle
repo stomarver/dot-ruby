@@ -1,15 +1,14 @@
-import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 plugins {
     id 'java'
-    // Плагин для создания "толстого" JAR со всеми библиотеками внутри
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'com.rubydung'
 version = '1'
 
-// Настройка кодировки для корректного отображения кириллицы
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
@@ -43,48 +42,49 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.12.0'
 }
 
-// Форматирование даты для версии
-def date = new SimpleDateFormat("MMddHHmm").format(new Date())
+// ===== VERSION GENERATION =====
 
-// Задача для создания файла с версией
-task generateVersionProperties {
+def now = LocalDateTime.now()
+def datePart = now.format(DateTimeFormatter.ofPattern("MMdd"))
+def timePart = now.format(DateTimeFormatter.ofPattern("HHmm"))
+
+def versionFile = file("src/main/resources/version.properties")
+
+def versionString = ".ruby-${datePart}"
+
+// если в этот день уже делали сборку -> добавляем HHmm
+if (versionFile.exists() && versionFile.text.contains(".ruby-${datePart}")) {
+    versionString = ".ruby-${datePart}-${timePart}"
+}
+
+tasks.register("generateVersionProperties") {
     doLast {
-        def resDir = new File(project.buildDir, "resources/main")
-        resDir.mkdirs()
-        def versionFile = new File(resDir, "version.properties")
-
-        // Определяем: это запуск из IDE или сборка JAR?
-        def isRelease = gradle.startParameter.taskNames.contains("shadowJar") ||
-                gradle.startParameter.taskNames.contains("build")
-
-        def finalVersion = isRelease ? "rd-rts-${date}" : "rd-rts-dev"
-
-        versionFile.text = "version=${finalVersion}"
-        println "[Build] Version set to: ${finalVersion}"
+        versionFile.parentFile.mkdirs()
+        versionFile.text = "version=${versionString}\n"
+        println "[Build] Version set to: ${versionString}"
     }
 }
 
-// Привязываем генерацию версии к стандартному процессу сборки ресурсов
-processResources.dependsOn generateVersionProperties
+processResources.dependsOn("generateVersionProperties")
+shadowJar.dependsOn("generateVersionProperties")
+
+// ===== SHADOWJAR SETTINGS =====
 
 shadowJar {
     manifest {
         attributes 'Main-Class': 'SwordsGame.core.Base'
     }
 
-    // Имя выходного файла: rd-rts-MMddHHmm.jar
     archiveBaseName.set("rd-rts")
-    archiveClassifier.set(date)
+    archiveClassifier.set(versionString.replace(".ruby-", ""))
     archiveVersion.set("")
 
-    // Стратегия дубликатов (чтобы не было конфликтов внутри JAR)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    // Удаляем подписи библиотек, чтобы JAR не ругался на безопасность
     exclude "META-INF/*.SF"
     exclude "META-INF/*.DSA"
     exclude "META-INF/*.RSA"
 }
 
-// Чтобы при обычном 'build' всегда создавался и shadowJar
+// чтобы build всегда собирал shadowJar
 build.dependsOn shadowJar

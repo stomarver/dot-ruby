@@ -78,6 +78,8 @@ public class Window {
         windowHandle = glfwCreateWindow(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, "SwordsGame", NULL, NULL);
         if (windowHandle == NULL) throw new RuntimeException("Window creation failed");
 
+        glfwSetWindowSizeLimits(windowHandle, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+
         System.out.println("[Vid] Window created: 960x540");
 
         glfwMakeContextCurrent(windowHandle);

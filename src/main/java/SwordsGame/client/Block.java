@@ -1,6 +1,6 @@
 package SwordsGame.client;
 
-import SwordsGame.client.blocks.BlockType;
+import SwordsGame.client.blocks.Type;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -16,20 +16,20 @@ public class Block {
 
     private final TextureLoader.Texture[] textures;
     private final BlockProperties properties;
-    private final BlockType type;
+    private final Type type;
 
-    public Block(BlockType type, String texturePath) {
+    public Block(Type type, String texturePath) {
         this(type, texturePath, new BlockProperties());
     }
 
-    public Block(BlockType type, String texturePath, BlockProperties props) {
+    public Block(Type type, String texturePath, BlockProperties props) {
         this.type = type;
         this.properties = props;
         this.textures = new TextureLoader.Texture[1];
         this.textures[0] = TextureLoader.loadTexture(texturePath, false);
     }
 
-    public Block(BlockType type, String topPath, String bottomPath, String sidePath, BlockProperties props) {
+    public Block(Type type, String topPath, String bottomPath, String sidePath, BlockProperties props) {
         this.type = type;
         this.properties = props;
         this.textures = new TextureLoader.Texture[3];
@@ -38,7 +38,7 @@ public class Block {
         this.textures[2] = TextureLoader.loadTexture(sidePath, false);
     }
 
-    public BlockType getType() { return type; }
+    public Type getType() { return type; }
     public BlockProperties getProperties() { return properties; }
 
     public void draw(int seed, boolean[] faces) {

@@ -1,6 +1,6 @@
 package SwordsGame.client.blocks;
 
-public enum BlockType {
+public enum Type {
     AIR(0, "Air"),
     COBBLE(1, "Cobblestone"),
     GRASS(2, "Grass"),
@@ -9,13 +9,13 @@ public enum BlockType {
     public final byte id;
     public final String name;
 
-    BlockType(int id, String name) {
+    Type(int id, String name) {
         this.id = (byte) id;
         this.name = name;
     }
 
-    public static BlockType fromId(byte id) {
-        for (BlockType type : values()) {
+    public static Type fromId(byte id) {
+        for (Type type : values()) {
             if (type.id == id) return type;
         }
         return AIR;

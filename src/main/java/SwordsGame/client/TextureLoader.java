@@ -31,7 +31,7 @@ public class TextureLoader {
 
     public static Texture loadTexture(String path, boolean removeBlack) {
         if (loadCount == 0) {
-            System.out.println("[Sys] Textures Loading with MipMaps & Anisotropy:");
+            System.out.println("[Sys] Textures Loading:");
         }
         loadCount++;
 
@@ -72,7 +72,7 @@ public class TextureLoader {
             }
 
             stbi_image_free(image);
-            System.out.printf("[ID: %d] | %-15s | [%dx%d] (MipMapped)%n", id, path, width, height);
+            System.out.printf("[ID: %d] | %-15s | [%dx%d]%n", id, path, width, height);
 
             return new Texture(id, width, height);
         }

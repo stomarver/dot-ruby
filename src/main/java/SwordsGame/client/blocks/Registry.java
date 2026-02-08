@@ -5,32 +5,32 @@ import SwordsGame.client.Block;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BlockRegistry {
-    private static final Map<BlockType, Block> registry = new HashMap<>();
+public class Registry {
+    private static final Map<Type, Block> registry = new HashMap<>();
     private static boolean destroyed = false;
 
     public static void init() {
         destroyed = false;
-        registry.put(BlockType.AIR, null);
-        registry.put(BlockType.COBBLE, new CobbleBlock());
-        registry.put(BlockType.GRASS, new GrassBlock());
-        registry.put(BlockType.STONE, new StoneBlock());
+        registry.put(Type.AIR, null);
+        registry.put(Type.COBBLE, new Cobble());
+        registry.put(Type.GRASS, new Grass());
+        registry.put(Type.STONE, new Stone());
     }
 
     public static void draw(byte id, int seed, boolean[] faces) {
-        BlockType type = BlockType.fromId(id);
+        Type type = Type.fromId(id);
         Block block = registry.get(type);
         if (block != null) {
             block.draw(seed, faces);
         }
     }
 
-    public static Block get(BlockType type) {
+    public static Block get(Type type) {
         return registry.get(type);
     }
 
     public static Block get(byte id) {
-        return registry.get(BlockType.fromId(id));
+        return registry.get(Type.fromId(id));
     }
 
     public static boolean isTransparent(byte id) {

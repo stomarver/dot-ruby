@@ -1,6 +1,6 @@
 package SwordsGame.client;
 
-import SwordsGame.client.blocks.BlockRegistry;
+import SwordsGame.client.blocks.Registry;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
 import java.util.ArrayList;
@@ -132,7 +132,7 @@ public class World {
             glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
             boolean[] allFaces = {true, true, true, true, true, true};
-            BlockRegistry.draw(block.type, block.seed, allFaces);
+            Registry.draw(block.type, block.seed, allFaces);
 
             glDisable(GL_BLEND);
             glColor3f(1.0f, 1.0f, 1.0f);
@@ -218,12 +218,13 @@ public class World {
     }
 
     private void drawChunkBounds(Chunk chunk, float totalOffset, float offset) {
-        float x0 = (chunk.x * Chunk.SIZE - totalOffset) * offset;
-        float z0 = (chunk.z * Chunk.SIZE - totalOffset) * offset;
-        float x1 = (chunk.x * Chunk.SIZE + Chunk.SIZE - totalOffset) * offset;
-        float z1 = (chunk.z * Chunk.SIZE + Chunk.SIZE - totalOffset) * offset;
-        float y0 = 0;
-        float y1 = Chunk.HEIGHT * offset;
+        float half = BLOCK_SIZE;
+        float x0 = ((chunk.x * Chunk.SIZE - totalOffset) * offset) - half;
+        float z0 = ((chunk.z * Chunk.SIZE - totalOffset) * offset) - half;
+        float x1 = (((chunk.x * Chunk.SIZE + Chunk.SIZE - 1) - totalOffset) * offset) + half;
+        float z1 = (((chunk.z * Chunk.SIZE + Chunk.SIZE - 1) - totalOffset) * offset) + half;
+        float y0 = -half;
+        float y1 = ((Chunk.HEIGHT - 1) * offset) + half;
 
         glBegin(GL_LINE_LOOP);
         glVertex3f(x0, y0, z0);
@@ -282,7 +283,7 @@ public class World {
         glScalef(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 
         int seed = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
-        BlockRegistry.draw(type, seed, faces);
+        Registry.draw(type, seed, faces);
 
         glPopMatrix();
     }

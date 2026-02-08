@@ -1,7 +1,8 @@
 package SwordsGame.ui;
 
 import SwordsGame.client.TextureLoader;
-import SwordsGame.client.assets.TexturePaths;
+import SwordsGame.client.assets.Paths;
+
 import static org.lwjgl.opengl.GL11.*;
 
 public class Cursor {
@@ -11,8 +12,7 @@ public class Cursor {
     private final int height = 16;
 
     public Cursor() {
-        this.texture = TextureLoader.loadTexture(TexturePaths.UI_CURSOR, true);
-        System.out.println("[UI] Custom cursor loaded");
+        this.texture = TextureLoader.loadTexture(Paths.UI_CURSOR, true);
     }
 
     public void updatePosition(float mouseX, float mouseY) {

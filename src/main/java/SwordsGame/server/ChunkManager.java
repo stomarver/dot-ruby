@@ -1,6 +1,6 @@
 package SwordsGame.server;
 
-import SwordsGame.server.Terrain;
+import SwordsGame.server.TerrainGenerator;
 
 public class ChunkManager {
     private final int worldSizeInChunks = 64;
@@ -16,7 +16,7 @@ public class ChunkManager {
         for (int cx = 0; cx < worldSizeInChunks; cx++) {
             for (int cz = 0; cz < worldSizeInChunks; cz++) {
                 chunks[cx][cz] = new Chunk(cx, cz);
-                Terrain.generate(chunks[cx][cz]);
+                TerrainGenerator.generate(chunks[cx][cz]);
             }
         }
         System.out.println("[Server] World generation finished.");
