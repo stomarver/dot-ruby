@@ -1,6 +1,9 @@
 package SwordsGame.client;
 
 import SwordsGame.ui.Anchor;
+import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -43,10 +46,6 @@ public class Sprite {
     private void drawInternal(TextureLoader.Texture tex, Anchor a, float ox, float oy, float scale) {
         if (tex == null) return;
 
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, tex.id);
-        glColor3f(1, 1, 1);
-
         float w = tex.width * scale;
         float h = tex.height * scale;
 
@@ -59,12 +58,34 @@ public class Sprite {
         if (a.ty == Anchor.TypeY.CENTER) ry -= h / 2f;
         else if (a.ty == Anchor.TypeY.BOTTOM) ry -= h;
 
-        glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2f(rx, ry);
-        glTexCoord2f(1, 0); glVertex2f(rx + w, ry);
-        glTexCoord2f(1, 1); glVertex2f(rx + w, ry + h);
-        glTexCoord2f(0, 1); glVertex2f(rx, ry + h);
-        glEnd();
+        FloatBuffer verts = BufferUtils.createFloatBuffer(8);
+        verts.put(new float[]{
+                rx, ry,
+                rx + w, ry,
+                rx + w, ry + h,
+                rx, ry + h
+        }).flip();
+        FloatBuffer uvs = BufferUtils.createFloatBuffer(8);
+        uvs.put(new float[]{
+                0f, 0f,
+                1f, 0f,
+                1f, 1f,
+                0f, 1f
+        }).flip();
+
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, tex.id);
+        glColor3f(1, 1, 1);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        glVertexPointer(2, GL_FLOAT, 0, verts);
+        glTexCoordPointer(2, GL_FLOAT, 0, uvs);
+        glDrawArrays(GL_QUADS, 0, 4);
+
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
 
         glDisable(GL_TEXTURE_2D);
     }

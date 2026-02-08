@@ -11,10 +11,15 @@ public class Registry {
 
     public static void init() {
         destroyed = false;
-        registry.put(Type.AIR, null);
-        registry.put(Type.COBBLE, new Cobble());
-        registry.put(Type.GRASS, new Grass());
-        registry.put(Type.STONE, new Stone());
+        registry.clear();
+        register(Type.AIR, null);
+        register(Type.COBBLE, new Cobble());
+        register(Type.GRASS, new Grass());
+        register(Type.STONE, new Stone());
+    }
+
+    public static void register(Type type, Block block) {
+        registry.put(type, block);
     }
 
     public static void draw(byte id, int seed, boolean[] faces) {
@@ -52,6 +57,7 @@ public class Registry {
                 block.destroy();
             }
         }
+        SwordsGame.client.BlockRenderer.clear();
         destroyed = true;
     }
 }
