@@ -8,6 +8,8 @@ import SwordsGame.server.Chunk;
 import SwordsGame.client.World;
 
 public class Camera {
+    private static final float ORTHO_WIDTH = 720.0f;
+    private static final float ORTHO_HEIGHT = 540.0f;
     private float x = 0, z = 0;
     private float zoom = 0.5f;
     private float targetRotationY = 45.0f;
@@ -23,8 +25,6 @@ public class Camera {
     private static final float MIN_ZOOM = 0.25f;
     private static final float MAX_ZOOM = 2.5f;
     private static final float PITCH = 35.264f;
-    private static final float ISO_COS = 0.8165f;
-    private static final float ISO_SIN = 0.5773f;
 
     public float getX() { return x; }
     public float getZ() { return z; }
@@ -101,35 +101,16 @@ public class Camera {
         float mouseX = (float) window.getMouseRelX() - centerX;
         float mouseY = centerY - (float) window.getMouseRelY();
 
-        float worldX_Iso = mouseX / zoom;
-        float worldY_Iso = mouseY / zoom;
+        float ndcX = (mouseX + renderer.getViewportWidth() / 2.0f) / renderer.getViewportWidth();
+        float ndcY = (renderer.getViewportHeight() / 2.0f - mouseY) / renderer.getViewportHeight();
 
-        float angleRad = (float) Math.toRadians(-currentRotationY);
-        float cos = (float) Math.cos(angleRad);
-        float sin = (float) Math.sin(angleRad);
+        float viewX = (ndcX * ORTHO_WIDTH) - (ORTHO_WIDTH / 2.0f);
+        float viewY = (ndcY * ORTHO_HEIGHT) - (ORTHO_HEIGHT / 2.0f);
 
-        float blockSizeUnits = World.BLOCK_SIZE * 2.0f;
-        float totalOffsetBlocks = (worldSizeInChunks * 16) / 2.0f;
+        float[] rayOrigin = toWorldPoint(viewX, viewY);
+        float[] rayDir = getWorldRayDirection();
 
-        for (int y = Chunk.HEIGHT - 1; y >= 0; y--) {
-            float yPos = (y + 1.0f) * blockSizeUnits;
-            float rotZ = (yPos * ISO_COS - worldY_Iso) / ISO_SIN;
-            float rotX = worldX_Iso;
-
-            float realX = rotX * cos + rotZ * sin;
-            float realZ = rotZ * cos - rotX * sin;
-
-            float worldX = realX - x;
-            float worldZ = realZ - z;
-
-            int blockX = (int) Math.floor((worldX / blockSizeUnits) + totalOffsetBlocks);
-            int blockZ = (int) Math.floor((worldZ / blockSizeUnits) + totalOffsetBlocks);
-
-            if (cm.isTopSurface(blockX, y, blockZ)) {
-                return new int[]{blockX, y, blockZ};
-            }
-        }
-        return null;
+        return raycastTopFace(cm, rayOrigin, rayDir);
     }
 
     public void applyTransformations() {
@@ -153,5 +134,113 @@ public class Camera {
 
     private float clamp(float value, float min, float max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private float[] toWorldPoint(float viewX, float viewY) {
+        float scaledX = viewX / zoom;
+        float scaledY = viewY / zoom;
+        float scaledZ = 0.0f;
+
+        float[] afterPitch = rotateX(scaledX, scaledY, scaledZ, -PITCH);
+        float[] afterYaw = rotateY(afterPitch[0], afterPitch[1], afterPitch[2], -currentRotationY);
+
+        afterYaw[0] -= x;
+        afterYaw[2] -= z;
+
+        return afterYaw;
+    }
+
+    private float[] getWorldRayDirection() {
+        float[] afterPitch = rotateX(0.0f, 0.0f, -1.0f, -PITCH);
+        float[] afterYaw = rotateY(afterPitch[0], afterPitch[1], afterPitch[2], -currentRotationY);
+        float length = (float) Math.sqrt(afterYaw[0] * afterYaw[0] + afterYaw[1] * afterYaw[1] + afterYaw[2] * afterYaw[2]);
+        return new float[]{afterYaw[0] / length, afterYaw[1] / length, afterYaw[2] / length};
+    }
+
+    private float[] rotateX(float x, float y, float z, float degrees) {
+        float rad = (float) Math.toRadians(degrees);
+        float cos = (float) Math.cos(rad);
+        float sin = (float) Math.sin(rad);
+        return new float[]{x, y * cos - z * sin, y * sin + z * cos};
+    }
+
+    private float[] rotateY(float x, float y, float z, float degrees) {
+        float rad = (float) Math.toRadians(degrees);
+        float cos = (float) Math.cos(rad);
+        float sin = (float) Math.sin(rad);
+        return new float[]{x * cos + z * sin, y, -x * sin + z * cos};
+    }
+
+    private int[] raycastTopFace(ChunkManager cm, float[] origin, float[] direction) {
+        float blockScale = World.BLOCK_SCALE;
+        float totalOffsetBlocks = cm.getWorldSizeInBlocks() / 2.0f;
+
+        double ox = (origin[0] / blockScale) + totalOffsetBlocks;
+        double oy = origin[1] / blockScale;
+        double oz = (origin[2] / blockScale) + totalOffsetBlocks;
+
+        double dx = direction[0];
+        double dy = direction[1];
+        double dz = direction[2];
+
+        int x = (int) Math.floor(ox);
+        int y = (int) Math.floor(oy);
+        int z = (int) Math.floor(oz);
+
+        int stepX = dx > 0 ? 1 : -1;
+        int stepY = dy > 0 ? 1 : -1;
+        int stepZ = dz > 0 ? 1 : -1;
+
+        double tMaxX = intBound(ox, dx);
+        double tMaxY = intBound(oy, dy);
+        double tMaxZ = intBound(oz, dz);
+
+        double tDeltaX = dx == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dx);
+        double tDeltaY = dy == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dy);
+        double tDeltaZ = dz == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dz);
+
+        int maxSteps = cm.getWorldSizeInBlocks() * 2;
+
+        for (int i = 0; i < maxSteps; i++) {
+            if (cm.isTopSurface(x, y, z)) {
+                return new int[]{x, y, z};
+            }
+
+            if (tMaxX < tMaxY) {
+                if (tMaxX < tMaxZ) {
+                    x += stepX;
+                    tMaxX += tDeltaX;
+                } else {
+                    z += stepZ;
+                    tMaxZ += tDeltaZ;
+                }
+            } else {
+                if (tMaxY < tMaxZ) {
+                    y += stepY;
+                    tMaxY += tDeltaY;
+                } else {
+                    z += stepZ;
+                    tMaxZ += tDeltaZ;
+                }
+            }
+
+            if (x < 0 || z < 0 || x >= cm.getWorldSizeInBlocks() || z >= cm.getWorldSizeInBlocks()) {
+                return null;
+            }
+            if (y < 0 || y >= Chunk.HEIGHT) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private double intBound(double s, double ds) {
+        if (ds == 0) return Double.POSITIVE_INFINITY;
+        double sIsInteger = Math.floor(s);
+        if (ds > 0) {
+            return (sIsInteger + 1 - s) / ds;
+        }
+        return (s - sIsInteger) / -ds;
     }
 }
