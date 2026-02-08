@@ -6,21 +6,31 @@ import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
 
 public class Target {
+    private static final float MAX_RAYCAST_MULTIPLIER = 2.0f;
     private final int x;
     private final int y;
     private final int z;
+    private final int faceX;
+    private final int faceY;
+    private final int faceZ;
     private final boolean hit;
 
-    private Target(int x, int y, int z, boolean hit) {
+    private Target(int x, int y, int z, int faceX, int faceY, int faceZ, boolean hit) {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.faceX = faceX;
+        this.faceY = faceY;
+        this.faceZ = faceZ;
         this.hit = hit;
     }
 
     public int getX() { return x; }
     public int getY() { return y; }
     public int getZ() { return z; }
+    public int getFaceX() { return faceX; }
+    public int getFaceY() { return faceY; }
+    public int getFaceZ() { return faceZ; }
     public boolean hasHit() { return hit; }
 
     public static Target fromMouse(Window window, Camera camera, Renderer renderer, ChunkManager chunkManager) {
@@ -31,41 +41,40 @@ public class Target {
 
         float viewX = (mouseX / renderer.getViewportWidth()) * camera.getOrthoWidth();
         float viewY = (mouseY / renderer.getViewportHeight()) * camera.getOrthoHeight();
-
-        return raycastSolid(camera, chunkManager, viewX, viewY);
+        return raycast(camera, chunkManager, viewX, viewY, Target::isSolidBlock);
     }
 
     public static Target focus(Camera camera, ChunkManager chunkManager) {
-        return raycastTopSurface(camera, chunkManager, 0.0f, 0.0f);
+        return raycast(camera, chunkManager, 0.0f, 0.0f, ChunkManager::isTopSurface);
     }
 
-    private static Target raycastSolid(Camera camera, ChunkManager chunkManager, float viewX, float viewY) {
-        return raycast(camera, chunkManager, viewX, viewY, (cm, x, y, z) -> cm.getBlockAtWorld(x, y, z) != 0);
-    }
-
-    private static Target raycastTopSurface(Camera camera, ChunkManager chunkManager, float viewX, float viewY) {
-        return raycast(camera, chunkManager, viewX, viewY, ChunkManager::isTopSurface);
+    private static boolean isSolidBlock(ChunkManager chunkManager, int x, int y, int z) {
+        return chunkManager.getBlockAtWorld(x, y, z) != 0;
     }
 
     private static Target raycast(Camera camera, ChunkManager chunkManager, float viewX, float viewY, HitPredicate predicate) {
-        float[] rayOrigin = unprojectViewToWorld(camera, viewX, viewY, 0.0f);
-        float[] rayFar = unprojectViewToWorld(camera, viewX, viewY, 1.0f);
-        float[] rayDir = normalize(rayFar[0] - rayOrigin[0], rayFar[1] - rayOrigin[1], rayFar[2] - rayOrigin[2]);
-
+        Ray ray = Ray.fromView(camera, viewX, viewY);
         float blockScale = World.BLOCK_SCALE;
         float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
 
-        double ox = (rayOrigin[0] / blockScale) + totalOffsetBlocks;
-        double oy = rayOrigin[1] / blockScale;
-        double oz = (rayOrigin[2] / blockScale) + totalOffsetBlocks;
+        double ox = (ray.originX / blockScale) + totalOffsetBlocks;
+        double oy = ray.originY / blockScale;
+        double oz = (ray.originZ / blockScale) + totalOffsetBlocks;
 
-        double dx = rayDir[0];
-        double dy = rayDir[1];
-        double dz = rayDir[2];
+        double dx = ray.dirX;
+        double dy = ray.dirY;
+        double dz = ray.dirZ;
 
         int x = (int) Math.floor(ox);
         int y = (int) Math.floor(oy);
         int z = (int) Math.floor(oz);
+
+        int worldSizeBlocks = chunkManager.getWorldSizeInBlocks();
+        double maxDistance = worldSizeBlocks * MAX_RAYCAST_MULTIPLIER;
+
+        if (isWithinWorld(x, y, z, worldSizeBlocks) && predicate.hit(chunkManager, x, y, z)) {
+            return new Target(x, y, z, 0, 0, 0, true);
+        }
 
         int stepX = dx > 0 ? 1 : -1;
         int stepY = dy > 0 ? 1 : -1;
@@ -79,75 +88,60 @@ public class Target {
         double tDeltaY = dy == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dy);
         double tDeltaZ = dz == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dz);
 
-        int maxSteps = chunkManager.getWorldSizeInBlocks() * 2;
+        int faceX = 0;
+        int faceY = 0;
+        int faceZ = 0;
+        double distanceTravelled = 0.0;
 
-        int worldSizeBlocks = chunkManager.getWorldSizeInBlocks();
-        for (int i = 0; i < maxSteps; i++) {
-            if (x < 0 || z < 0 || x >= worldSizeBlocks || z >= worldSizeBlocks) {
-                break;
-            }
-            if (y >= 0 && y < Chunk.HEIGHT && predicate.hit(chunkManager, x, y, z)) {
-                return new Target(x, y, z, true);
-            }
-
+        while (distanceTravelled <= maxDistance) {
             if (tMaxX < tMaxY) {
                 if (tMaxX < tMaxZ) {
                     x += stepX;
+                    distanceTravelled = tMaxX;
                     tMaxX += tDeltaX;
+                    faceX = -stepX;
+                    faceY = 0;
+                    faceZ = 0;
                 } else {
                     z += stepZ;
+                    distanceTravelled = tMaxZ;
                     tMaxZ += tDeltaZ;
+                    faceX = 0;
+                    faceY = 0;
+                    faceZ = -stepZ;
                 }
             } else {
                 if (tMaxY < tMaxZ) {
                     y += stepY;
+                    distanceTravelled = tMaxY;
                     tMaxY += tDeltaY;
+                    faceX = 0;
+                    faceY = -stepY;
+                    faceZ = 0;
                 } else {
                     z += stepZ;
+                    distanceTravelled = tMaxZ;
                     tMaxZ += tDeltaZ;
+                    faceX = 0;
+                    faceY = 0;
+                    faceZ = -stepZ;
                 }
             }
 
-            if (x < 0 || z < 0 || x >= worldSizeBlocks || z >= worldSizeBlocks) {
+            if (!isWithinWorld(x, y, z, worldSizeBlocks)) {
                 break;
+            }
+
+            if (predicate.hit(chunkManager, x, y, z)) {
+                return new Target(x, y, z, faceX, faceY, faceZ, true);
             }
         }
 
-        return new Target(0, 0, 0, false);
+        return new Target(0, 0, 0, 0, 0, 0, false);
     }
 
-    private static float[] unprojectViewToWorld(Camera camera, float viewX, float viewY, float viewZ) {
-        float scaledX = viewX / camera.getZoom();
-        float scaledY = viewY / camera.getZoom();
-        float scaledZ = viewZ / camera.getZoom();
-
-        float[] afterPitch = rotateX(scaledX, scaledY, scaledZ, -camera.getPitch());
-        float[] afterYaw = rotateY(afterPitch[0], afterPitch[1], afterPitch[2], -camera.getRotation());
-
-        afterYaw[0] -= camera.getX();
-        afterYaw[2] -= camera.getZ();
-
-        return afterYaw;
-    }
-
-    private static float[] normalize(float x, float y, float z) {
-        float length = (float) Math.sqrt(x * x + y * y + z * z);
-        if (length == 0) return new float[]{0.0f, 0.0f, 0.0f};
-        return new float[]{x / length, y / length, z / length};
-    }
-
-    private static float[] rotateX(float x, float y, float z, float degrees) {
-        float rad = (float) Math.toRadians(degrees);
-        float cos = (float) Math.cos(rad);
-        float sin = (float) Math.sin(rad);
-        return new float[]{x, y * cos - z * sin, y * sin + z * cos};
-    }
-
-    private static float[] rotateY(float x, float y, float z, float degrees) {
-        float rad = (float) Math.toRadians(degrees);
-        float cos = (float) Math.cos(rad);
-        float sin = (float) Math.sin(rad);
-        return new float[]{x * cos + z * sin, y, -x * sin + z * cos};
+    private static boolean isWithinWorld(int x, int y, int z, int worldSizeBlocks) {
+        return x >= 0 && z >= 0 && x < worldSizeBlocks && z < worldSizeBlocks && y >= 0 && y < Chunk.HEIGHT;
     }
 
     private static double intBound(double s, double ds) {
@@ -161,5 +155,64 @@ public class Target {
 
     private interface HitPredicate {
         boolean hit(ChunkManager chunkManager, int x, int y, int z);
+    }
+
+    private static class Ray {
+        private final float originX;
+        private final float originY;
+        private final float originZ;
+        private final float dirX;
+        private final float dirY;
+        private final float dirZ;
+
+        private Ray(float originX, float originY, float originZ, float dirX, float dirY, float dirZ) {
+            this.originX = originX;
+            this.originY = originY;
+            this.originZ = originZ;
+            this.dirX = dirX;
+            this.dirY = dirY;
+            this.dirZ = dirZ;
+        }
+
+        private static Ray fromView(Camera camera, float viewX, float viewY) {
+            float[] origin = unprojectViewToWorld(camera, viewX, viewY, 0.0f);
+            float[] far = unprojectViewToWorld(camera, viewX, viewY, 1.0f);
+            float dirX = far[0] - origin[0];
+            float dirY = far[1] - origin[1];
+            float dirZ = far[2] - origin[2];
+            float length = (float) Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+            if (length == 0.0f) {
+                return new Ray(origin[0], origin[1], origin[2], 0.0f, 0.0f, 0.0f);
+            }
+            return new Ray(origin[0], origin[1], origin[2], dirX / length, dirY / length, dirZ / length);
+        }
+
+        private static float[] unprojectViewToWorld(Camera camera, float viewX, float viewY, float viewZ) {
+            float scaledX = viewX / camera.getZoom();
+            float scaledY = viewY / camera.getZoom();
+            float scaledZ = viewZ / camera.getZoom();
+
+            float[] afterPitch = rotateX(scaledX, scaledY, scaledZ, -camera.getPitch());
+            float[] afterYaw = rotateY(afterPitch[0], afterPitch[1], afterPitch[2], -camera.getRotation());
+
+            afterYaw[0] -= camera.getX();
+            afterYaw[2] -= camera.getZ();
+
+            return afterYaw;
+        }
+
+        private static float[] rotateX(float x, float y, float z, float degrees) {
+            float rad = (float) Math.toRadians(degrees);
+            float cos = (float) Math.cos(rad);
+            float sin = (float) Math.sin(rad);
+            return new float[]{x, y * cos - z * sin, y * sin + z * cos};
+        }
+
+        private static float[] rotateY(float x, float y, float z, float degrees) {
+            float rad = (float) Math.toRadians(degrees);
+            float cos = (float) Math.cos(rad);
+            float sin = (float) Math.sin(rad);
+            return new float[]{x * cos + z * sin, y, -x * sin + z * cos};
+        }
     }
 }

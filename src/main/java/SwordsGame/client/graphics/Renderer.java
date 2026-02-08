@@ -28,6 +28,7 @@ public class Renderer {
         viewportHeight = virtualHeight;
 
         glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1.0f);
+        glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
         glMatrixMode(GL_PROJECTION);
@@ -37,6 +38,8 @@ public class Renderer {
         glLoadIdentity();
 
         glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(true);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         glEnable(GL_TEXTURE_2D);

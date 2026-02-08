@@ -23,15 +23,17 @@ public class World {
 
     public void render(ChunkManager chunkManager, Camera camera) {
         ViewCulling culling = buildCulling(chunkManager, camera);
+        ArrayList<ChunkRenderEntry> visibleChunks = collectVisibleChunks(chunkManager, culling);
 
         cleanupCache();
 
-        renderVisibleChunks(chunkManager, culling);
+        renderVisibleChunks(chunkManager, culling, visibleChunks);
         updateAndRenderFallingBlocks(culling.worldSize);
     }
 
     public void renderChunkBounds(ChunkManager chunkManager, Camera camera) {
         ViewCulling culling = buildCulling(chunkManager, camera);
+        ArrayList<ChunkRenderEntry> visibleChunks = collectVisibleChunks(chunkManager, culling);
         float offset = BLOCK_SCALE;
         float totalOffset = (culling.worldSize * Chunk.SIZE) / 2f;
 
@@ -40,7 +42,7 @@ public class World {
         glColor4f(0.2f, 0.9f, 0.9f, 0.7f);
         glLineWidth(2.0f);
 
-        renderVisibleChunkBounds(chunkManager, culling, totalOffset, offset);
+        renderVisibleChunkBounds(visibleChunks, totalOffset, offset);
 
         glLineWidth(1.0f);
         glEnable(GL_LIGHTING);
@@ -75,40 +77,38 @@ public class World {
         return new ViewCulling(worldSize, focusChunkX, focusChunkZ, radius, maxLoopDist);
     }
 
-    private void renderVisibleChunks(ChunkManager chunkManager, ViewCulling culling) {
+    private ArrayList<ChunkRenderEntry> collectVisibleChunks(ChunkManager chunkManager, ViewCulling culling) {
+        ArrayList<ChunkRenderEntry> entries = new ArrayList<>();
         float radiusSquared = culling.radius * culling.radius;
         for (int dx = -culling.maxLoopDist; dx <= culling.maxLoopDist; dx++) {
             for (int dz = -culling.maxLoopDist; dz <= culling.maxLoopDist; dz++) {
                 int cx = culling.centerChunkX + dx;
                 int cz = culling.centerChunkZ + dz;
                 if (cx >= 0 && cx < culling.worldSize && cz >= 0 && cz < culling.worldSize) {
-                    if ((dx * dx) + (dz * dz) <= radiusSquared) {
+                    int distanceSq = (dx * dx) + (dz * dz);
+                    if (distanceSq <= radiusSquared) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             int lod = selectLod(dx, dz, culling.radius);
-                            renderChunkCached(chunkManager, chunk, culling.worldSize, lod);
+                            entries.add(new ChunkRenderEntry(chunk, lod, distanceSq));
                         }
                     }
                 }
             }
         }
+        entries.sort((a, b) -> Integer.compare(a.distanceSq, b.distanceSq));
+        return entries;
     }
 
-    private void renderVisibleChunkBounds(ChunkManager chunkManager, ViewCulling culling, float totalOffset, float offset) {
-        float radiusSquared = culling.radius * culling.radius;
-        for (int dx = -culling.maxLoopDist; dx <= culling.maxLoopDist; dx++) {
-            for (int dz = -culling.maxLoopDist; dz <= culling.maxLoopDist; dz++) {
-                int cx = culling.centerChunkX + dx;
-                int cz = culling.centerChunkZ + dz;
-                if (cx >= 0 && cx < culling.worldSize && cz >= 0 && cz < culling.worldSize) {
-                    if ((dx * dx) + (dz * dz) <= radiusSquared) {
-                        Chunk chunk = chunkManager.getChunk(cx, cz);
-                        if (chunk != null) {
-                            drawChunkBounds(chunk, totalOffset, offset);
-                        }
-                    }
-                }
-            }
+    private void renderVisibleChunks(ChunkManager chunkManager, ViewCulling culling, ArrayList<ChunkRenderEntry> entries) {
+        for (ChunkRenderEntry entry : entries) {
+            renderChunkCached(chunkManager, entry.chunk, culling.worldSize, entry.lod);
+        }
+    }
+
+    private void renderVisibleChunkBounds(ArrayList<ChunkRenderEntry> entries, float totalOffset, float offset) {
+        for (ChunkRenderEntry entry : entries) {
+            drawChunkBounds(entry.chunk, totalOffset, offset);
         }
     }
 
@@ -173,9 +173,15 @@ public class World {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_POLYGON_OFFSET_LINE);
+        glPolygonOffset(-1.5f, -1.5f);
 
-        drawTopFaceOutline();
+        drawSelectionOutline();
+        drawSelectionFace(target.getFaceX(), target.getFaceY(), target.getFaceZ());
 
+        glDisable(GL_POLYGON_OFFSET_LINE);
+        glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
         glEnable(GL_LIGHTING);
         glEnable(GL_TEXTURE_2D);
@@ -224,20 +230,81 @@ public class World {
         glEnd();
     }
 
-    private void drawTopFaceOutline() {
+    private void drawSelectionOutline() {
         float s = 1.02f;
-        float h = 1.02f;
-        glLineWidth(3.0f);
-        glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
+        float min = -s;
+        float max = s;
+        float low = -s;
+        float high = s;
+        glLineWidth(2.5f);
+        glColor4f(1.0f, 1.0f, 1.0f, 0.85f);
 
         glBegin(GL_LINE_LOOP);
-        glVertex3f(-s, h, -s);
-        glVertex3f(s, h, -s);
-        glVertex3f(s, h, s);
-        glVertex3f(-s, h, s);
+        glVertex3f(min, low, min);
+        glVertex3f(max, low, min);
+        glVertex3f(max, low, max);
+        glVertex3f(min, low, max);
+        glEnd();
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(min, high, min);
+        glVertex3f(max, high, min);
+        glVertex3f(max, high, max);
+        glVertex3f(min, high, max);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex3f(min, low, min); glVertex3f(min, high, min);
+        glVertex3f(max, low, min); glVertex3f(max, high, min);
+        glVertex3f(max, low, max); glVertex3f(max, high, max);
+        glVertex3f(min, low, max); glVertex3f(min, high, max);
         glEnd();
 
         glLineWidth(1.0f);
+    }
+
+    private void drawSelectionFace(int faceX, int faceY, int faceZ) {
+        if (faceX == 0 && faceY == 0 && faceZ == 0) return;
+        float s = 1.01f;
+        float min = -s;
+        float max = s;
+        float low = -s;
+        float high = s;
+        glColor4f(0.5f, 0.85f, 1.0f, 0.25f);
+
+        glBegin(GL_QUADS);
+        if (faceY == 1) {
+            glVertex3f(min, high, min);
+            glVertex3f(max, high, min);
+            glVertex3f(max, high, max);
+            glVertex3f(min, high, max);
+        } else if (faceY == -1) {
+            glVertex3f(min, low, min);
+            glVertex3f(max, low, min);
+            glVertex3f(max, low, max);
+            glVertex3f(min, low, max);
+        } else if (faceX == 1) {
+            glVertex3f(max, low, min);
+            glVertex3f(max, high, min);
+            glVertex3f(max, high, max);
+            glVertex3f(max, low, max);
+        } else if (faceX == -1) {
+            glVertex3f(min, low, min);
+            glVertex3f(min, high, min);
+            glVertex3f(min, high, max);
+            glVertex3f(min, low, max);
+        } else if (faceZ == 1) {
+            glVertex3f(min, low, max);
+            glVertex3f(max, low, max);
+            glVertex3f(max, high, max);
+            glVertex3f(min, high, max);
+        } else if (faceZ == -1) {
+            glVertex3f(min, low, min);
+            glVertex3f(max, low, min);
+            glVertex3f(max, high, min);
+            glVertex3f(min, high, min);
+        }
+        glEnd();
     }
 
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {
@@ -287,6 +354,18 @@ public class World {
             this.centerChunkZ = centerChunkZ;
             this.radius = radius;
             this.maxLoopDist = maxLoopDist;
+        }
+    }
+
+    private static class ChunkRenderEntry {
+        private final Chunk chunk;
+        private final int lod;
+        private final int distanceSq;
+
+        private ChunkRenderEntry(Chunk chunk, int lod, int distanceSq) {
+            this.chunk = chunk;
+            this.lod = lod;
+            this.distanceSq = distanceSq;
         }
     }
 
