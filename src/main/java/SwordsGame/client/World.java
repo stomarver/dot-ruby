@@ -17,6 +17,7 @@ public class World {
     public static final float BLOCK_SIZE = 12.5f;
     public static final float BLOCK_SCALE = BLOCK_SIZE * 2.0f;
     private static final float RENDER_RADIUS_PADDING = 6.0f;
+    private static final float LOD_DISTANCE_PADDING = 3.0f;
     private final Map<Chunk, ChunkRenderData> chunkCache = new HashMap<>();
     private final ArrayList<FallingBlock> fallingBlocks = new ArrayList<>();
 
@@ -266,8 +267,8 @@ public class World {
 
     private int selectLod(int dx, int dz, float radius) {
         float distance = (float) Math.sqrt((dx * dx) + (dz * dz));
-        float nearThreshold = Math.max(2.0f, radius * 0.35f);
-        float midThreshold = Math.max(4.0f, radius * 0.7f);
+        float nearThreshold = Math.max(2.0f, radius * 0.35f) + LOD_DISTANCE_PADDING;
+        float midThreshold = Math.max(4.0f, radius * 0.7f) + LOD_DISTANCE_PADDING;
         if (distance <= nearThreshold) return 0;
         if (distance <= midThreshold) return 1;
         return 2;
