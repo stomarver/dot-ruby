@@ -65,76 +65,27 @@ public class Target {
         double dy = ray.dirY;
         double dz = ray.dirZ;
 
-        int x = (int) Math.floor(ox);
-        int y = (int) Math.floor(oy);
-        int z = (int) Math.floor(oz);
-
         int worldSizeBlocks = chunkManager.getWorldSizeInBlocks();
         double maxDistance = worldSizeBlocks * MAX_RAYCAST_MULTIPLIER;
 
-        if (isWithinWorld(x, y, z, worldSizeBlocks) && predicate.hit(chunkManager, x, y, z)) {
-            return new Target(x, y, z, 0, 0, 0, true);
-        }
-
-        int stepX = dx > 0 ? 1 : -1;
-        int stepY = dy > 0 ? 1 : -1;
-        int stepZ = dz > 0 ? 1 : -1;
-
-        double tMaxX = intBound(ox, dx);
-        double tMaxY = intBound(oy, dy);
-        double tMaxZ = intBound(oz, dz);
-
-        double tDeltaX = dx == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dx);
-        double tDeltaY = dy == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dy);
-        double tDeltaZ = dz == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dz);
-
+        VoxelTraversal traversal = new VoxelTraversal(ox, oy, oz, dx, dy, dz);
         int faceX = 0;
         int faceY = 0;
         int faceZ = 0;
-        double distanceTravelled = 0.0;
 
-        while (distanceTravelled <= maxDistance) {
-            if (tMaxX < tMaxY) {
-                if (tMaxX < tMaxZ) {
-                    x += stepX;
-                    distanceTravelled = tMaxX;
-                    tMaxX += tDeltaX;
-                    faceX = -stepX;
-                    faceY = 0;
-                    faceZ = 0;
-                } else {
-                    z += stepZ;
-                    distanceTravelled = tMaxZ;
-                    tMaxZ += tDeltaZ;
-                    faceX = 0;
-                    faceY = 0;
-                    faceZ = -stepZ;
+        while (traversal.distanceTravelled <= maxDistance) {
+            if (isWithinWorld(traversal.x, traversal.y, traversal.z, worldSizeBlocks)) {
+                if (predicate.hit(chunkManager, traversal.x, traversal.y, traversal.z)) {
+                    return new Target(traversal.x, traversal.y, traversal.z, faceX, faceY, faceZ, true);
                 }
             } else {
-                if (tMaxY < tMaxZ) {
-                    y += stepY;
-                    distanceTravelled = tMaxY;
-                    tMaxY += tDeltaY;
-                    faceX = 0;
-                    faceY = -stepY;
-                    faceZ = 0;
-                } else {
-                    z += stepZ;
-                    distanceTravelled = tMaxZ;
-                    tMaxZ += tDeltaZ;
-                    faceX = 0;
-                    faceY = 0;
-                    faceZ = -stepZ;
-                }
-            }
-
-            if (!isWithinWorld(x, y, z, worldSizeBlocks)) {
                 break;
             }
 
-            if (predicate.hit(chunkManager, x, y, z)) {
-                return new Target(x, y, z, faceX, faceY, faceZ, true);
-            }
+            AxisStep step = traversal.step();
+            faceX = step.faceX;
+            faceY = step.faceY;
+            faceZ = step.faceZ;
         }
 
         return new Target(0, 0, 0, 0, 0, 0, false);
@@ -142,15 +93,6 @@ public class Target {
 
     private static boolean isWithinWorld(int x, int y, int z, int worldSizeBlocks) {
         return x >= 0 && z >= 0 && x < worldSizeBlocks && z < worldSizeBlocks && y >= 0 && y < Chunk.HEIGHT;
-    }
-
-    private static double intBound(double s, double ds) {
-        if (ds == 0) return Double.POSITIVE_INFINITY;
-        double sIsInteger = Math.floor(s);
-        if (ds > 0) {
-            return (sIsInteger + 1 - s) / ds;
-        }
-        return (s - sIsInteger) / -ds;
     }
 
     private interface HitPredicate {
@@ -175,30 +117,32 @@ public class Target {
         }
 
         private static Ray fromView(Camera camera, float viewX, float viewY) {
-            float[] origin = unprojectViewToWorld(camera, viewX, viewY, 0.0f);
-            float[] far = unprojectViewToWorld(camera, viewX, viewY, 1.0f);
-            float dirX = far[0] - origin[0];
-            float dirY = far[1] - origin[1];
-            float dirZ = far[2] - origin[2];
-            float length = (float) Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
-            if (length == 0.0f) {
-                return new Ray(origin[0], origin[1], origin[2], 0.0f, 0.0f, 0.0f);
-            }
-            return new Ray(origin[0], origin[1], origin[2], dirX / length, dirY / length, dirZ / length);
+            float[] origin = viewToWorld(camera, viewX, viewY);
+            float[] forward = cameraForward(camera);
+            return new Ray(origin[0], origin[1], origin[2], forward[0], forward[1], forward[2]);
         }
 
-        private static float[] unprojectViewToWorld(Camera camera, float viewX, float viewY, float viewZ) {
+        private static float[] viewToWorld(Camera camera, float viewX, float viewY) {
             float scaledX = viewX / camera.getZoom();
             float scaledY = viewY / camera.getZoom();
-            float scaledZ = viewZ / camera.getZoom();
 
-            float[] afterPitch = rotateX(scaledX, scaledY, scaledZ, -camera.getPitch());
+            float[] afterPitch = rotateX(scaledX, scaledY, 0.0f, -camera.getPitch());
             float[] afterYaw = rotateY(afterPitch[0], afterPitch[1], afterPitch[2], -camera.getRotation());
 
             afterYaw[0] -= camera.getX();
             afterYaw[2] -= camera.getZ();
 
             return afterYaw;
+        }
+
+        private static float[] cameraForward(Camera camera) {
+            float[] forward = rotateX(0.0f, 0.0f, -1.0f, -camera.getPitch());
+            forward = rotateY(forward[0], forward[1], forward[2], -camera.getRotation());
+            float length = (float) Math.sqrt(forward[0] * forward[0] + forward[1] * forward[1] + forward[2] * forward[2]);
+            if (length == 0.0f) {
+                return new float[]{0.0f, -1.0f, 0.0f};
+            }
+            return new float[]{forward[0] / length, forward[1] / length, forward[2] / length};
         }
 
         private static float[] rotateX(float x, float y, float z, float degrees) {
@@ -213,6 +157,91 @@ public class Target {
             float cos = (float) Math.cos(rad);
             float sin = (float) Math.sin(rad);
             return new float[]{x * cos + z * sin, y, -x * sin + z * cos};
+        }
+    }
+
+    private static class VoxelTraversal {
+        private int x;
+        private int y;
+        private int z;
+        private final int stepX;
+        private final int stepY;
+        private final int stepZ;
+        private double tMaxX;
+        private double tMaxY;
+        private double tMaxZ;
+        private final double tDeltaX;
+        private final double tDeltaY;
+        private final double tDeltaZ;
+        private double distanceTravelled;
+
+        private VoxelTraversal(double ox, double oy, double oz, double dx, double dy, double dz) {
+            this.x = (int) Math.floor(ox);
+            this.y = (int) Math.floor(oy);
+            this.z = (int) Math.floor(oz);
+
+            this.stepX = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
+            this.stepY = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
+            this.stepZ = dz > 0 ? 1 : (dz < 0 ? -1 : 0);
+
+            this.tMaxX = intBound(ox, dx);
+            this.tMaxY = intBound(oy, dy);
+            this.tMaxZ = intBound(oz, dz);
+
+            this.tDeltaX = dx == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dx);
+            this.tDeltaY = dy == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dy);
+            this.tDeltaZ = dz == 0 ? Double.POSITIVE_INFINITY : Math.abs(1.0 / dz);
+            this.distanceTravelled = 0.0;
+        }
+
+        private AxisStep step() {
+            if (tMaxX < tMaxY) {
+                if (tMaxX < tMaxZ) {
+                    x += stepX;
+                    distanceTravelled = tMaxX;
+                    tMaxX += tDeltaX;
+                    return AxisStep.fromFace(-stepX, 0, 0);
+                }
+                z += stepZ;
+                distanceTravelled = tMaxZ;
+                tMaxZ += tDeltaZ;
+                return AxisStep.fromFace(0, 0, -stepZ);
+            }
+            if (tMaxY < tMaxZ) {
+                y += stepY;
+                distanceTravelled = tMaxY;
+                tMaxY += tDeltaY;
+                return AxisStep.fromFace(0, -stepY, 0);
+            }
+            z += stepZ;
+            distanceTravelled = tMaxZ;
+            tMaxZ += tDeltaZ;
+            return AxisStep.fromFace(0, 0, -stepZ);
+        }
+
+        private static double intBound(double s, double ds) {
+            if (ds == 0) return Double.POSITIVE_INFINITY;
+            double sIsInteger = Math.floor(s);
+            if (ds > 0) {
+                return (sIsInteger + 1 - s) / ds;
+            }
+            return (s - sIsInteger) / -ds;
+        }
+    }
+
+    private static class AxisStep {
+        private final int faceX;
+        private final int faceY;
+        private final int faceZ;
+
+        private AxisStep(int faceX, int faceY, int faceZ) {
+            this.faceX = faceX;
+            this.faceY = faceY;
+            this.faceZ = faceZ;
+        }
+
+        private static AxisStep fromFace(int faceX, int faceY, int faceZ) {
+            return new AxisStep(faceX, faceY, faceZ);
         }
     }
 }
