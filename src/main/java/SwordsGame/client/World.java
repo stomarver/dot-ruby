@@ -34,7 +34,7 @@ public class World {
         float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
         float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
 
-        int maxLoopDist = 12;
+        int maxLoopDist = (int) Math.ceil(Math.max(horizDist, vertDist)) + 2;
 
         cleanupCache();
 
@@ -75,7 +75,7 @@ public class World {
         float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
         float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
 
-        int maxLoopDist = 12;
+        int maxLoopDist = (int) Math.ceil(Math.max(horizDist, vertDist)) + 2;
 
         float offset = BLOCK_SCALE;
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;

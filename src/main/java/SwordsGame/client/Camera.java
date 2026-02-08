@@ -128,6 +128,15 @@ public class Camera {
 
         x = clamp(x, -halfWorld + margin, halfWorld - margin);
         z = clamp(z, -halfWorld + margin, halfWorld - margin);
+
+        float radiusUnits = 1024.0f * blockSizeUnits;
+        float maxRadius = Math.max(0.0f, radiusUnits - margin);
+        float dist = (float) Math.sqrt((x * x) + (z * z));
+        if (dist > maxRadius && dist > 0.0f) {
+            float scale = maxRadius / dist;
+            x *= scale;
+            z *= scale;
+        }
     }
 
     private float clamp(float value, float min, float max) {
@@ -199,7 +208,7 @@ public class Camera {
         int maxSteps = cm.getWorldSizeInBlocks() * 2;
 
         for (int i = 0; i < maxSteps; i++) {
-            if (cm.isTopSurface(x, y, z)) {
+            if (y >= 0 && y < Chunk.HEIGHT && cm.isTopSurface(x, y, z)) {
                 return new int[]{x, y, z};
             }
 

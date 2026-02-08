@@ -64,6 +64,7 @@ public class ChunkMesh {
         if (xray.isEmpty()) return;
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(false);
@@ -71,6 +72,7 @@ public class ChunkMesh {
         glDepthMask(true);
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_LIGHTING);
         glEnable(GL_CULL_FACE);
     }
 
