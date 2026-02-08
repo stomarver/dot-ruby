@@ -1,4 +1,4 @@
-package SwordsGame.core;
+package SwordsGame.client.core;
 
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
@@ -180,7 +180,7 @@ public class Window {
             }
 
             if (key == GLFW_KEY_F12 || ctrlP) {
-                SwordsGame.utils.Screenshot.takeScreenshot(fboId, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+                SwordsGame.client.utils.Screenshot.takeScreenshot(fboId, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
             }
         });
 

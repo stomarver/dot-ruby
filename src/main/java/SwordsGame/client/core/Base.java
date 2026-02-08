@@ -1,17 +1,17 @@
-package SwordsGame.core;
+package SwordsGame.client.core;
 
 import SwordsGame.client.*;
 import SwordsGame.client.assets.Paths;
 import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.ui.HUD;
+import SwordsGame.client.ui.Cursor;
+import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.functions.Explosion;
-import SwordsGame.ui.Cursor;
-import SwordsGame.ui.HUD;
-import SwordsGame.utils.Discord;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
-public class Debug {
+public class Base {
     private Window window;
     private Renderer renderer;
     private Font font;
@@ -25,7 +25,7 @@ public class Debug {
     private final double explosionCooldown = 0.2;
 
     public static void main(String[] args) {
-        new Debug().start();
+        new Base().start();
     }
 
     public void start() {
@@ -53,6 +53,7 @@ public class Debug {
                     chunkManager.getWorldSizeInChunks(),
                     chunkManager,
                     renderer);
+            cursor.setHasTarget(target != null);
 
             double currentTime = glfwGetTime();
             if (glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
@@ -69,7 +70,6 @@ public class Debug {
             camera.applyTransformations();
 
             world.render(chunkManager, camera);
-            world.renderChunkBounds(chunkManager, camera);
 
             if (target != null) {
                 world.renderSelection(target, chunkManager.getWorldSizeInChunks());

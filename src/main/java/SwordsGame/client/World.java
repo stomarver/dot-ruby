@@ -2,6 +2,10 @@ package SwordsGame.client;
 
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.Type;
+import SwordsGame.client.Block;
+import SwordsGame.client.BlockProperties;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -27,8 +31,8 @@ public class World {
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float horizDist = Math.max(4.0f, Math.min(8.0f, steppedDist));
+        float vertDist = Math.max(4.0f, Math.min(8.0f, steppedDist));
 
         int maxLoopDist = 12;
 
@@ -68,8 +72,8 @@ public class World {
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float horizDist = Math.max(4.0f, Math.min(8.0f, steppedDist));
+        float vertDist = Math.max(4.0f, Math.min(8.0f, steppedDist));
 
         int maxLoopDist = 12;
 
@@ -167,7 +171,9 @@ public class World {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        drawTopFaceOutline();
+        float pulse = (float) (0.6f + 0.4f * Math.sin(glfwGetTime() * 6.0));
+        drawSelectionOutline(pulse);
+        drawSelectionFill(pulse);
 
         glDisable(GL_BLEND);
         glEnable(GL_LIGHTING);
@@ -217,11 +223,18 @@ public class World {
         glEnd();
     }
 
-    private void drawTopFaceOutline() {
-        float s = 1.02f;
-        float h = 1.02f;
-        glLineWidth(3.0f);
-        glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
+    private void drawSelectionOutline(float pulse) {
+        float s = 1.03f;
+        float h = 1.03f;
+        glLineWidth(2.5f);
+        glColor4f(0.2f, 0.9f, 1.0f, 0.5f + (0.3f * pulse));
+
+        glBegin(GL_LINE_LOOP);
+        glVertex3f(-s, -s, -s);
+        glVertex3f(s, -s, -s);
+        glVertex3f(s, -s, s);
+        glVertex3f(-s, -s, s);
+        glEnd();
 
         glBegin(GL_LINE_LOOP);
         glVertex3f(-s, h, -s);
@@ -230,7 +243,27 @@ public class World {
         glVertex3f(-s, h, s);
         glEnd();
 
+        glBegin(GL_LINES);
+        glVertex3f(-s, -s, -s); glVertex3f(-s, h, -s);
+        glVertex3f(s, -s, -s); glVertex3f(s, h, -s);
+        glVertex3f(s, -s, s); glVertex3f(s, h, s);
+        glVertex3f(-s, -s, s); glVertex3f(-s, h, s);
+        glEnd();
+
         glLineWidth(1.0f);
+    }
+
+    private void drawSelectionFill(float pulse) {
+        float s = 1.02f;
+        float h = 1.02f;
+        glColor4f(0.1f, 0.6f, 0.9f, 0.15f + (0.2f * pulse));
+
+        glBegin(GL_QUADS);
+        glVertex3f(-s, h, -s);
+        glVertex3f(s, h, -s);
+        glVertex3f(s, h, s);
+        glVertex3f(-s, h, s);
+        glEnd();
     }
 
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {
@@ -305,8 +338,33 @@ public class World {
 
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
+                    if (type == Type.STONE.id) {
+                        byte above = getBlockAtWorld(cm, wx, y + 1, wz);
+                        if (above == Type.COBBLE.id) {
+                            continue;
+                        }
+                    }
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    float[][] faceVertexColors = buildFaceVertexColors(cm, wx, y, wz, faces);
+                    float tintR = 1.0f;
+                    float tintG = 1.0f;
+                    float tintB = 1.0f;
+                    float alpha = 1.0f;
+                    boolean forceTransparent = false;
+
+                    if (type == Type.STONE.id) {
+                        byte above = getBlockAtWorld(cm, wx, y + 1, wz);
+                        if (above == Type.AIR.id) {
+                            tintR = 0.6f;
+                            tintG = 0.8f;
+                            tintB = 1.0f;
+                            alpha = 0.55f;
+                            forceTransparent = true;
+                        }
+                    }
+
+                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE,
+                            faceVertexColors, tintR, tintG, tintB, alpha, forceTransparent);
                 }
             }
         }
@@ -321,5 +379,101 @@ public class World {
             }
         }
         return false;
+    }
+
+    private float[][] buildFaceVertexColors(ChunkManager cm, int wx, int wy, int wz, boolean[] faces) {
+        float[][] colors = new float[6][4];
+        for (int face = 0; face < 6; face++) {
+            if (!faces[face]) {
+                colors[face] = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
+                continue;
+            }
+            colors[face] = computeFaceVertexColors(cm, wx, wy, wz, face);
+        }
+        return colors;
+    }
+
+    private float[] computeFaceVertexColors(ChunkManager cm, int wx, int wy, int wz, int face) {
+        switch (face) {
+            case 0:
+                return new float[] {
+                        ao(cm, wx, wy, wz, -1, 0, 1, 0, -1, 1, -1, -1, 1),
+                        ao(cm, wx, wy, wz, 1, 0, 1, 0, -1, 1, 1, -1, 1),
+                        ao(cm, wx, wy, wz, 1, 0, 1, 0, 1, 1, 1, 1, 1),
+                        ao(cm, wx, wy, wz, -1, 0, 1, 0, 1, 1, -1, 1, 1)
+                };
+            case 1:
+                return new float[] {
+                        ao(cm, wx, wy, wz, -1, 0, -1, 0, -1, -1, -1, -1, -1),
+                        ao(cm, wx, wy, wz, 1, 0, -1, 0, -1, -1, 1, -1, -1),
+                        ao(cm, wx, wy, wz, 1, 0, -1, 0, 1, -1, 1, 1, -1),
+                        ao(cm, wx, wy, wz, -1, 0, -1, 0, 1, -1, -1, 1, -1)
+                };
+            case 2:
+                return new float[] {
+                        ao(cm, wx, wy, wz, -1, 1, 0, 0, 1, -1, -1, 1, -1),
+                        ao(cm, wx, wy, wz, -1, 1, 0, 0, 1, 1, -1, 1, 1),
+                        ao(cm, wx, wy, wz, 1, 1, 0, 0, 1, 1, 1, 1, 1),
+                        ao(cm, wx, wy, wz, 1, 1, 0, 0, 1, -1, 1, 1, -1)
+                };
+            case 3:
+                return new float[] {
+                        ao(cm, wx, wy, wz, -1, -1, 0, 0, -1, -1, -1, -1, -1),
+                        ao(cm, wx, wy, wz, -1, -1, 0, 0, -1, 1, -1, -1, 1),
+                        ao(cm, wx, wy, wz, 1, -1, 0, 0, -1, 1, 1, -1, 1),
+                        ao(cm, wx, wy, wz, 1, -1, 0, 0, -1, -1, 1, -1, -1)
+                };
+            case 4:
+                return new float[] {
+                        ao(cm, wx, wy, wz, 1, -1, 0, 1, 0, -1, 1, -1, -1),
+                        ao(cm, wx, wy, wz, 1, 1, 0, 1, 0, -1, 1, 1, -1),
+                        ao(cm, wx, wy, wz, 1, 1, 0, 1, 0, 1, 1, 1, 1),
+                        ao(cm, wx, wy, wz, 1, -1, 0, 1, 0, 1, 1, -1, 1)
+                };
+            case 5:
+                return new float[] {
+                        ao(cm, wx, wy, wz, -1, -1, 0, -1, 0, -1, -1, -1, -1),
+                        ao(cm, wx, wy, wz, -1, 1, 0, -1, 0, -1, -1, 1, -1),
+                        ao(cm, wx, wy, wz, -1, 1, 0, -1, 0, 1, -1, 1, 1),
+                        ao(cm, wx, wy, wz, -1, -1, 0, -1, 0, 1, -1, -1, 1)
+                };
+            default:
+                return new float[] {1.0f, 1.0f, 1.0f, 1.0f};
+        }
+    }
+
+    private float ao(ChunkManager cm, int wx, int wy, int wz,
+                     int sx1, int sy1, int sz1,
+                     int sx2, int sy2, int sz2,
+                     int cx, int cy, int cz) {
+        int side1 = isOccluding(cm, wx + sx1, wy + sy1, wz + sz1) ? 1 : 0;
+        int side2 = isOccluding(cm, wx + sx2, wy + sy2, wz + sz2) ? 1 : 0;
+        int corner = isOccluding(cm, wx + cx, wy + cy, wz + cz) ? 1 : 0;
+        int occlusion = (side1 == 1 && side2 == 1) ? 3 : (side1 + side2 + corner);
+        switch (occlusion) {
+            case 0:
+                return 1.0f;
+            case 1:
+                return 0.8f;
+            case 2:
+                return 0.6f;
+            default:
+                return 0.5f;
+        }
+    }
+
+    private boolean isOccluding(ChunkManager cm, int wx, int wy, int wz) {
+        if (wy < 0 || wy >= Chunk.HEIGHT) return false;
+        byte type = getBlockAtWorld(cm, wx, wy, wz);
+        if (type == Type.AIR.id) return false;
+        Block block = Registry.get(type);
+        if (block == null) return false;
+        BlockProperties props = block.getProperties();
+        return props.isSolid() && !props.isTransparent();
+    }
+
+    private byte getBlockAtWorld(ChunkManager cm, int wx, int wy, int wz) {
+        if (wy < 0 || wy >= Chunk.HEIGHT) return Type.AIR.id;
+        return cm.getBlockAtWorld(wx, wy, wz);
     }
 }

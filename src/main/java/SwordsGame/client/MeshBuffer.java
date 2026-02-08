@@ -8,7 +8,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 
 public class MeshBuffer {
-    private static final int STRIDE_FLOATS = 11;
+    private static final int STRIDE_FLOATS = 12;
     private static final int STRIDE_BYTES = STRIDE_FLOATS * Float.BYTES;
 
     private final int vboId;
@@ -48,7 +48,7 @@ public class MeshBuffer {
         glNormalPointer(GL_FLOAT, STRIDE_BYTES, (long) (3 * Float.BYTES));
         glTexCoordPointer(2, GL_FLOAT, STRIDE_BYTES, (long) (6 * Float.BYTES));
         if (useColorArray) {
-            glColorPointer(3, GL_FLOAT, STRIDE_BYTES, (long) (8 * Float.BYTES));
+            glColorPointer(4, GL_FLOAT, STRIDE_BYTES, (long) (8 * Float.BYTES));
         }
 
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);

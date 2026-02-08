@@ -1,9 +1,9 @@
-package SwordsGame.ui;
+package SwordsGame.client.ui;
 
 import static org.lwjgl.opengl.GL11.*;
 
 import SwordsGame.client.assets.Paths;
-import SwordsGame.ui.Text.*;
+import SwordsGame.client.ui.Text.*;
 import SwordsGame.client.Font;
 import SwordsGame.client.Sprite;
 import SwordsGame.client.TextureLoader;

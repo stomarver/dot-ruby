@@ -1,4 +1,4 @@
-package SwordsGame.ui;
+package SwordsGame.client.ui;
 
 public class Anchor {
     public enum TypeX { LEFT, CENTER, RIGHT }
