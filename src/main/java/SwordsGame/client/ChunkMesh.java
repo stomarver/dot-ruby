@@ -61,19 +61,7 @@ public class ChunkMesh {
     }
 
     private void renderXray(boolean useColor) {
-        if (xray.isEmpty()) return;
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDepthMask(false);
-        renderBuffers(xray, useColor);
-        glDepthMask(true);
-        glDisable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_CULL_FACE);
+        Xray.render(xray, useColor);
     }
 
     private void destroyBuffers(Map<Integer, MeshBuffer> buffers) {

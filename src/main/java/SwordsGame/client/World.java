@@ -34,7 +34,7 @@ public class World {
         float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
         float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
 
-        int maxLoopDist = (int) Math.ceil(Math.max(horizDist, vertDist)) + 2;
+        int maxLoopDist = Culling.maxLoopDist(horizDist, vertDist);
 
         cleanupCache();
 
@@ -43,10 +43,7 @@ public class World {
                 int cx = camChunkX + dx;
                 int cz = camChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float depth = dx * (-sinTheta) + dz * cosTheta;
-                    float lateral = dx * cosTheta + dz * sinTheta;
-
-                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
+                    if (Culling.isChunkVisible(dx, dz, sinTheta, cosTheta, horizDist, vertDist)) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             int lod = selectLod(dx, dz);
@@ -75,7 +72,7 @@ public class World {
         float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
         float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
 
-        int maxLoopDist = (int) Math.ceil(Math.max(horizDist, vertDist)) + 2;
+        int maxLoopDist = Culling.maxLoopDist(horizDist, vertDist);
 
         float offset = BLOCK_SCALE;
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;
@@ -90,10 +87,7 @@ public class World {
                 int cx = camChunkX + dx;
                 int cz = camChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float depth = dx * (-sinTheta) + dz * cosTheta;
-                    float lateral = dx * cosTheta + dz * sinTheta;
-
-                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
+                    if (Culling.isChunkVisible(dx, dz, sinTheta, cosTheta, horizDist, vertDist)) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             drawChunkBounds(chunk, totalOffset, offset);
