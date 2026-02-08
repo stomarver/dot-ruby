@@ -3,6 +3,7 @@ package SwordsGame.client;
 import SwordsGame.core.Window;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.client.graphics.Renderer;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 

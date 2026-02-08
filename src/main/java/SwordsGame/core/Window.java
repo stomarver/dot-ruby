@@ -17,7 +17,7 @@ public class Window {
 
     private long windowHandle;
 
-    // FBO
+
     private int fboId;
     private int textureId;
     private int depthId;
@@ -25,38 +25,38 @@ public class Window {
     private int screenVboId;
     private boolean useVao;
 
-    // virtual resolution
+
     private static final int VIRTUAL_WIDTH = 960;
     private static final int VIRTUAL_HEIGHT = 540;
 
-    // real framebuffer letterbox viewport
+
     private int physicalX, physicalY;
     private int physicalWidth, physicalHeight;
 
     private boolean fullscreen = false;
 
-    // scroll input
+
     private double scrollX = 0;
     private double scrollY = 0;
 
-    // virtual mouse position
+
     private float virtualMouseX = VIRTUAL_WIDTH / 2f;
     private float virtualMouseY = VIRTUAL_HEIGHT / 2f;
 
-    // delta mouse
+
     private double lastMouseX = 0;
     private double lastMouseY = 0;
     private boolean mouseInitialized = false;
 
-    // sensitivity settings
+
     private float windowedSensitivity = 1.0f;
     private float fullscreenSensitivity = 0.6f;
 
-    // current sensitivity (auto switches)
+
     private float mouseSensitivity = windowedSensitivity;
 
     public Window(String title) {
-        // title пока не используем
+
     }
 
     public long getHandle() {
@@ -92,9 +92,9 @@ public class Window {
         scrollY = 0;
     }
 
-    // ===========================================
-    // SENSITIVITY API
-    // ===========================================
+
+
+
 
     public void setWindowedSensitivity(float value) {
         windowedSensitivity = value;
@@ -116,9 +116,9 @@ public class Window {
         System.out.println("[Input] Mouse sensitivity = " + mouseSensitivity);
     }
 
-    // ===========================================
-    // CREATE WINDOW
-    // ===========================================
+
+
+
 
     public void create() {
         if (!glfwInit()) {
@@ -131,7 +131,7 @@ public class Window {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        // OpenGL 2.1 (как у тебя)
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
@@ -159,9 +159,9 @@ public class Window {
         System.out.println("[Vid] Window created");
     }
 
-    // ===========================================
-    // CALLBACKS
-    // ===========================================
+
+
+
 
     private void setupCallbacks() {
 
@@ -202,9 +202,9 @@ public class Window {
         });
     }
 
-    // ===========================================
-    // VIEWPORT (LETTERBOX)
-    // ===========================================
+
+
+
 
     private void updateViewport() {
         int[] fbW = new int[1];
@@ -232,9 +232,9 @@ public class Window {
         System.out.println("[Vid] Viewport updated: " + physicalWidth + "x" + physicalHeight);
     }
 
-    // ===========================================
-    // CURSOR / MOUSE
-    // ===========================================
+
+
+
 
     private void captureCursor() {
         glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -269,7 +269,7 @@ public class Window {
         virtualMouseX += (float) (dx * mouseSensitivity);
         virtualMouseY += (float) (dy * mouseSensitivity);
 
-        // clamp to screen
+
         if (virtualMouseX < 0) virtualMouseX = 0;
         if (virtualMouseY < 0) virtualMouseY = 0;
 
@@ -277,9 +277,9 @@ public class Window {
         if (virtualMouseY > VIRTUAL_HEIGHT - 1) virtualMouseY = VIRTUAL_HEIGHT - 1;
     }
 
-    // ===========================================
-    // FULLSCREEN
-    // ===========================================
+
+
+
 
     public void toggleFullscreen() {
         fullscreen = !fullscreen;
@@ -314,9 +314,9 @@ public class Window {
         captureCursor();
     }
 
-    // ===========================================
-    // FBO
-    // ===========================================
+
+
+
 
     private void initFBO() {
         fboId = glGenFramebuffers();
@@ -385,9 +385,9 @@ public class Window {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    // ===========================================
-    // RENDER PIPELINE
-    // ===========================================
+
+
+
 
     public void beginRenderToFBO() {
         glBindFramebuffer(GL_FRAMEBUFFER, fboId);
@@ -439,9 +439,9 @@ public class Window {
         glDisable(GL_TEXTURE_2D);
     }
 
-    // ===========================================
-    // MAIN LOOP STEP
-    // ===========================================
+
+
+
 
     public void update() {
         updateMouse();
@@ -453,9 +453,9 @@ public class Window {
         return glfwWindowShouldClose(windowHandle);
     }
 
-    // ===========================================
-    // CLEANUP
-    // ===========================================
+
+
+
 
     public void destroy() {
 

@@ -1,6 +1,7 @@
 package SwordsGame.client.blocks;
 
-import SwordsGame.client.Block;
+import SwordsGame.client.graphics.Block;
+import SwordsGame.client.graphics.BlockRenderer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class Registry {
                 block.destroy();
             }
         }
-        SwordsGame.client.BlockRenderer.clear();
+        BlockRenderer.clear();
         destroyed = true;
     }
 }

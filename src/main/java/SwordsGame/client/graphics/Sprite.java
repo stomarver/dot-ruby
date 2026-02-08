@@ -1,4 +1,4 @@
-package SwordsGame.client;
+package SwordsGame.client.graphics;
 
 import SwordsGame.ui.Anchor;
 import org.lwjgl.BufferUtils;
@@ -32,8 +32,7 @@ public class Sprite {
      * Перегрузка для случая, когда случайно передали два TypeX (например, CENTER, CENTER)
      */
     public void draw(TextureLoader.Texture tex, Anchor.TypeX ax, Anchor.TypeX ay, float x, float y, float s) {
-        Anchor.TypeY vy = (ay == Anchor.TypeX.CENTER) ? Anchor.TypeY.CENTER : Anchor.TypeY.TOP;
-        draw(tex, ax, vy, x, y, s);
+        draw(tex, ax, toTypeY(ay), x, y, s);
     }
 
     /**
@@ -94,5 +93,9 @@ public class Sprite {
         float bx = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
         float by = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
         return new Anchor(ax, ay, bx, by);
+    }
+
+    private Anchor.TypeY toTypeY(Anchor.TypeX type) {
+        return type == Anchor.TypeX.CENTER ? Anchor.TypeY.CENTER : Anchor.TypeY.TOP;
     }
 }

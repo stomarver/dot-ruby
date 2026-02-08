@@ -1,6 +1,7 @@
-package SwordsGame.client;
+package SwordsGame.client.graphics;
 
 import SwordsGame.client.blocks.Type;
+import java.util.Objects;
 
 public class Block {
     protected static final float MIN = 0.01f;
@@ -17,23 +18,15 @@ public class Block {
     private final Type type;
 
     public Block(Type type, String texturePath) {
-        this(type, texturePath, new BlockProperties());
+        this(type, new BlockProperties(), texturePath);
     }
 
     public Block(Type type, String texturePath, BlockProperties props) {
-        this.type = type;
-        this.properties = props;
-        this.textures = new TextureLoader.Texture[1];
-        this.textures[0] = TextureLoader.loadTexture(texturePath, false);
+        this(type, props, texturePath);
     }
 
     public Block(Type type, String topPath, String bottomPath, String sidePath, BlockProperties props) {
-        this.type = type;
-        this.properties = props;
-        this.textures = new TextureLoader.Texture[3];
-        this.textures[0] = TextureLoader.loadTexture(topPath, false);
-        this.textures[1] = TextureLoader.loadTexture(bottomPath, false);
-        this.textures[2] = TextureLoader.loadTexture(sidePath, false);
+        this(type, props, topPath, bottomPath, sidePath);
     }
 
     public Type getType() { return type; }
@@ -65,5 +58,23 @@ public class Block {
 
     public boolean hasTexture() {
         return textures[0] != null;
+    }
+
+    private Block(Type type, BlockProperties props, String... texturePaths) {
+        this.type = Objects.requireNonNull(type, "type");
+        this.properties = Objects.requireNonNull(props, "props");
+        this.textures = loadTextures(texturePaths);
+    }
+
+    private TextureLoader.Texture[] loadTextures(String[] texturePaths) {
+        int count = texturePaths.length;
+        if (count != 1 && count != 3) {
+            throw new IllegalArgumentException("Block textures must have 1 or 3 paths");
+        }
+        TextureLoader.Texture[] loaded = new TextureLoader.Texture[count];
+        for (int i = 0; i < count; i++) {
+            loaded[i] = TextureLoader.loadTexture(texturePaths[i], false);
+        }
+        return loaded;
     }
 }

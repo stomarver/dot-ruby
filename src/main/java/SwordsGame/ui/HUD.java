@@ -4,9 +4,9 @@ import static org.lwjgl.opengl.GL11.*;
 
 import SwordsGame.client.assets.Paths;
 import SwordsGame.ui.Text.*;
-import SwordsGame.client.Font;
-import SwordsGame.client.Sprite;
-import SwordsGame.client.TextureLoader;
+import SwordsGame.client.graphics.Font;
+import SwordsGame.client.graphics.Sprite;
+import SwordsGame.client.graphics.TextureLoader;
 
 import java.util.ArrayList;
 import java.util.List;

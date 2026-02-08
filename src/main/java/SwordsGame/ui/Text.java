@@ -1,6 +1,6 @@
 package SwordsGame.ui;
 
-import SwordsGame.client.Font;
+import SwordsGame.client.graphics.Font;
 
 import static org.lwjgl.opengl.GL11.*;
 import java.util.Random;
@@ -20,13 +20,11 @@ public class Text {
     }
 
     public void draw(String t, Anchor.TypeX ax, Anchor.TypeX ay, float x, float y, float s) {
-        Anchor.TypeY vy = (ay == Anchor.TypeX.CENTER) ? Anchor.TypeY.CENTER : Anchor.TypeY.TOP;
-        draw(t, ax, vy, x, y, s);
+        draw(t, ax, toTypeY(ay), x, y, s);
     }
 
     public void draw(String t, Anchor.TypeX ax, Anchor.TypeX ay, float x, float y, float s, Wave wv) {
-        Anchor.TypeY vy = (ay == Anchor.TypeX.CENTER) ? Anchor.TypeY.CENTER : Anchor.TypeY.TOP;
-        draw(t, ax, vy, x, y, s, wv);
+        draw(t, ax, toTypeY(ay), x, y, s, wv);
     }
 
     public void draw(String t, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float s) {
@@ -161,6 +159,10 @@ public class Text {
         float bx = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
         float by = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
         return new Anchor(ax, ay, bx, by);
+    }
+
+    private Anchor.TypeY toTypeY(Anchor.TypeX type) {
+        return type == Anchor.TypeX.CENTER ? Anchor.TypeY.CENTER : Anchor.TypeY.TOP;
     }
 
     private void drQ(Font.CharData d, float x, float y, float s) {

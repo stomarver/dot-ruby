@@ -1,7 +1,7 @@
 package SwordsGame.client.blocks;
 
-import SwordsGame.client.Block;
-import SwordsGame.client.BlockProperties;
+import SwordsGame.client.graphics.Block;
+import SwordsGame.client.graphics.BlockProperties;
 import SwordsGame.client.assets.Paths;
 
 public class Grass extends Block {

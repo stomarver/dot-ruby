@@ -1,4 +1,4 @@
-package SwordsGame.client;
+package SwordsGame.client.graphics;
 
 import SwordsGame.core.Window;
 import static org.lwjgl.opengl.GL11.*;

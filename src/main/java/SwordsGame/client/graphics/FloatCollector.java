@@ -1,4 +1,4 @@
-package SwordsGame.client;
+package SwordsGame.client.graphics;
 
 public class FloatCollector {
     private float[] data;

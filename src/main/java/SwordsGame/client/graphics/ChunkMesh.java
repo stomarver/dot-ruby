@@ -1,4 +1,4 @@
-package SwordsGame.client;
+package SwordsGame.client.graphics;
 
 import java.util.Map;
 

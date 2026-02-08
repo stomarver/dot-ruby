@@ -1,5 +1,6 @@
-package SwordsGame.client;
+package SwordsGame.client.graphics;
 
+import SwordsGame.client.World;
 import SwordsGame.client.blocks.Registry;
 
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class BlockRenderer {
     private static final Map<Block, ChunkMesh[]> cache = new HashMap<>();
+    private static final boolean[] ALL_FACES = {true, true, true, true, true, true};
 
     public static void renderBlock(Block block, int seed, boolean[] faces) {
         renderBlock(block, seed, faces, 1.0f);
@@ -75,8 +77,7 @@ public class BlockRenderer {
 
     private static ChunkMesh buildMesh(Block block, int rot) {
         MeshBuilder builder = new MeshBuilder(false, false);
-        boolean[] faces = {true, true, true, true, true, true};
-        builder.addBlock(block.getType().id, rot, faces, 0, 0, 0, 0, World.BLOCK_SCALE);
+        builder.addBlock(block.getType().id, rot, ALL_FACES, 0, 0, 0, 0, World.BLOCK_SCALE);
         return builder.build();
     }
 

@@ -1,8 +1,12 @@
 package SwordsGame.core;
 
-import SwordsGame.client.*;
+import SwordsGame.client.Camera;
+import SwordsGame.client.World;
 import SwordsGame.client.assets.Paths;
 import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.graphics.Font;
+import SwordsGame.client.graphics.Renderer;
+import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.functions.Explosion;
 import SwordsGame.ui.Cursor;

@@ -1,6 +1,6 @@
 package SwordsGame.ui;
 
-import SwordsGame.client.TextureLoader;
+import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.client.assets.Paths;
 
 import static org.lwjgl.opengl.GL11.*;

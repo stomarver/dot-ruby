@@ -1,4 +1,4 @@
-package SwordsGame.client;
+package SwordsGame.client.graphics;
 
 import org.lwjgl.system.MemoryStack;
 import java.io.InputStream;
