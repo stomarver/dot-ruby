@@ -2,10 +2,6 @@ package SwordsGame.client;
 
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.client.blocks.Registry;
-import SwordsGame.client.blocks.Type;
-import SwordsGame.client.Block;
-import SwordsGame.client.BlockProperties;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -23,31 +19,30 @@ public class World {
         int worldSize = chunkManager.getWorldSizeInChunks();
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
-        float camChunkX = ((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2.0f);
-        float camChunkZ = ((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2.0f);
-        int baseChunkX = (int) Math.floor(camChunkX);
-        int baseChunkZ = (int) Math.floor(camChunkZ);
+        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
+        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
 
         float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
         float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
 
-        int maxLoopDist = Culling.maxLoopDist(horizDist, vertDist);
+        int maxLoopDist = 12;
 
         cleanupCache();
 
         for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
             for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = baseChunkX + dx;
-                int cz = baseChunkZ + dz;
+                int cx = camChunkX + dx;
+                int cz = camChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float relX = Culling.relX(camChunkX, cx);
-                    float relZ = Culling.relZ(camChunkZ, cz);
-                    if (Culling.isChunkVisible(relX, relZ, sinTheta, cosTheta, horizDist, vertDist)) {
+                    float depth = dx * (-sinTheta) + dz * cosTheta;
+                    float lateral = dx * cosTheta + dz * sinTheta;
+
+                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             int lod = selectLod(dx, dz);
@@ -65,20 +60,18 @@ public class World {
         int worldSize = chunkManager.getWorldSizeInChunks();
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
-        float camChunkX = ((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2.0f);
-        float camChunkZ = ((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2.0f);
-        int baseChunkX = (int) Math.floor(camChunkX);
-        int baseChunkZ = (int) Math.floor(camChunkZ);
+        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
+        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
 
         float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
         float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
 
-        int maxLoopDist = Culling.maxLoopDist(horizDist, vertDist);
+        int maxLoopDist = 12;
 
         float offset = BLOCK_SCALE;
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;
@@ -90,12 +83,13 @@ public class World {
 
         for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
             for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = baseChunkX + dx;
-                int cz = baseChunkZ + dz;
+                int cx = camChunkX + dx;
+                int cz = camChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float relX = Culling.relX(camChunkX, cx);
-                    float relZ = Culling.relZ(camChunkZ, cz);
-                    if (Culling.isChunkVisible(relX, relZ, sinTheta, cosTheta, horizDist, vertDist)) {
+                    float depth = dx * (-sinTheta) + dz * cosTheta;
+                    float lateral = dx * cosTheta + dz * sinTheta;
+
+                    if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
                         if (chunk != null) {
                             drawChunkBounds(chunk, totalOffset, offset);
@@ -312,28 +306,7 @@ public class World {
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    float[][] faceVertexColors = buildFaceVertexColors(cm, wx, y, wz, faces);
-                    float tintR = 1.0f;
-                    float tintG = 1.0f;
-                    float tintB = 1.0f;
-                    float alpha = 1.0f;
-                    boolean forceTransparent = false;
-                    boolean forceXray = false;
-
-                    if (type == Type.STONE.id) {
-                        byte above = getBlockAtWorld(cm, wx, y + 1, wz);
-                        if (above == Type.AIR.id) {
-                            tintR = 0.6f;
-                            tintG = 0.8f;
-                            tintB = 1.0f;
-                            alpha = 0.55f;
-                            forceTransparent = true;
-                            forceXray = true;
-                        }
-                    }
-
-                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE,
-                            faceVertexColors, tintR, tintG, tintB, alpha, forceTransparent, forceXray);
+                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }
@@ -348,129 +321,5 @@ public class World {
             }
         }
         return false;
-    }
-
-    private float[][] buildFaceVertexColors(ChunkManager cm, int wx, int wy, int wz, boolean[] faces) {
-        float[][] colors = new float[6][4];
-        for (int face = 0; face < 6; face++) {
-            if (!faces[face]) {
-                colors[face] = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
-                continue;
-            }
-            colors[face] = computeFaceVertexColors(cm, wx, wy, wz, face);
-        }
-        return colors;
-    }
-
-    private float[] computeFaceVertexColors(ChunkManager cm, int wx, int wy, int wz, int face) {
-        int[] normal = faceNormal(face);
-        int[][] uvAxes = faceAxes(face);
-        int[] uAxis = uvAxes[0];
-        int[] vAxis = uvAxes[1];
-        int[][] signs = faceVertexSigns(face);
-
-        float[] colors = new float[4];
-        for (int i = 0; i < 4; i++) {
-            int uSign = signs[i][0];
-            int vSign = signs[i][1];
-            colors[i] = ao(cm, wx, wy, wz, normal, uAxis, vAxis, uSign, vSign);
-        }
-        return colors;
-    }
-
-    private float ao(ChunkManager cm, int wx, int wy, int wz,
-                     int[] normal, int[] uAxis, int[] vAxis, int uSign, int vSign) {
-        int side1 = isOccluding(cm,
-                wx + normal[0] + (uAxis[0] * uSign),
-                wy + normal[1] + (uAxis[1] * uSign),
-                wz + normal[2] + (uAxis[2] * uSign)) ? 1 : 0;
-        int side2 = isOccluding(cm,
-                wx + normal[0] + (vAxis[0] * vSign),
-                wy + normal[1] + (vAxis[1] * vSign),
-                wz + normal[2] + (vAxis[2] * vSign)) ? 1 : 0;
-        int corner = isOccluding(cm,
-                wx + normal[0] + (uAxis[0] * uSign) + (vAxis[0] * vSign),
-                wy + normal[1] + (uAxis[1] * uSign) + (vAxis[1] * vSign),
-                wz + normal[2] + (uAxis[2] * uSign) + (vAxis[2] * vSign)) ? 1 : 0;
-        int occlusion = (side1 == 1 && side2 == 1) ? 3 : (side1 + side2 + corner);
-        switch (occlusion) {
-            case 0:
-                return 1.0f;
-            case 1:
-                return 0.82f;
-            case 2:
-                return 0.64f;
-            default:
-                return 0.5f;
-        }
-    }
-
-    private int[] faceNormal(int face) {
-        switch (face) {
-            case 0:
-                return new int[] {0, 0, 1};
-            case 1:
-                return new int[] {0, 0, -1};
-            case 2:
-                return new int[] {0, 1, 0};
-            case 3:
-                return new int[] {0, -1, 0};
-            case 4:
-                return new int[] {1, 0, 0};
-            case 5:
-                return new int[] {-1, 0, 0};
-            default:
-                return new int[] {0, 0, 0};
-        }
-    }
-
-    private int[][] faceAxes(int face) {
-        switch (face) {
-            case 0:
-            case 1:
-                return new int[][] {{1, 0, 0}, {0, 1, 0}};
-            case 2:
-            case 3:
-                return new int[][] {{1, 0, 0}, {0, 0, 1}};
-            case 4:
-            case 5:
-                return new int[][] {{0, 0, 1}, {0, 1, 0}};
-            default:
-                return new int[][] {{1, 0, 0}, {0, 1, 0}};
-        }
-    }
-
-    private int[][] faceVertexSigns(int face) {
-        switch (face) {
-            case 0:
-                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
-            case 1:
-                return new int[][] {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
-            case 2:
-                return new int[][] {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
-            case 3:
-                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
-            case 4:
-                return new int[][] {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
-            case 5:
-                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
-            default:
-                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
-        }
-    }
-
-    private boolean isOccluding(ChunkManager cm, int wx, int wy, int wz) {
-        if (wy < 0 || wy >= Chunk.HEIGHT) return false;
-        byte type = getBlockAtWorld(cm, wx, wy, wz);
-        if (type == Type.AIR.id) return false;
-        Block block = Registry.get(type);
-        if (block == null) return false;
-        BlockProperties props = block.getProperties();
-        return props.isSolid() && !props.isTransparent();
-    }
-
-    private byte getBlockAtWorld(ChunkManager cm, int wx, int wy, int wz) {
-        if (wy < 0 || wy >= Chunk.HEIGHT) return Type.AIR.id;
-        return cm.getBlockAtWorld(wx, wy, wz);
     }
 }
