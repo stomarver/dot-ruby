@@ -31,8 +31,8 @@ public class World {
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
 
         int maxLoopDist = 12;
 
@@ -72,8 +72,8 @@ public class World {
 
         float baseDist = 4.0f / camera.getZoom();
         float steppedDist = (float) (Math.floor(baseDist / 2 - 0.5f) + 0.5f);
-        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
-        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist));
+        float horizDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
+        float vertDist = Math.max(1.0f, Math.min(5.0f, steppedDist)) + 3.0f;
 
         int maxLoopDist = 12;
 

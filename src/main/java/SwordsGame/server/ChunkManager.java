@@ -3,9 +3,9 @@ package SwordsGame.server;
 import SwordsGame.server.Terrain;
 
 public class ChunkManager {
-    private static final int WORLD_SIZE_BLOCKS = 2048;
-    private static final int WORLD_SIZE_CHUNKS = WORLD_SIZE_BLOCKS / Chunk.SIZE;
-    private static final int WORLD_RADIUS_BLOCKS = WORLD_SIZE_BLOCKS / 2;
+    public static final int WORLD_SIZE_BLOCKS = 2048;
+    public static final int WORLD_SIZE_CHUNKS = WORLD_SIZE_BLOCKS / Chunk.SIZE;
+    public static final int WORLD_RADIUS_BLOCKS = WORLD_SIZE_BLOCKS / 2;
     private final int worldSizeInChunks = WORLD_SIZE_CHUNKS;
     private final Chunk[] chunks;
 

@@ -37,6 +37,16 @@ public class Terrain {
             for (int z = 0; z < Chunk.SIZE; z++) {
                 int wx = chunk.x * Chunk.SIZE + x;
                 int wz = chunk.z * Chunk.SIZE + z;
+                int center = ChunkManager.WORLD_RADIUS_BLOCKS;
+                int dx = wx - center;
+                int dz = wz - center;
+                int radius = ChunkManager.WORLD_RADIUS_BLOCKS;
+                if ((dx * dx + dz * dz) > (radius * radius)) {
+                    for (int y = 0; y < Chunk.HEIGHT; y++) {
+                        chunk.setBlock(x, y, z, Type.AIR.id);
+                    }
+                    continue;
+                }
 
                 double groundNoise = getNoise(wx * 0.06, wz * 0.06);
                 int groundY = (int) ((groundNoise + 1.0) * 2.5);
