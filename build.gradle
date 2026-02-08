@@ -47,52 +47,50 @@ dependencies {
 def versionFile = file("src/main/resources/version.properties")
 
 tasks.register("generateVersionProperties") {
+    outputs.file(versionFile)
+    outputs.upToDateWhen { false }  // Всегда перезаписываем файл для актуальности
+
     doLast {
         def now = LocalDateTime.now()
         def datePart = now.format(DateTimeFormatter.ofPattern("MMdd"))
         def timePart = now.format(DateTimeFormatter.ofPattern("HHmm"))
 
         def libsDir = file("${buildDir}/libs")
-        libsDir.mkdirs()
 
-        // базовая версия
         def versionString = ".ruby-${datePart}"
 
-        // если jar с таким MMdd уже есть -> добавляем время
-        def jarBase = new File(libsDir, "dot-ruby-${datePart}.jar")
-        if (jarBase.exists()) {
+        def baseDir = new File(libsDir, "dot-ruby-${datePart}")
+        def jarRelease = new File(baseDir, "dot-ruby-${datePart}.jar")
+        def jarDebug = new File(baseDir, "debug-ruby-${datePart}.jar")
+
+        if (baseDir.exists() && (jarRelease.exists() || jarDebug.exists())) {
             versionString = ".ruby-${datePart}-${timePart}"
         }
+
+        project.ext.generatedVersion = versionString
 
         versionFile.parentFile.mkdirs()
         versionFile.text = "version=${versionString}\n"
 
         println "[Build] Version set to: ${versionString}"
-
-        // сохраняем в extra чтобы shadowJar мог использовать
-        project.ext.generatedVersion = versionString
     }
 }
 
 processResources.dependsOn("generateVersionProperties")
 
-// ===== SHADOWJAR SETTINGS =====
+// ===== ОБЩИЕ НАСТРОЙКИ ДЛЯ SHADOW JAR =====
 
-shadowJar {
-    dependsOn("generateVersionProperties")
+def commonShadowConfig = {
+    dependsOn("classes", "processResources", "generateVersionProperties")
 
-    manifest {
-        attributes 'Main-Class': 'SwordsGame.core.Base'
-    }
+    from(project.sourceSets.main.output)
 
-    doFirst {
-        def v = project.ext.generatedVersion ?: ".ruby-unknown"
-        def classifier = v.replace(".ruby-", "")
-        def fileName = "dot-ruby-${classifier}.jar"  // будет dot-ruby-0208.jar или dot-ruby-0208-1234.jar
+    // Отключаем автоматическое включение конфигураций, чтобы избежать ошибки в DefaultDependencyFilter
+    configurations = []
 
-        archiveFileName.set(fileName)
-
-        println "[Build] ShadowJar filename: ${fileName}"
+    // Включаем все зависимости вручную через zipTree
+    project.configurations.runtimeClasspath.files.each { dep ->
+        from(project.zipTree(dep))
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -102,4 +100,56 @@ shadowJar {
     exclude "META-INF/*.RSA"
 }
 
+// ===== RELEASE JAR (Main-Class: Base) =====
+
+shadowJar {
+    commonShadowConfig.delegate = delegate
+    commonShadowConfig()
+
+    manifest {
+        attributes 'Main-Class': 'SwordsGame.core.Base'
+    }
+
+    doFirst {
+        def v = project.ext.generatedVersion ?: ".ruby-unknown"
+        def dateTimePart = v.replace(".ruby-", "")
+
+        def outputDir = file("${buildDir}/libs/dot-ruby-${dateTimePart}")
+        destinationDirectory.set(outputDir)
+        outputDir.mkdirs()
+
+        archiveFileName.set("dot-ruby-${dateTimePart}.jar")
+
+        println "[Build] Release JAR: ${outputDir}/${archiveFileName.get()}"
+    }
+}
+
+// ===== DEBUG JAR (Main-Class: Debug) =====
+
+tasks.register('shadowJarDebug', shadowJar.getClass()) {
+    commonShadowConfig.delegate = delegate
+    commonShadowConfig()
+
+    manifest {
+        attributes 'Main-Class': 'SwordsGame.core.Debug'  // Поправьте, если путь к классу другой
+    }
+
+    doFirst {
+        def v = project.ext.generatedVersion ?: ".ruby-unknown"
+        def dateTimePart = v.replace(".ruby-", "")
+
+        def outputDir = file("${buildDir}/libs/dot-ruby-${dateTimePart}")
+        destinationDirectory.set(outputDir)
+        outputDir.mkdirs()
+
+        archiveFileName.set("debug-ruby-${dateTimePart}.jar")
+
+        println "[Build] Debug JAR: ${outputDir}/${archiveFileName.get()}"
+    }
+}
+
+// Делаем задачу shadowJar собирать также debug JAR
+shadowJar.dependsOn shadowJarDebug
+
+// Делаем задачу build собирать оба JAR
 build.dependsOn shadowJar

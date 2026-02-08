@@ -68,7 +68,7 @@ public class Discord {
             presence.details = gameVersion;
             presence.startTimestamp = startTime;
             presence.largeImageKey = "logo";
-            presence.largeImageText = "Ruby RTS";
+            presence.largeImageText = "DotRuby";
 
             lib.Discord_UpdatePresence(presence);
 
