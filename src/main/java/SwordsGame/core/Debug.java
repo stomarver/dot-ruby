@@ -1,6 +1,7 @@
 package SwordsGame.core;
 
 import SwordsGame.client.Camera;
+import SwordsGame.client.Target;
 import SwordsGame.client.World;
 import SwordsGame.client.assets.Paths;
 import SwordsGame.client.blocks.Registry;
@@ -53,15 +54,12 @@ public class Debug {
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
 
-            int[] target = camera.getTargetBlockFromMouse(window,
-                    chunkManager.getWorldSizeInChunks(),
-                    chunkManager,
-                    renderer);
+            Target target = Target.fromMouse(window, camera, renderer, chunkManager);
 
             double currentTime = glfwGetTime();
             if (glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-                if (currentTime - lastExplosionTime >= explosionCooldown && target != null) {
-                    Explosion.createSphere(chunkManager, world, target[0], target[1], target[2]);
+                if (currentTime - lastExplosionTime >= explosionCooldown && target.hasHit()) {
+                    Explosion.createSphere(chunkManager, world, target.getX(), target.getY(), target.getZ());
                     lastExplosionTime = currentTime;
                 }
             }
@@ -75,9 +73,7 @@ public class Debug {
             world.render(chunkManager, camera);
             world.renderChunkBounds(chunkManager, camera);
 
-            if (target != null) {
-                world.renderSelection(target, chunkManager.getWorldSizeInChunks());
-            }
+            world.renderSelection(target, chunkManager.getWorldSizeInChunks());
 
             glPopMatrix();
 
