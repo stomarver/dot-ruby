@@ -47,11 +47,12 @@ public class Base {
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
-            camera.update(window);
+            camera.update(window, chunkManager, renderer);
 
             int[] target = camera.getTargetBlockFromMouse(window,
                     chunkManager.getWorldSizeInChunks(),
-                    chunkManager);
+                    chunkManager,
+                    renderer);
 
             double currentTime = glfwGetTime();
             if (glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
