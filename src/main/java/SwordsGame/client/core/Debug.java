@@ -23,8 +23,6 @@ public class Debug {
 
     private double lastExplosionTime = 0;
     private final double explosionCooldown = 0.2;
-    private boolean explosionsEnabled = false;
-    private boolean togglePressed = false;
 
     public static void main(String[] args) {
         new Debug().start();
@@ -57,15 +55,9 @@ public class Debug {
                     renderer);
             cursor.setHasTarget(target != null);
 
-            boolean toggleKey = glfwGetKey(window.getHandle(), GLFW_KEY_E) == GLFW_PRESS;
-            if (toggleKey && !togglePressed) {
-                explosionsEnabled = !explosionsEnabled;
-            }
-            togglePressed = toggleKey;
-
             double currentTime = glfwGetTime();
             if (glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-                if (explosionsEnabled && currentTime - lastExplosionTime >= explosionCooldown && target != null) {
+                if (currentTime - lastExplosionTime >= explosionCooldown && target != null) {
                     Explosion.createSphere(chunkManager, world, target[0], target[1], target[2]);
                     lastExplosionTime = currentTime;
                 }

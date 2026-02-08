@@ -23,8 +23,8 @@ public class World {
         int worldSize = chunkManager.getWorldSizeInChunks();
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
-        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
-        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
+        float camChunkX = ((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2.0f);
+        float camChunkZ = ((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2.0f);
 
         float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
         float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
@@ -38,13 +38,18 @@ public class World {
 
         cleanupCache();
 
+        int baseChunkX = (int) Math.floor(camChunkX);
+        int baseChunkZ = (int) Math.floor(camChunkZ);
+
         for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
             for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = camChunkX + dx;
-                int cz = camChunkZ + dz;
+                int cx = baseChunkX + dx;
+                int cz = baseChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float depth = dx * (-sinTheta) + dz * cosTheta;
-                    float lateral = dx * cosTheta + dz * sinTheta;
+                    float relX = (cx + 0.5f) - camChunkX;
+                    float relZ = (cz + 0.5f) - camChunkZ;
+                    float depth = relX * (-sinTheta) + relZ * cosTheta;
+                    float lateral = relX * cosTheta + relZ * sinTheta;
 
                     if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
@@ -64,8 +69,8 @@ public class World {
         int worldSize = chunkManager.getWorldSizeInChunks();
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
-        int camChunkX = (int) Math.floor((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2);
-        int camChunkZ = (int) Math.floor((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2);
+        float camChunkX = ((-camera.getX()) / chunkSizeInUnits) + (worldSize / 2.0f);
+        float camChunkZ = ((-camera.getZ()) / chunkSizeInUnits) + (worldSize / 2.0f);
 
         float sinTheta = (float) Math.sin(Math.toRadians(camera.getRotation()));
         float cosTheta = (float) Math.cos(Math.toRadians(camera.getRotation()));
@@ -85,13 +90,18 @@ public class World {
         glColor4f(0.2f, 0.9f, 0.9f, 0.7f);
         glLineWidth(2.0f);
 
+        int baseChunkX = (int) Math.floor(camChunkX);
+        int baseChunkZ = (int) Math.floor(camChunkZ);
+
         for (int dx = -maxLoopDist; dx <= maxLoopDist; dx++) {
             for (int dz = -maxLoopDist; dz <= maxLoopDist; dz++) {
-                int cx = camChunkX + dx;
-                int cz = camChunkZ + dz;
+                int cx = baseChunkX + dx;
+                int cz = baseChunkZ + dz;
                 if (cx >= 0 && cx < worldSize && cz >= 0 && cz < worldSize) {
-                    float depth = dx * (-sinTheta) + dz * cosTheta;
-                    float lateral = dx * cosTheta + dz * sinTheta;
+                    float relX = (cx + 0.5f) - camChunkX;
+                    float relZ = (cz + 0.5f) - camChunkZ;
+                    float depth = relX * (-sinTheta) + relZ * cosTheta;
+                    float lateral = relX * cosTheta + relZ * sinTheta;
 
                     if (Math.abs(depth) <= vertDist + 0.5f && Math.abs(lateral) <= horizDist + 0.5f) {
                         Chunk chunk = chunkManager.getChunk(cx, cz);
