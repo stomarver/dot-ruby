@@ -1,6 +1,9 @@
 package SwordsGame.client;
 
 import SwordsGame.ui.Anchor;
+import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -55,18 +58,20 @@ public class Sprite {
         if (a.ty == Anchor.TypeY.CENTER) ry -= h / 2f;
         else if (a.ty == Anchor.TypeY.BOTTOM) ry -= h;
 
-        float[] verts = {
+        FloatBuffer verts = BufferUtils.createFloatBuffer(8);
+        verts.put(new float[]{
                 rx, ry,
                 rx + w, ry,
                 rx + w, ry + h,
                 rx, ry + h
-        };
-        float[] uvs = {
+        }).flip();
+        FloatBuffer uvs = BufferUtils.createFloatBuffer(8);
+        uvs.put(new float[]{
                 0f, 0f,
                 1f, 0f,
                 1f, 1f,
                 0f, 1f
-        };
+        }).flip();
 
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, tex.id);
