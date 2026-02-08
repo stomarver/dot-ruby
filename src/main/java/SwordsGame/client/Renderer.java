@@ -66,6 +66,7 @@ public class Renderer {
         glEnable(GL_LIGHT0);
         glEnable(GL_COLOR_MATERIAL);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+        glEnable(GL_NORMALIZE);
 
         float[] lightPosition = { 15.0f, 25.0f, 10.0f, 0.0f };
         float[] ambientLight = { 0.35f, 0.35f, 0.35f, 1.0f };
