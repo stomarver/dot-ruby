@@ -78,8 +78,6 @@ public class Target {
                 if (predicate.hit(chunkManager, traversal.x, traversal.y, traversal.z)) {
                     return new Target(traversal.x, traversal.y, traversal.z, faceX, faceY, faceZ, true);
                 }
-            } else {
-                break;
             }
 
             AxisStep step = traversal.step();
