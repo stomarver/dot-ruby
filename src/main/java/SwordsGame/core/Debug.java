@@ -23,10 +23,11 @@ public class Debug {
     private World world;
     private Camera camera;
     private ChunkManager chunkManager;
-    private boolean showChunkBounds = true;
+    private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
     private float sunYaw = 45.0f;
     private float sunPitch = 50.0f;
+    private boolean resetSunHeld = false;
 
 
     public static void main(String[] args) {
@@ -96,8 +97,10 @@ public class Debug {
         if (glfwGetKey(windowHandle, GLFW_KEY_U) == GLFW_PRESS) {
             sunYaw += step;
         }
+        handleSunReset(windowHandle);
         sunYaw = normalizeAngle(sunYaw);
-        renderer.setSunDirectionFromAngles(sunYaw, sunPitch);
+        float[] sunDirection = rotateAroundTiltedAxis(sunYaw, sunPitch);
+        renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }
 
     private void updateBoundsToggle(long windowHandle) {
@@ -106,6 +109,56 @@ public class Debug {
             showChunkBounds = !showChunkBounds;
         }
         toggleBoundsHeld = togglePressed;
+    }
+
+    private void handleSunReset(long windowHandle) {
+        boolean resetPressed = glfwGetKey(windowHandle, GLFW_KEY_R) == GLFW_PRESS;
+        if (resetPressed && !resetSunHeld) {
+            sunYaw = 45.0f;
+            sunPitch = 50.0f;
+        }
+        resetSunHeld = resetPressed;
+    }
+
+    private float[] rotateAroundTiltedAxis(float yawDegrees, float pitchDegrees) {
+        float tilt = (float) Math.toRadians(30.0f);
+        float axisX = (float) Math.cos(tilt);
+        float axisY = 0.0f;
+        float axisZ = (float) Math.sin(tilt);
+
+        float upX = 0.0f;
+        float upY = 1.0f;
+        float upZ = 0.0f;
+
+        float baseX = upY * axisZ - upZ * axisY;
+        float baseY = upZ * axisX - upX * axisZ;
+        float baseZ = upX * axisY - upY * axisX;
+        float baseLength = (float) Math.sqrt(baseX * baseX + baseY * baseY + baseZ * baseZ);
+        baseX /= baseLength;
+        baseY /= baseLength;
+        baseZ /= baseLength;
+
+        float perpX = axisY * baseZ - axisZ * baseY;
+        float perpY = axisZ * baseX - axisX * baseZ;
+        float perpZ = axisX * baseY - axisY * baseX;
+
+        float pitch = (float) Math.toRadians(pitchDegrees);
+        float cosPitch = (float) Math.cos(pitch);
+        float sinPitch = (float) Math.sin(pitch);
+
+        float dirX = (baseX * cosPitch) + (perpX * sinPitch);
+        float dirY = (baseY * cosPitch) + (perpY * sinPitch);
+        float dirZ = (baseZ * cosPitch) + (perpZ * sinPitch);
+
+        float yaw = (float) Math.toRadians(yawDegrees);
+        float cosYaw = (float) Math.cos(yaw);
+        float sinYaw = (float) Math.sin(yaw);
+        float dot = (axisX * dirX) + (axisY * dirY) + (axisZ * dirZ);
+
+        float rotX = (dirX * cosYaw) + ((axisY * dirZ - axisZ * dirY) * sinYaw) + (axisX * dot * (1.0f - cosYaw));
+        float rotY = (dirY * cosYaw) + ((axisZ * dirX - axisX * dirZ) * sinYaw) + (axisY * dot * (1.0f - cosYaw));
+        float rotZ = (dirZ * cosYaw) + ((axisX * dirY - axisY * dirX) * sinYaw) + (axisZ * dot * (1.0f - cosYaw));
+        return new float[] { rotX, rotY, rotZ };
     }
 
     private float normalizeAngle(float angle) {
