@@ -8,11 +8,14 @@ public class ChunkMesh {
     private final Map<Integer, MeshBuffer> opaque;
     private final Map<Integer, MeshBuffer> transparent;
     private final Map<Integer, MeshBuffer> emissive;
+    private final Map<Integer, MeshBuffer> xray;
 
-    public ChunkMesh(Map<Integer, MeshBuffer> opaque, Map<Integer, MeshBuffer> transparent, Map<Integer, MeshBuffer> emissive) {
+    public ChunkMesh(Map<Integer, MeshBuffer> opaque, Map<Integer, MeshBuffer> transparent, Map<Integer, MeshBuffer> emissive,
+                     Map<Integer, MeshBuffer> xray) {
         this.opaque = opaque;
         this.transparent = transparent;
         this.emissive = emissive;
+        this.xray = xray;
     }
 
     public void render() {
@@ -23,12 +26,14 @@ public class ChunkMesh {
         renderBuffers(opaque, useColorArray);
         renderEmissive(useColorArray);
         renderTransparent(useColorArray);
+        renderXray(useColorArray);
     }
 
     public void destroy() {
         destroyBuffers(opaque);
         destroyBuffers(transparent);
         destroyBuffers(emissive);
+        destroyBuffers(xray);
     }
 
     private void renderBuffers(Map<Integer, MeshBuffer> buffers, boolean useColor) {
@@ -53,6 +58,18 @@ public class ChunkMesh {
         renderBuffers(transparent, useColor);
         glDepthMask(true);
         glDisable(GL_BLEND);
+    }
+
+    private void renderXray(boolean useColor) {
+        if (xray.isEmpty()) return;
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(false);
+        renderBuffers(xray, useColor);
+        glDepthMask(true);
+        glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
     }
 
     private void destroyBuffers(Map<Integer, MeshBuffer> buffers) {

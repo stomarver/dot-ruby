@@ -107,7 +107,7 @@ shadowJar {
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.core.Base'
+        attributes 'Main-Class': 'SwordsGame.client.core.Base'
     }
 
     doFirst {
@@ -131,7 +131,7 @@ tasks.register('shadowJarDebug', shadowJar.getClass()) {
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.core.Debug'  // Поправьте, если путь к классу другой
+        attributes 'Main-Class': 'SwordsGame.client.core.Debug'  // Поправьте, если путь к классу другой
     }
 
     doFirst {

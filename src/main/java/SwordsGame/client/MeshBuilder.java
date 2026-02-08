@@ -27,6 +27,7 @@ public class MeshBuilder {
     private final Map<Integer, FloatCollector> opaque = new HashMap<>();
     private final Map<Integer, FloatCollector> transparent = new HashMap<>();
     private final Map<Integer, FloatCollector> emissive = new HashMap<>();
+    private final Map<Integer, FloatCollector> xray = new HashMap<>();
     private final boolean topOnly;
     private final boolean useVertexColor;
 
@@ -36,6 +37,12 @@ public class MeshBuilder {
     }
 
     public void addBlock(byte typeId, int seed, boolean[] faces, int wx, int wy, int wz, float totalOffset, float scale) {
+        addBlock(typeId, seed, faces, wx, wy, wz, totalOffset, scale, null, 1.0f, 1.0f, 1.0f, 1.0f, false, false);
+    }
+
+    public void addBlock(byte typeId, int seed, boolean[] faces, int wx, int wy, int wz, float totalOffset, float scale,
+                         float[][] faceVertexColors, float tintR, float tintG, float tintB, float alpha,
+                         boolean forceTransparent, boolean forceXray) {
         Block block = Registry.get(typeId);
         if (block == null) return;
 
@@ -55,9 +62,17 @@ public class MeshBuilder {
             int textureId = block.getTextureId(face);
             if (textureId == 0) continue;
 
-            Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
+            Map<Integer, FloatCollector> target;
+            if (forceXray) {
+                target = xray;
+            } else if (props.isTransparent() || forceTransparent) {
+                target = transparent;
+            } else {
+                target = props.hasEmission() ? emissive : opaque;
+            }
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
-            appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod);
+            float[] vertexColors = faceVertexColors != null ? faceVertexColors[face] : null;
+            appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod, vertexColors, tintR, tintG, tintB, alpha);
         }
     }
 
@@ -65,7 +80,8 @@ public class MeshBuilder {
         return new ChunkMesh(
                 buildBuffers(opaque),
                 buildBuffers(transparent),
-                buildBuffers(emissive)
+                buildBuffers(emissive),
+                buildBuffers(xray)
         );
     }
 
@@ -81,22 +97,29 @@ public class MeshBuilder {
     }
 
     private void appendFace(FloatCollector collector, int face, Block block, int rot,
-                            float baseX, float baseY, float baseZ, float color) {
+                            float baseX, float baseY, float baseZ, float color,
+                            float[] vertexColors, float tintR, float tintG, float tintB, float alpha) {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[face];
         float[][] verts = FACE_VERTS[face];
 
-        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color);
-        addVertex(collector, verts[1], baseX, baseY, baseZ, normal, uv[2], uv[3], color);
-        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color);
+        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1],
+                applyVertexColor(color, vertexColors, 0, tintR, tintG, tintB), alpha);
+        addVertex(collector, verts[1], baseX, baseY, baseZ, normal, uv[2], uv[3],
+                applyVertexColor(color, vertexColors, 1, tintR, tintG, tintB), alpha);
+        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5],
+                applyVertexColor(color, vertexColors, 2, tintR, tintG, tintB), alpha);
 
-        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color);
-        addVertex(collector, verts[3], baseX, baseY, baseZ, normal, uv[6], uv[7], color);
-        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color);
+        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5],
+                applyVertexColor(color, vertexColors, 2, tintR, tintG, tintB), alpha);
+        addVertex(collector, verts[3], baseX, baseY, baseZ, normal, uv[6], uv[7],
+                applyVertexColor(color, vertexColors, 3, tintR, tintG, tintB), alpha);
+        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1],
+                applyVertexColor(color, vertexColors, 0, tintR, tintG, tintB), alpha);
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
-                           float[] normal, float u, float vTex, float color) {
+                           float[] normal, float u, float vTex, float[] color, float alpha) {
         float x = baseX + (v[0] * World.BLOCK_SIZE);
         float y = baseY + (v[1] * World.BLOCK_SIZE);
         float z = baseZ + (v[2] * World.BLOCK_SIZE);
@@ -104,7 +127,14 @@ public class MeshBuilder {
                 x, y, z,
                 normal[0], normal[1], normal[2],
                 u, vTex,
-                color, color, color
+                color[0], color[1], color[2], alpha
         );
+    }
+
+    private float[] applyVertexColor(float baseColor, float[] vertexColors, int vertexIndex,
+                                     float tintR, float tintG, float tintB) {
+        float shade = vertexColors != null ? vertexColors[vertexIndex] : 1.0f;
+        float color = baseColor * shade;
+        return new float[] {color * tintR, color * tintG, color * tintB};
     }
 }

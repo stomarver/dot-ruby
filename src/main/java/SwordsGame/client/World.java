@@ -2,6 +2,10 @@ package SwordsGame.client;
 
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.Type;
+import SwordsGame.client.Block;
+import SwordsGame.client.BlockProperties;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -167,7 +171,8 @@ public class World {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        drawTopFaceOutline();
+        float pulse = (float) (0.6f + 0.4f * Math.sin(glfwGetTime() * 6.0));
+        drawSelectionOutline(pulse);
 
         glDisable(GL_BLEND);
         glEnable(GL_LIGHTING);
@@ -217,20 +222,39 @@ public class World {
         glEnd();
     }
 
-    private void drawTopFaceOutline() {
+    private void drawSelectionOutline(float pulse) {
         float s = 1.02f;
         float h = 1.02f;
-        glLineWidth(3.0f);
-        glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
+        float alpha = 0.65f + (0.25f * pulse);
 
-        glBegin(GL_LINE_LOOP);
-        glVertex3f(-s, h, -s);
-        glVertex3f(s, h, -s);
-        glVertex3f(s, h, s);
-        glVertex3f(-s, h, s);
+        glDisable(GL_DEPTH_TEST);
+        glLineWidth(2.0f);
+        glColor4f(1.0f, 1.0f, 1.0f, alpha);
+
+        glBegin(GL_LINES);
+        drawBoxEdge(-s, -s, -s, s, -s, -s);
+        drawBoxEdge(s, -s, -s, s, -s, s);
+        drawBoxEdge(s, -s, s, -s, -s, s);
+        drawBoxEdge(-s, -s, s, -s, -s, -s);
+
+        drawBoxEdge(-s, h, -s, s, h, -s);
+        drawBoxEdge(s, h, -s, s, h, s);
+        drawBoxEdge(s, h, s, -s, h, s);
+        drawBoxEdge(-s, h, s, -s, h, -s);
+
+        drawBoxEdge(-s, -s, -s, -s, h, -s);
+        drawBoxEdge(s, -s, -s, s, h, -s);
+        drawBoxEdge(s, -s, s, s, h, s);
+        drawBoxEdge(-s, -s, s, -s, h, s);
         glEnd();
 
         glLineWidth(1.0f);
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    private void drawBoxEdge(float x0, float y0, float z0, float x1, float y1, float z1) {
+        glVertex3f(x0, y0, z0);
+        glVertex3f(x1, y1, z1);
     }
 
     private boolean isTransparent(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte currentType) {
@@ -305,8 +329,35 @@ public class World {
 
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
+                    if (type == Type.STONE.id) {
+                        byte above = getBlockAtWorld(cm, wx, y + 1, wz);
+                        if (above == Type.COBBLE.id) {
+                            continue;
+                        }
+                    }
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    float[][] faceVertexColors = buildFaceVertexColors(cm, wx, y, wz, faces);
+                    float tintR = 1.0f;
+                    float tintG = 1.0f;
+                    float tintB = 1.0f;
+                    float alpha = 1.0f;
+                    boolean forceTransparent = false;
+                    boolean forceXray = false;
+
+                    if (type == Type.STONE.id) {
+                        byte above = getBlockAtWorld(cm, wx, y + 1, wz);
+                        if (above == Type.AIR.id) {
+                            tintR = 0.6f;
+                            tintG = 0.8f;
+                            tintB = 1.0f;
+                            alpha = 0.55f;
+                            forceTransparent = true;
+                            forceXray = true;
+                        }
+                    }
+
+                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE,
+                            faceVertexColors, tintR, tintG, tintB, alpha, forceTransparent, forceXray);
                 }
             }
         }
@@ -321,5 +372,129 @@ public class World {
             }
         }
         return false;
+    }
+
+    private float[][] buildFaceVertexColors(ChunkManager cm, int wx, int wy, int wz, boolean[] faces) {
+        float[][] colors = new float[6][4];
+        for (int face = 0; face < 6; face++) {
+            if (!faces[face]) {
+                colors[face] = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
+                continue;
+            }
+            colors[face] = computeFaceVertexColors(cm, wx, wy, wz, face);
+        }
+        return colors;
+    }
+
+    private float[] computeFaceVertexColors(ChunkManager cm, int wx, int wy, int wz, int face) {
+        int[] normal = faceNormal(face);
+        int[][] uvAxes = faceAxes(face);
+        int[] uAxis = uvAxes[0];
+        int[] vAxis = uvAxes[1];
+        int[][] signs = faceVertexSigns(face);
+
+        float[] colors = new float[4];
+        for (int i = 0; i < 4; i++) {
+            int uSign = signs[i][0];
+            int vSign = signs[i][1];
+            colors[i] = ao(cm, wx, wy, wz, normal, uAxis, vAxis, uSign, vSign);
+        }
+        return colors;
+    }
+
+    private float ao(ChunkManager cm, int wx, int wy, int wz,
+                     int[] normal, int[] uAxis, int[] vAxis, int uSign, int vSign) {
+        int side1 = isOccluding(cm,
+                wx + normal[0] + (uAxis[0] * uSign),
+                wy + normal[1] + (uAxis[1] * uSign),
+                wz + normal[2] + (uAxis[2] * uSign)) ? 1 : 0;
+        int side2 = isOccluding(cm,
+                wx + normal[0] + (vAxis[0] * vSign),
+                wy + normal[1] + (vAxis[1] * vSign),
+                wz + normal[2] + (vAxis[2] * vSign)) ? 1 : 0;
+        int corner = isOccluding(cm,
+                wx + normal[0] + (uAxis[0] * uSign) + (vAxis[0] * vSign),
+                wy + normal[1] + (uAxis[1] * uSign) + (vAxis[1] * vSign),
+                wz + normal[2] + (uAxis[2] * uSign) + (vAxis[2] * vSign)) ? 1 : 0;
+        int occlusion = (side1 == 1 && side2 == 1) ? 3 : (side1 + side2 + corner);
+        switch (occlusion) {
+            case 0:
+                return 1.0f;
+            case 1:
+                return 0.82f;
+            case 2:
+                return 0.64f;
+            default:
+                return 0.5f;
+        }
+    }
+
+    private int[] faceNormal(int face) {
+        switch (face) {
+            case 0:
+                return new int[] {0, 0, 1};
+            case 1:
+                return new int[] {0, 0, -1};
+            case 2:
+                return new int[] {0, 1, 0};
+            case 3:
+                return new int[] {0, -1, 0};
+            case 4:
+                return new int[] {1, 0, 0};
+            case 5:
+                return new int[] {-1, 0, 0};
+            default:
+                return new int[] {0, 0, 0};
+        }
+    }
+
+    private int[][] faceAxes(int face) {
+        switch (face) {
+            case 0:
+            case 1:
+                return new int[][] {{1, 0, 0}, {0, 1, 0}};
+            case 2:
+            case 3:
+                return new int[][] {{1, 0, 0}, {0, 0, 1}};
+            case 4:
+            case 5:
+                return new int[][] {{0, 0, 1}, {0, 1, 0}};
+            default:
+                return new int[][] {{1, 0, 0}, {0, 1, 0}};
+        }
+    }
+
+    private int[][] faceVertexSigns(int face) {
+        switch (face) {
+            case 0:
+                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
+            case 1:
+                return new int[][] {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
+            case 2:
+                return new int[][] {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
+            case 3:
+                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
+            case 4:
+                return new int[][] {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
+            case 5:
+                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
+            default:
+                return new int[][] {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
+        }
+    }
+
+    private boolean isOccluding(ChunkManager cm, int wx, int wy, int wz) {
+        if (wy < 0 || wy >= Chunk.HEIGHT) return false;
+        byte type = getBlockAtWorld(cm, wx, wy, wz);
+        if (type == Type.AIR.id) return false;
+        Block block = Registry.get(type);
+        if (block == null) return false;
+        BlockProperties props = block.getProperties();
+        return props.isSolid() && !props.isTransparent();
+    }
+
+    private byte getBlockAtWorld(ChunkManager cm, int wx, int wy, int wz) {
+        if (wy < 0 || wy >= Chunk.HEIGHT) return Type.AIR.id;
+        return cm.getBlockAtWorld(wx, wy, wz);
     }
 }

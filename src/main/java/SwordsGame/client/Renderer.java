@@ -1,6 +1,6 @@
 package SwordsGame.client;
 
-import SwordsGame.core.Window;
+import SwordsGame.client.core.Window;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Renderer {
