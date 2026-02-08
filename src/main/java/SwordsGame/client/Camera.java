@@ -101,11 +101,8 @@ public class Camera {
         float mouseX = (float) window.getMouseRelX() - centerX;
         float mouseY = centerY - (float) window.getMouseRelY();
 
-        float ndcX = (mouseX + renderer.getViewportWidth() / 2.0f) / renderer.getViewportWidth();
-        float ndcY = (renderer.getViewportHeight() / 2.0f - mouseY) / renderer.getViewportHeight();
-
-        float viewX = (ndcX * ORTHO_WIDTH) - (ORTHO_WIDTH / 2.0f);
-        float viewY = (ndcY * ORTHO_HEIGHT) - (ORTHO_HEIGHT / 2.0f);
+        float viewX = (mouseX / renderer.getViewportWidth()) * ORTHO_WIDTH;
+        float viewY = (mouseY / renderer.getViewportHeight()) * ORTHO_HEIGHT;
 
         float[] rayOrigin = toWorldPoint(viewX, viewY);
         float[] rayDir = getWorldRayDirection();
@@ -228,7 +225,7 @@ public class Camera {
                 return null;
             }
             if (y < 0 || y >= Chunk.HEIGHT) {
-                return null;
+                continue;
             }
         }
 
