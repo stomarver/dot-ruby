@@ -20,7 +20,7 @@ public class Chunk {
     }
 
     public byte getBlock(int lx, int ly, int lz) {
-        if (ly < 0 || ly >= HEIGHT) return 0;
+        if (lx < 0 || lx >= SIZE || lz < 0 || lz >= SIZE || ly < 0 || ly >= HEIGHT) return 0;
         return blocks[lx][ly][lz];
     }
 }
