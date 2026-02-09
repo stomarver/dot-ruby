@@ -39,6 +39,13 @@ public class Text {
         drawInternal(t, a, x, y, s, true, Shake.NONE, Wave.NONE, Crit.NONE, 0);
     }
 
+    public float getLineStep(float scale) {
+        float s = Math.max(0.1f, scale) * 2f;
+        float h = font.getCharHeight() * s;
+        float gap = h * 0.5f;
+        return h + gap;
+    }
+
     private void drawInternal(String txt, Anchor a, float ox, float oy, float scale,
                               boolean shad, Shake shk, Wave wav, Crit crt, float spc) {
         if (txt == null || txt.isEmpty()) return;

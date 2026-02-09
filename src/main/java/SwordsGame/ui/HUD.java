@@ -22,6 +22,7 @@ public class HUD {
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
     private String sunInfo = "";
     private String cameraInfo = "";
+    private final float debugLineGap = 10.0f;
 
     private final TextureLoader.Texture charFrameTex;
     private final TextureLoader.Texture separatorTex;
@@ -86,12 +87,19 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
+        float textYOffset = -20.0f;
+        float debugX = 135.0f;
+        float sunY = 28.0f + textYOffset;
+        float cameraBaseY = 44.0f + textYOffset;
+
+        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2 + textYOffset, 1);
+        float nextDebugY = sunY;
         if (!sunInfo.isEmpty()) {
-            text.draw(sunInfo, Anchor.LEFT, Anchor.TOP, 135, 28, 1);
+            nextDebugY = drawDebugLines(sunInfo, debugX, sunY, 1.0f);
         }
         if (!cameraInfo.isEmpty()) {
-            text.draw(cameraInfo, Anchor.LEFT, Anchor.TOP, 135, 44, 1);
+            float cameraY = Math.max(cameraBaseY, nextDebugY + debugLineGap);
+            drawDebugLines(cameraInfo, debugX, cameraY, 1.0f);
         }
 
         messageSystem.draw(text);
@@ -110,5 +118,16 @@ public class HUD {
             TextureLoader.deleteTexture(t.id);
         }
         textures.clear();
+    }
+
+    private float drawDebugLines(String content, float x, float y, float scale) {
+        String[] lines = content.split("\n");
+        float step = text.getLineStep(scale) + debugLineGap;
+        float currentY = y;
+        for (String line : lines) {
+            text.draw(line, Anchor.LEFT, Anchor.TOP, x, currentY, scale);
+            currentY += step;
+        }
+        return currentY - step;
     }
 }
