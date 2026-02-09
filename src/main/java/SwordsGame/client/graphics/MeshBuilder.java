@@ -114,7 +114,8 @@ public class MeshBuilder {
                                      float baseX, float baseY, float baseZ, float color, boolean[] sideAir) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(FACE_VERTS[FACE_TOP]);
-        if (shouldRotateForCorner(sideAir)) {
+        int cornerRotationSteps = getCornerRotationSteps(sideAir);
+        for (int i = 0; i < cornerRotationSteps; i++) {
             verts = rotateTopVerts90(verts);
         }
         boolean[] lower = new boolean[4];
@@ -175,19 +176,40 @@ public class MeshBuilder {
         return rotated;
     }
 
-    private boolean shouldRotateForCorner(boolean[] sideAir) {
+    private int getCornerRotationSteps(boolean[] sideAir) {
         if (sideAir == null) {
-            return false;
+            return 0;
         }
         boolean front = sideAir[FACE_FRONT];
         boolean back = sideAir[FACE_BACK];
         boolean right = sideAir[FACE_RIGHT];
         boolean left = sideAir[FACE_LEFT];
-        boolean adjacentPair = (front && right) || (right && back) || (back && left) || (left && front);
-        if (!adjacentPair) {
-            return false;
+        int openSides = countOpenSides(front, back, right, left);
+        if (openSides != 2) {
+            return 0;
         }
-        return !(front && back) && !(left && right);
+        if (front && right) {
+            return 0;
+        }
+        if (right && back) {
+            return 1;
+        }
+        if (back && left) {
+            return 2;
+        }
+        if (left && front) {
+            return 3;
+        }
+        return 0;
+    }
+
+    private int countOpenSides(boolean front, boolean back, boolean right, boolean left) {
+        int count = 0;
+        if (front) count++;
+        if (back) count++;
+        if (right) count++;
+        if (left) count++;
+        return count;
     }
 
     private void appendTriangleWithNormalUp(FloatCollector collector,
