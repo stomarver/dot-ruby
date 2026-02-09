@@ -15,8 +15,17 @@ class Slopes {
                                     boolean[] sideAir, boolean[] sideSame) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
-        int cornerRotationSteps = resolveCornerRotation(sideSame, sideAir);
+        int cornerFromSame = resolveCornerPairRotation(sideSame);
+        int cornerRotationSteps = cornerFromSame != -1
+                ? cornerFromSame
+                : resolveCornerPairRotation(sideAir);
+        if (cornerRotationSteps == -1) {
+            cornerRotationSteps = 0;
+        }
         boolean[] rotatedSideAir = rotateSideFlags(sideAir, cornerRotationSteps);
+        if (cornerFromSame != -1 && !hasSideOpen(rotatedSideAir)) {
+            rotatedSideAir = buildCornerAirFlags((cornerRotationSteps + 2) % 4);
+        }
         for (int i = 0; i < cornerRotationSteps; i++) {
             verts = rotateTopVerts90(verts);
         }
@@ -98,18 +107,6 @@ class Slopes {
         return rotated;
     }
 
-    private static int resolveCornerRotation(boolean[] sideSame, boolean[] sideAir) {
-        int fromSame = resolveCornerPairRotation(sideSame);
-        if (fromSame != -1) {
-            return fromSame;
-        }
-        int fromAir = resolveCornerPairRotation(sideAir);
-        if (fromAir != -1) {
-            return fromAir;
-        }
-        return 0;
-    }
-
     private static int resolveCornerPairRotation(boolean[] sideFlags) {
         if (sideFlags == null) {
             return -1;
@@ -131,6 +128,32 @@ class Slopes {
             return 2;
         }
         return 3;
+    }
+
+    private static boolean hasSideOpen(boolean[] sideFlags) {
+        if (sideFlags == null) {
+            return false;
+        }
+        return sideFlags[FACE_FRONT] || sideFlags[FACE_BACK] || sideFlags[FACE_RIGHT] || sideFlags[FACE_LEFT];
+    }
+
+    private static boolean[] buildCornerAirFlags(int rotation) {
+        boolean[] flags = new boolean[6];
+        int normalized = ((rotation % 4) + 4) % 4;
+        if (normalized == 0) {
+            flags[FACE_FRONT] = true;
+            flags[FACE_RIGHT] = true;
+        } else if (normalized == 1) {
+            flags[FACE_RIGHT] = true;
+            flags[FACE_BACK] = true;
+        } else if (normalized == 2) {
+            flags[FACE_BACK] = true;
+            flags[FACE_LEFT] = true;
+        } else {
+            flags[FACE_LEFT] = true;
+            flags[FACE_FRONT] = true;
+        }
+        return flags;
     }
 
     private static boolean isCornerPair(boolean front, boolean back, boolean right, boolean left) {
