@@ -9,6 +9,7 @@ public class Grass extends Block {
         super(Type.GRASS, Paths.BLOCK_GRASS,
                 new BlockProperties()
                         .randomRotation()
-                        .randomColor());
+                        .randomColor()
+                        .sloped());
     }
 }
