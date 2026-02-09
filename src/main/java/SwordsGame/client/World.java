@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import SwordsGame.client.blocks.Type;
+import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockRenderer;
 import SwordsGame.client.graphics.ChunkMesh;
 import SwordsGame.client.graphics.MeshBuilder;
@@ -215,20 +216,21 @@ public class World {
         int aboveY = y + 1;
         if (aboveY < Chunk.HEIGHT) {
             byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
-            if (aboveType == Type.GRASS.id) {
+            Block aboveBlock = Registry.get(aboveType);
+            if (aboveBlock != null && aboveBlock.getProperties().isSloped()) {
                 return false;
             }
         }
         return true;
     }
 
-    private boolean isGrass(ChunkManager cm, Chunk currentChunk, int x, int y, int z) {
+    private boolean isSameType(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte type) {
         if (y < 0) return false;
         if (y >= Chunk.HEIGHT) return false;
         int worldX = currentChunk.x * Chunk.SIZE + x;
         int worldZ = currentChunk.z * Chunk.SIZE + z;
         byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
-        return neighborType == Type.GRASS.id;
+        return neighborType == type;
     }
 
     public void markChunkDirty(Chunk chunk) {
@@ -332,16 +334,16 @@ public class World {
                     sideAir[4] = isAir(cm, chunk, x + 1, y, z);
                     sideAir[5] = isAir(cm, chunk, x - 1, y, z);
 
-                    boolean[] sideGrass = new boolean[6];
-                    sideGrass[0] = isGrass(cm, chunk, x, y, z + 1);
-                    sideGrass[1] = isGrass(cm, chunk, x, y, z - 1);
-                    sideGrass[4] = isGrass(cm, chunk, x + 1, y, z);
-                    sideGrass[5] = isGrass(cm, chunk, x - 1, y, z);
+                    boolean[] sideSame = new boolean[6];
+                    sideSame[0] = isSameType(cm, chunk, x, y, z + 1, type);
+                    sideSame[1] = isSameType(cm, chunk, x, y, z - 1, type);
+                    sideSame[4] = isSameType(cm, chunk, x + 1, y, z, type);
+                    sideSame[5] = isSameType(cm, chunk, x - 1, y, z, type);
 
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, sideAir, sideGrass, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    builder.addBlock(type, seed, faces, sideAir, sideSame, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }
