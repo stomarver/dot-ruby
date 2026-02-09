@@ -16,24 +16,25 @@ class Slopes {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
         int cornerRotationSteps = resolveCornerRotation(sideSame);
+        boolean[] rotatedSideAir = rotateSideFlags(sideAir, cornerRotationSteps);
         for (int i = 0; i < cornerRotationSteps; i++) {
             verts = rotateTopVerts90(verts);
         }
 
         boolean[] lower = new boolean[4];
-        if (sideAir != null && sideAir[FACE_FRONT]) {
+        if (rotatedSideAir != null && rotatedSideAir[FACE_FRONT]) {
             lower[1] = true;
             lower[2] = true;
         }
-        if (sideAir != null && sideAir[FACE_BACK]) {
+        if (rotatedSideAir != null && rotatedSideAir[FACE_BACK]) {
             lower[0] = true;
             lower[3] = true;
         }
-        if (sideAir != null && sideAir[FACE_RIGHT]) {
+        if (rotatedSideAir != null && rotatedSideAir[FACE_RIGHT]) {
             lower[2] = true;
             lower[3] = true;
         }
-        if (sideAir != null && sideAir[FACE_LEFT]) {
+        if (rotatedSideAir != null && rotatedSideAir[FACE_LEFT]) {
             lower[0] = true;
             lower[1] = true;
         }
@@ -73,6 +74,26 @@ class Slopes {
             rotated[i][0] = -source[i][2];
             rotated[i][1] = source[i][1];
             rotated[i][2] = source[i][0];
+        }
+        return rotated;
+    }
+
+    private static boolean[] rotateSideFlags(boolean[] sideFlags, int steps) {
+        if (sideFlags == null) {
+            return null;
+        }
+        boolean[] rotated = new boolean[sideFlags.length];
+        System.arraycopy(sideFlags, 0, rotated, 0, sideFlags.length);
+        int turns = ((steps % 4) + 4) % 4;
+        for (int i = 0; i < turns; i++) {
+            boolean front = rotated[FACE_FRONT];
+            boolean right = rotated[FACE_RIGHT];
+            boolean back = rotated[FACE_BACK];
+            boolean left = rotated[FACE_LEFT];
+            rotated[FACE_RIGHT] = front;
+            rotated[FACE_BACK] = right;
+            rotated[FACE_LEFT] = back;
+            rotated[FACE_FRONT] = left;
         }
         return rotated;
     }
