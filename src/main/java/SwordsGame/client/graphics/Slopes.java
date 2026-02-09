@@ -15,7 +15,7 @@ class Slopes {
                                     boolean[] sideAir, boolean[] sideSame) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
-        int cornerRotationSteps = getCornerRotationSteps(sideSame);
+        int cornerRotationSteps = resolveCornerRotation(sideSame);
         for (int i = 0; i < cornerRotationSteps; i++) {
             verts = rotateTopVerts90(verts);
         }
@@ -77,7 +77,7 @@ class Slopes {
         return rotated;
     }
 
-    private static int getCornerRotationSteps(boolean[] sideSame) {
+    private static int resolveCornerRotation(boolean[] sideSame) {
         if (sideSame == null) {
             return 0;
         }
@@ -85,8 +85,7 @@ class Slopes {
         boolean back = sideSame[FACE_BACK];
         boolean right = sideSame[FACE_RIGHT];
         boolean left = sideSame[FACE_LEFT];
-        int openSides = countOpenSides(front, back, right, left);
-        if (openSides != 2) {
+        if (!isCornerPair(front, back, right, left)) {
             return 0;
         }
         if (front && right) {
@@ -98,19 +97,19 @@ class Slopes {
         if (back && left) {
             return 2;
         }
-        if (left && front) {
-            return 3;
-        }
-        return 0;
+        return 3;
     }
 
-    private static int countOpenSides(boolean front, boolean back, boolean right, boolean left) {
+    private static boolean isCornerPair(boolean front, boolean back, boolean right, boolean left) {
         int count = 0;
         if (front) count++;
         if (back) count++;
         if (right) count++;
         if (left) count++;
-        return count;
+        if (count != 2) {
+            return false;
+        }
+        return (front && right) || (right && back) || (back && left) || (left && front);
     }
 
     private static void appendTriangleWithNormalUp(FloatCollector collector,
