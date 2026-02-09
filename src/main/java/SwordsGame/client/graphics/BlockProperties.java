@@ -6,6 +6,7 @@ public class BlockProperties {
     private boolean emission = false;
     private boolean transparent = false;
     private boolean solid = true;
+    private boolean smoothing = false;
     private float hardness = 1.0f;
 
     public BlockProperties() {}
@@ -15,6 +16,7 @@ public class BlockProperties {
     public BlockProperties emission() { this.emission = true; return this; }
     public BlockProperties transparent() { this.transparent = true; return this; }
     public BlockProperties nonSolid() { this.solid = false; return this; }
+    public BlockProperties smoothing() { this.smoothing = true; return this; }
     public BlockProperties hardness(float value) { this.hardness = value; return this; }
 
     public boolean hasRandomRotation() { return randomRotation; }
@@ -22,5 +24,6 @@ public class BlockProperties {
     public boolean hasEmission() { return emission; }
     public boolean isTransparent() { return transparent; }
     public boolean isSolid() { return solid; }
+    public boolean hasSmoothing() { return smoothing; }
     public float getHardness() { return hardness; }
 }

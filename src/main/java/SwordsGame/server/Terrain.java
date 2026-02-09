@@ -64,8 +64,6 @@ public class Terrain {
                     } else {
                         if (y == groundY) {
                             chunk.setBlock(x, y, z, Type.GRASS.id);
-                        } else if (y < groundY) {
-                            chunk.setBlock(x, y, z, Type.STONE.id);
                         } else {
                             chunk.setBlock(x, y, z, Type.AIR.id);
                         }
