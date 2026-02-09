@@ -222,6 +222,15 @@ public class World {
         return true;
     }
 
+    private boolean isGrass(ChunkManager cm, Chunk currentChunk, int x, int y, int z) {
+        if (y < 0) return false;
+        if (y >= Chunk.HEIGHT) return false;
+        int worldX = currentChunk.x * Chunk.SIZE + x;
+        int worldZ = currentChunk.z * Chunk.SIZE + z;
+        byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
+        return neighborType == Type.GRASS.id;
+    }
+
     public void markChunkDirty(Chunk chunk) {
         ChunkRenderData data = chunkCache.remove(chunk);
         if (data != null) {
@@ -323,10 +332,16 @@ public class World {
                     sideAir[4] = isAir(cm, chunk, x + 1, y, z);
                     sideAir[5] = isAir(cm, chunk, x - 1, y, z);
 
+                    boolean[] sideGrass = new boolean[6];
+                    sideGrass[0] = isGrass(cm, chunk, x, y, z + 1);
+                    sideGrass[1] = isGrass(cm, chunk, x, y, z - 1);
+                    sideGrass[4] = isGrass(cm, chunk, x + 1, y, z);
+                    sideGrass[5] = isGrass(cm, chunk, x - 1, y, z);
+
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, sideAir, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    builder.addBlock(type, seed, faces, sideAir, sideGrass, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }
