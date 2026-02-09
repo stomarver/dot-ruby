@@ -140,7 +140,7 @@ public class Debug {
             hud.setCameraInfo("");
             return;
         }
-        hud.setSunInfo(String.format("^2Sun^0: ^3yaw ^0%.1f ^4pitch ^0%.1f", sun.getYaw(), sun.getPitch()));
+        hud.setSunInfo(String.format("^2Sun^0\n^3yaw^0 %.1f\n^4pitch^0 %.1f", sun.getYaw(), sun.getPitch()));
         hud.setCameraInfo(buildCameraInfo());
     }
 
@@ -156,7 +156,7 @@ public class Debug {
         int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
         int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
         return String.format(
-                "^2Camera^0: ^3pos ^0(%.1f, %.1f) ^4chunk ^0(%d, %d) ^1local ^0(%d, %d)",
+                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)",
                 camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
     }
 
