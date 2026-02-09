@@ -50,13 +50,14 @@ public class Terrain {
                 double finalMask = body + edges;
                 boolean isPillar = finalMask > 0.6;
 
+                boolean hasCobbleColumn = isPillar && (pillarTopY - groundY) > 1;
                 for (int y = 0; y < Chunk.HEIGHT; y++) {
                     if (isPillar) {
                         if (y == pillarTopY) {
                             chunk.setBlock(x, y, z, Type.GRASS.id);
                         } else if (y < pillarTopY && y > groundY) {
                             chunk.setBlock(x, y, z, Type.COBBLE.id);
-                        } else if (y <= groundY) {
+                        } else if (y == groundY && hasCobbleColumn) {
                             chunk.setBlock(x, y, z, Type.STONE.id);
                         } else {
                             chunk.setBlock(x, y, z, Type.AIR.id);
