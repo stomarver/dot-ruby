@@ -9,6 +9,6 @@ public class Stone extends Block {
         super(Type.STONE, Paths.BLOCK_STONE,
                 new BlockProperties()
                         .randomColor()
-                        .sloped());
+                        .slopeBlocker());
     }
 }

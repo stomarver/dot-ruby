@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Map;
 import SwordsGame.client.blocks.Registry;
 import SwordsGame.client.graphics.Block;
+import SwordsGame.client.graphics.BlockProperties;
 import SwordsGame.client.graphics.BlockRenderer;
 import SwordsGame.client.graphics.ChunkMesh;
 import SwordsGame.client.graphics.MeshBuilder;
@@ -204,7 +205,7 @@ public class World {
         return neighborType == 0 || neighborType != currentType;
     }
 
-    private boolean isAir(ChunkManager cm, Chunk currentChunk, int x, int y, int z) {
+    private boolean isAir(ChunkManager cm, Chunk currentChunk, int x, int y, int z, BlockProperties currentProps) {
         if (y <= 0) return false;
         if (y >= Chunk.HEIGHT) return true;
         int worldX = currentChunk.x * Chunk.SIZE + x;
@@ -213,12 +214,14 @@ public class World {
         if (neighborType != 0) {
             return false;
         }
-        int aboveY = y + 1;
-        if (aboveY < Chunk.HEIGHT) {
-            byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
-            Block aboveBlock = Registry.get(aboveType);
-            if (aboveBlock != null && aboveBlock.getProperties().isSloped()) {
-                return false;
+        if (currentProps != null && currentProps.isSloped()) {
+            int aboveY = y + 1;
+            if (aboveY < Chunk.HEIGHT) {
+                byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
+                Block aboveBlock = Registry.get(aboveType);
+                if (aboveBlock != null && aboveBlock.getProperties().isSlopeBlocker()) {
+                    return false;
+                }
             }
         }
         return true;
@@ -328,11 +331,14 @@ public class World {
 
                     if (!isAnyFaceVisible(faces)) continue;
 
+                    Block currentBlock = Registry.get(type);
+                    BlockProperties currentProps = currentBlock != null ? currentBlock.getProperties() : null;
+
                     boolean[] sideAir = new boolean[6];
-                    sideAir[0] = isAir(cm, chunk, x, y, z + 1);
-                    sideAir[1] = isAir(cm, chunk, x, y, z - 1);
-                    sideAir[4] = isAir(cm, chunk, x + 1, y, z);
-                    sideAir[5] = isAir(cm, chunk, x - 1, y, z);
+                    sideAir[0] = isAir(cm, chunk, x, y, z + 1, currentProps);
+                    sideAir[1] = isAir(cm, chunk, x, y, z - 1, currentProps);
+                    sideAir[4] = isAir(cm, chunk, x + 1, y, z, currentProps);
+                    sideAir[5] = isAir(cm, chunk, x - 1, y, z, currentProps);
 
                     boolean[] sideSame = new boolean[6];
                     sideSame[0] = isSameType(cm, chunk, x, y, z + 1, type);
