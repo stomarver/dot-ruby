@@ -215,16 +215,33 @@ public class World {
             return false;
         }
         if (currentProps != null && currentProps.isSloped()) {
-            int aboveY = y + 1;
-            if (aboveY < Chunk.HEIGHT) {
-                byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
-                Block aboveBlock = Registry.get(aboveType);
-                if (aboveBlock != null && aboveBlock.getProperties().isSlopeBlocker()) {
-                    return false;
-                }
+            if (isSlopeBlocked(cm, worldX, y + 1, worldZ)) {
+                return false;
             }
         }
         return true;
+    }
+
+    private boolean isSlopeBlocked(ChunkManager cm, int worldX, int startY, int worldZ) {
+        for (int y = startY; y < Chunk.HEIGHT; y++) {
+            byte type = cm.getBlockAtWorld(worldX, y, worldZ);
+            if (type == 0) {
+                continue;
+            }
+            Block block = Registry.get(type);
+            if (block == null) {
+                return false;
+            }
+            BlockProperties props = block.getProperties();
+            if (props.isBlockUnder()) {
+                return true;
+            }
+            if (props.isBlock() && y == startY) {
+                return true;
+            }
+            return false;
+        }
+        return false;
     }
 
     private boolean isSameType(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte type) {

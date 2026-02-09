@@ -7,7 +7,8 @@ public class BlockProperties {
     private boolean transparent = false;
     private boolean solid = true;
     private boolean sloped = false;
-    private boolean slopeBlocker = false;
+    private boolean block = false;
+    private boolean blockUnder = false;
     private float hardness = 1.0f;
 
     public BlockProperties() {}
@@ -18,7 +19,8 @@ public class BlockProperties {
     public BlockProperties transparent() { this.transparent = true; return this; }
     public BlockProperties nonSolid() { this.solid = false; return this; }
     public BlockProperties sloped() { this.sloped = true; return this; }
-    public BlockProperties slopeBlocker() { this.slopeBlocker = true; return this; }
+    public BlockProperties block() { this.block = true; return this; }
+    public BlockProperties blockUnder() { this.blockUnder = true; return this; }
     public BlockProperties hardness(float value) { this.hardness = value; return this; }
 
     public boolean hasRandomRotation() { return randomRotation; }
@@ -27,6 +29,7 @@ public class BlockProperties {
     public boolean isTransparent() { return transparent; }
     public boolean isSolid() { return solid; }
     public boolean isSloped() { return sloped; }
-    public boolean isSlopeBlocker() { return slopeBlocker; }
+    public boolean isBlock() { return block; }
+    public boolean isBlockUnder() { return blockUnder; }
     public float getHardness() { return hardness; }
 }
