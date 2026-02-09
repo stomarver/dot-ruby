@@ -12,28 +12,23 @@ class Slopes {
 
     static void appendSlopedTopFace(FloatCollector collector, Block block, int rot,
                                     float baseX, float baseY, float baseZ, float color,
-                                    boolean[] sideAir, boolean[] sideSame) {
+                                    boolean[] sideAir) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
-        boolean[] effectiveSideAir = sideAir;
-        if (inCorner(sideAir, sideSame) || inSlope(sideAir, sideSame)) {
-            effectiveSideAir = sideSame;
-        }
-
         boolean[] lower = new boolean[4];
-        if (effectiveSideAir != null && effectiveSideAir[FACE_FRONT]) {
+        if (sideAir != null && sideAir[FACE_FRONT]) {
             lower[1] = true;
             lower[2] = true;
         }
-        if (effectiveSideAir != null && effectiveSideAir[FACE_BACK]) {
+        if (sideAir != null && sideAir[FACE_BACK]) {
             lower[0] = true;
             lower[3] = true;
         }
-        if (effectiveSideAir != null && effectiveSideAir[FACE_RIGHT]) {
+        if (sideAir != null && sideAir[FACE_RIGHT]) {
             lower[2] = true;
             lower[3] = true;
         }
-        if (effectiveSideAir != null && effectiveSideAir[FACE_LEFT]) {
+        if (sideAir != null && sideAir[FACE_LEFT]) {
             lower[0] = true;
             lower[1] = true;
         }
@@ -65,61 +60,6 @@ class Slopes {
             copy[i][2] = source[i][2];
         }
         return copy;
-    }
-
-    private static boolean hasSideOpen(boolean[] sideFlags) {
-        if (sideFlags == null) {
-            return false;
-        }
-        return sideFlags[FACE_FRONT] || sideFlags[FACE_BACK] || sideFlags[FACE_RIGHT] || sideFlags[FACE_LEFT];
-    }
-
-    private static int countSideTrue(boolean[] sideFlags) {
-        int count = 0;
-        if (sideFlags[FACE_FRONT]) count++;
-        if (sideFlags[FACE_BACK]) count++;
-        if (sideFlags[FACE_RIGHT]) count++;
-        if (sideFlags[FACE_LEFT]) count++;
-        return count;
-    }
-
-    private static boolean isCornerPair(boolean[] sideFlags) {
-        if (sideFlags == null) {
-            return false;
-        }
-        boolean front = sideFlags[FACE_FRONT];
-        boolean back = sideFlags[FACE_BACK];
-        boolean right = sideFlags[FACE_RIGHT];
-        boolean left = sideFlags[FACE_LEFT];
-        int count = 0;
-        if (front) count++;
-        if (back) count++;
-        if (right) count++;
-        if (left) count++;
-        if (count != 2) {
-            return false;
-        }
-        return (front && right) || (right && back) || (back && left) || (left && front);
-    }
-
-    private static boolean outCorner(boolean[] sideAir) {
-        return isCornerPair(sideAir);
-    }
-
-    private static boolean inCorner(boolean[] sideAir, boolean[] sideSame) {
-        return !hasSideOpen(sideAir) && isCornerPair(sideSame);
-    }
-
-    private static boolean outSlope(boolean[] sideAir) {
-        return countSideTrue(sideAir) == 1;
-    }
-
-    private static boolean inSlope(boolean[] sideAir, boolean[] sideSame) {
-        return !hasSideOpen(sideAir) && countSideTrue(sideSame) == 1;
-    }
-
-    private static boolean slope(boolean[] sideAir, boolean[] sideSame) {
-        return outSlope(sideAir) || inSlope(sideAir, sideSame);
     }
 
     private static void appendTriangleWithNormalUp(FloatCollector collector,

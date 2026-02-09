@@ -255,15 +255,6 @@ public class World {
         return false;
     }
 
-    private boolean isSameType(ChunkManager cm, Chunk currentChunk, int x, int y, int z, byte type) {
-        if (y < 0) return false;
-        if (y >= Chunk.HEIGHT) return false;
-        int worldX = currentChunk.x * Chunk.SIZE + x;
-        int worldZ = currentChunk.z * Chunk.SIZE + z;
-        byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
-        return neighborType == type;
-    }
-
     public void markChunkDirty(Chunk chunk) {
         ChunkRenderData data = chunkCache.remove(chunk);
         if (data != null) {
@@ -368,16 +359,10 @@ public class World {
                     sideAir[4] = isAir(cm, chunk, x + 1, y, z, currentProps);
                     sideAir[5] = isAir(cm, chunk, x - 1, y, z, currentProps);
 
-                    boolean[] sideSame = new boolean[6];
-                    sideSame[0] = isSameType(cm, chunk, x, y, z + 1, type);
-                    sideSame[1] = isSameType(cm, chunk, x, y, z - 1, type);
-                    sideSame[4] = isSameType(cm, chunk, x + 1, y, z, type);
-                    sideSame[5] = isSameType(cm, chunk, x - 1, y, z, type);
-
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, sideAir, sideSame, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    builder.addBlock(type, seed, faces, sideAir, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }
