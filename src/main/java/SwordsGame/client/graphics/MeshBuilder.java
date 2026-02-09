@@ -50,7 +50,9 @@ public class MeshBuilder {
         float baseY = wy * scale;
         float baseZ = (wz - totalOffset) * scale;
 
+        boolean slopeActive = props.hasVertexSmoothing() && faces[2] && hasSlopeSide(faces);
         for (int face = 0; face < 6; face++) {
+            if (slopeActive && face != 2) continue;
             if (topOnly && face != 2) continue;
             if (!faces[face]) continue;
             int textureId = block.getTextureId(face);
@@ -58,7 +60,7 @@ public class MeshBuilder {
 
             Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
-            SlopeVertexShader shader = props.hasVertexSmoothing() ? slopeShader : null;
+            SlopeVertexShader shader = slopeActive ? slopeShader : null;
             appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod, faces, shader);
         }
     }
@@ -116,5 +118,9 @@ public class MeshBuilder {
                 u, vTex,
                 color, color, color
         );
+    }
+
+    private boolean hasSlopeSide(boolean[] faces) {
+        return faces[0] || faces[1] || faces[4] || faces[5];
     }
 }
