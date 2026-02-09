@@ -203,7 +203,7 @@ public class World {
     }
 
     private boolean isAir(ChunkManager cm, Chunk currentChunk, int x, int y, int z) {
-        if (y < 0) return false;
+        if (y <= 0) return false;
         if (y >= Chunk.HEIGHT) return true;
         int worldX = currentChunk.x * Chunk.SIZE + x;
         int worldZ = currentChunk.z * Chunk.SIZE + z;
