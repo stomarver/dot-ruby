@@ -1,7 +1,7 @@
 package SwordsGame.server.environment;
 
 public class Sun {
-    private static final float DEFAULT_YAW = 45.0f;
+    private static final float DEFAULT_YAW = 65.0f;
     private static final float DEFAULT_PITCH = 50.0f;
     private static final float TILT_DEGREES = 30.0f;
 

@@ -28,6 +28,8 @@ public class Debug {
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
     private boolean resetSunHeld = false;
+    private boolean showDebugInfo = true;
+    private boolean toggleDebugHeld = false;
 
 
     public static void main(String[] args) {
@@ -57,6 +59,7 @@ public class Debug {
             camera.update(window, chunkManager, renderer);
             updateSunControls(window.getHandle());
             updateBoundsToggle(window.getHandle());
+            updateDebugToggle(window.getHandle());
             updateHudInfo();
 
             window.beginRenderToFBO();
@@ -112,6 +115,14 @@ public class Debug {
         toggleBoundsHeld = togglePressed;
     }
 
+    private void updateDebugToggle(long windowHandle) {
+        boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_F8) == GLFW_PRESS;
+        if (togglePressed && !toggleDebugHeld) {
+            showDebugInfo = !showDebugInfo;
+        }
+        toggleDebugHeld = togglePressed;
+    }
+
     private void handleSunReset(long windowHandle) {
         boolean resetPressed = glfwGetKey(windowHandle, GLFW_KEY_R) == GLFW_PRESS;
         if (resetPressed && !resetSunHeld) {
@@ -124,7 +135,12 @@ public class Debug {
         if (hud == null || camera == null || chunkManager == null) {
             return;
         }
-        hud.setSunInfo(String.format("Sun: yaw %.1f pitch %.1f", sun.getYaw(), sun.getPitch()));
+        if (!showDebugInfo) {
+            hud.setSunInfo("");
+            hud.setCameraInfo("");
+            return;
+        }
+        hud.setSunInfo(String.format("^2Sun^0: ^3yaw ^0%.1f ^4pitch ^0%.1f", sun.getYaw(), sun.getPitch()));
         hud.setCameraInfo(buildCameraInfo());
     }
 
@@ -140,7 +156,7 @@ public class Debug {
         int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
         int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
         return String.format(
-                "Camera: pos (%.1f, %.1f) chunk (%d, %d) local (%d, %d)",
+                "^2Camera^0: ^3pos ^0(%.1f, %.1f) ^4chunk ^0(%d, %d) ^1local ^0(%d, %d)",
                 camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
     }
 

@@ -86,13 +86,12 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 15, 2, 1);
-        text.draw("^2WIP", Anchor.CENTER, Anchor.TOP, 0, 10, 1, Wave.MEDIUM);
+        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 95, 2, 1);
         if (!sunInfo.isEmpty()) {
-            text.draw(sunInfo, Anchor.LEFT, Anchor.TOP, 15, 28, 1);
+            text.draw(sunInfo, Anchor.LEFT, Anchor.TOP, 95, 28, 1);
         }
         if (!cameraInfo.isEmpty()) {
-            text.draw(cameraInfo, Anchor.LEFT, Anchor.TOP, 15, 44, 1);
+            text.draw(cameraInfo, Anchor.LEFT, Anchor.TOP, 95, 44, 1);
         }
 
         messageSystem.draw(text);
