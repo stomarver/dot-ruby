@@ -43,7 +43,7 @@ public class MeshBuilder {
         this.useVertexColor = useVertexColor;
     }
 
-    public void addBlock(byte typeId, int seed, boolean[] faces, boolean[] sideAir,
+    public void addBlock(byte typeId, int seed, boolean[] faces, boolean[] sideAir, boolean[] sideGrass,
                          int wx, int wy, int wz, float totalOffset, float scale) {
         Block block = Registry.get(typeId);
         if (block == null) return;
@@ -69,7 +69,7 @@ public class MeshBuilder {
             Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
             if (slopeGrassTop && face == FACE_TOP) {
-                appendSlopedTopFace(collector, block, rot, baseX, baseY, baseZ, colorMod, sideAir);
+                appendSlopedTopFace(collector, block, rot, baseX, baseY, baseZ, colorMod, sideAir, sideGrass);
             } else {
                 appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod);
             }
@@ -111,10 +111,11 @@ public class MeshBuilder {
     }
 
     private void appendSlopedTopFace(FloatCollector collector, Block block, int rot,
-                                     float baseX, float baseY, float baseZ, float color, boolean[] sideAir) {
+                                     float baseX, float baseY, float baseZ, float color,
+                                     boolean[] sideAir, boolean[] sideGrass) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(FACE_VERTS[FACE_TOP]);
-        int cornerRotationSteps = getCornerRotationSteps(sideAir);
+        int cornerRotationSteps = getCornerRotationSteps(sideGrass);
         for (int i = 0; i < cornerRotationSteps; i++) {
             verts = rotateTopVerts90(verts);
         }
@@ -176,14 +177,14 @@ public class MeshBuilder {
         return rotated;
     }
 
-    private int getCornerRotationSteps(boolean[] sideAir) {
-        if (sideAir == null) {
+    private int getCornerRotationSteps(boolean[] sideGrass) {
+        if (sideGrass == null) {
             return 0;
         }
-        boolean front = sideAir[FACE_FRONT];
-        boolean back = sideAir[FACE_BACK];
-        boolean right = sideAir[FACE_RIGHT];
-        boolean left = sideAir[FACE_LEFT];
+        boolean front = sideGrass[FACE_FRONT];
+        boolean back = sideGrass[FACE_BACK];
+        boolean right = sideGrass[FACE_RIGHT];
+        boolean left = sideGrass[FACE_LEFT];
         int openSides = countOpenSides(front, back, right, left);
         if (openSides != 2) {
             return 0;

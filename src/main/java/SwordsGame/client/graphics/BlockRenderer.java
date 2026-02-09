@@ -77,13 +77,13 @@ public class BlockRenderer {
 
     private static ChunkMesh buildMesh(Block block, int rot) {
         MeshBuilder builder = new MeshBuilder(false, false);
-        builder.addBlock(block.getType().id, rot, ALL_FACES, null, 0, 0, 0, 0, World.BLOCK_SCALE);
+        builder.addBlock(block.getType().id, rot, ALL_FACES, null, null, 0, 0, 0, 0, World.BLOCK_SCALE);
         return builder.build();
     }
 
     private static ChunkMesh buildDynamicMesh(Block block, int rot, boolean[] faces) {
         MeshBuilder builder = new MeshBuilder(false, false);
-        builder.addBlock(block.getType().id, rot, faces, null, 0, 0, 0, 0, World.BLOCK_SCALE);
+        builder.addBlock(block.getType().id, rot, faces, null, null, 0, 0, 0, 0, World.BLOCK_SCALE);
         return builder.build();
     }
 
