@@ -15,7 +15,7 @@ class Slopes {
                                     boolean[] sideAir, boolean[] sideSame) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
-        int cornerRotationSteps = resolveCornerRotation(sideSame);
+        int cornerRotationSteps = resolveCornerRotation(sideSame, sideAir);
         boolean[] rotatedSideAir = rotateSideFlags(sideAir, cornerRotationSteps);
         for (int i = 0; i < cornerRotationSteps; i++) {
             verts = rotateTopVerts90(verts);
@@ -98,16 +98,28 @@ class Slopes {
         return rotated;
     }
 
-    private static int resolveCornerRotation(boolean[] sideSame) {
-        if (sideSame == null) {
-            return 0;
+    private static int resolveCornerRotation(boolean[] sideSame, boolean[] sideAir) {
+        int fromSame = resolveCornerPairRotation(sideSame);
+        if (fromSame != -1) {
+            return fromSame;
         }
-        boolean front = sideSame[FACE_FRONT];
-        boolean back = sideSame[FACE_BACK];
-        boolean right = sideSame[FACE_RIGHT];
-        boolean left = sideSame[FACE_LEFT];
+        int fromAir = resolveCornerPairRotation(sideAir);
+        if (fromAir != -1) {
+            return fromAir;
+        }
+        return 0;
+    }
+
+    private static int resolveCornerPairRotation(boolean[] sideFlags) {
+        if (sideFlags == null) {
+            return -1;
+        }
+        boolean front = sideFlags[FACE_FRONT];
+        boolean back = sideFlags[FACE_BACK];
+        boolean right = sideFlags[FACE_RIGHT];
+        boolean left = sideFlags[FACE_LEFT];
         if (!isCornerPair(front, back, right, left)) {
-            return 0;
+            return -1;
         }
         if (front && right) {
             return 0;
