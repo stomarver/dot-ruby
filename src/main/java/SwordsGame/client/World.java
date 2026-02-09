@@ -209,7 +209,11 @@ public class World {
         if (neighborBlock == null) {
             return false;
         }
-        return !neighborBlock.getProperties().occludesFaces();
+        BlockProperties neighborProps = neighborBlock.getProperties();
+        if (neighborProps.isSloped()) {
+            return true;
+        }
+        return !neighborProps.occludesFaces();
     }
 
     private boolean isAir(ChunkManager cm, Chunk currentChunk, int x, int y, int z, BlockProperties currentProps) {
