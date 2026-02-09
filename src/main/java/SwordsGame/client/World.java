@@ -211,6 +211,12 @@ public class World {
         }
         BlockProperties neighborProps = neighborBlock.getProperties();
         if (neighborProps.isSloped()) {
+            if (neighborProps.isSlopeBlockUnder()) {
+                return false;
+            }
+            if (isSlopeBlocked(cm, worldX, y + 1, worldZ)) {
+                return false;
+            }
             return true;
         }
         return !neighborProps.occludesFaces();
@@ -402,6 +408,13 @@ public class World {
         if (neighborBlock == null) {
             return false;
         }
-        return neighborBlock.getProperties().isSloped();
+        BlockProperties neighborProps = neighborBlock.getProperties();
+        if (!neighborProps.isSloped()) {
+            return false;
+        }
+        if (neighborProps.isSlopeBlockUnder()) {
+            return false;
+        }
+        return !isSlopeBlocked(cm, worldX, y + 1, worldZ);
     }
 }
