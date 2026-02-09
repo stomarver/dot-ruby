@@ -8,6 +8,7 @@ public class Stone extends Block {
     public Stone() {
         super(Type.STONE, Paths.BLOCK_STONE,
                 new BlockProperties()
-                        .randomColor());
+                        .randomColor()
+                        .sloped());
     }
 }
