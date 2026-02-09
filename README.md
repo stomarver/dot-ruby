@@ -1,9 +1,9 @@
    <A HREF="http://theintraclinic.com">
-  <IMG SRC="http://theintraclinic.com/buttons/btn2.gif">
+  <IMG SRC="https://github.com/stomarver/dot-ruby/blob/main/IntraClinic.png?raw=true">
 </A>
-
+&nbsp;&nbsp;&nbsp;&nbsp;
    <A HREF="https://discord.gg/AQtjxJDatu">
-  <IMG SRC="https://github.com/stomarver/dot-ruby/blob/main/btn2.png">
+  <IMG SRC="https://github.com/stomarver/dot-ruby/blob/main/DotRuby.png?raw=true">
 </A>
 
 ***
