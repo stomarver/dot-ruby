@@ -11,6 +11,6 @@ public class Grass extends Block {
                         .randomRotation()
                         .randomColor()
                         .sloped()
-                        .blockUnder());
+                        .slopeBlockUnder());
     }
 }

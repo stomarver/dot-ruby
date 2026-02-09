@@ -202,7 +202,14 @@ public class World {
         int worldX = currentChunk.x * Chunk.SIZE + x;
         int worldZ = currentChunk.z * Chunk.SIZE + z;
         byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
-        return neighborType == 0 || neighborType != currentType;
+        if (neighborType == 0) {
+            return true;
+        }
+        Block neighborBlock = Registry.get(neighborType);
+        if (neighborBlock == null) {
+            return false;
+        }
+        return !neighborBlock.getProperties().occludesFaces();
     }
 
     private boolean isAir(ChunkManager cm, Chunk currentChunk, int x, int y, int z, BlockProperties currentProps) {
@@ -233,10 +240,10 @@ public class World {
                 return false;
             }
             BlockProperties props = block.getProperties();
-            if (props.isBlockUnder()) {
+            if (props.isSlopeBlockUnder()) {
                 return true;
             }
-            if (props.isBlock() && y == startY) {
+            if (props.isSlopeBlock() && y == startY) {
                 return true;
             }
             return false;
