@@ -1,3 +1,4 @@
+&nbsp;&nbsp;&nbsp;&nbsp;
    <A HREF="http://theintraclinic.com">
   <IMG SRC="https://github.com/stomarver/dot-ruby/blob/main/IntraClinic.png?raw=true">
 </A>
