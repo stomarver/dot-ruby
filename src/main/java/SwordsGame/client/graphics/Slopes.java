@@ -15,35 +15,25 @@ class Slopes {
                                     boolean[] sideAir, boolean[] sideSame) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
-        int cornerFromSame = resolveCornerPairRotation(sideSame);
-        int cornerRotationSteps = cornerFromSame != -1
-                ? cornerFromSame
-                : resolveCornerPairRotation(sideAir);
-        if (cornerRotationSteps == -1) {
-            cornerRotationSteps = 0;
-        }
-        boolean[] rotatedSideAir = rotateSideFlags(sideAir, cornerRotationSteps);
-        if (cornerFromSame != -1 && !hasSideOpen(rotatedSideAir)) {
-            rotatedSideAir = buildCornerAirFlags((cornerRotationSteps + 2) % 4);
-        }
-        for (int i = 0; i < cornerRotationSteps; i++) {
-            verts = rotateTopVerts90(verts);
+        boolean[] effectiveSideAir = sideAir;
+        if (!hasSideOpen(effectiveSideAir) && sideSame != null && countSideTrue(sideSame) >= 2) {
+            effectiveSideAir = buildOppositeSideFlags(sideSame);
         }
 
         boolean[] lower = new boolean[4];
-        if (rotatedSideAir != null && rotatedSideAir[FACE_FRONT]) {
+        if (effectiveSideAir != null && effectiveSideAir[FACE_FRONT]) {
             lower[1] = true;
             lower[2] = true;
         }
-        if (rotatedSideAir != null && rotatedSideAir[FACE_BACK]) {
+        if (effectiveSideAir != null && effectiveSideAir[FACE_BACK]) {
             lower[0] = true;
             lower[3] = true;
         }
-        if (rotatedSideAir != null && rotatedSideAir[FACE_RIGHT]) {
+        if (effectiveSideAir != null && effectiveSideAir[FACE_RIGHT]) {
             lower[2] = true;
             lower[3] = true;
         }
-        if (rotatedSideAir != null && rotatedSideAir[FACE_LEFT]) {
+        if (effectiveSideAir != null && effectiveSideAir[FACE_LEFT]) {
             lower[0] = true;
             lower[1] = true;
         }
@@ -77,59 +67,6 @@ class Slopes {
         return copy;
     }
 
-    private static float[][] rotateTopVerts90(float[][] source) {
-        float[][] rotated = new float[source.length][3];
-        for (int i = 0; i < source.length; i++) {
-            rotated[i][0] = -source[i][2];
-            rotated[i][1] = source[i][1];
-            rotated[i][2] = source[i][0];
-        }
-        return rotated;
-    }
-
-    private static boolean[] rotateSideFlags(boolean[] sideFlags, int steps) {
-        if (sideFlags == null) {
-            return null;
-        }
-        boolean[] rotated = new boolean[sideFlags.length];
-        System.arraycopy(sideFlags, 0, rotated, 0, sideFlags.length);
-        int turns = ((steps % 4) + 4) % 4;
-        for (int i = 0; i < turns; i++) {
-            boolean front = rotated[FACE_FRONT];
-            boolean right = rotated[FACE_RIGHT];
-            boolean back = rotated[FACE_BACK];
-            boolean left = rotated[FACE_LEFT];
-            rotated[FACE_RIGHT] = front;
-            rotated[FACE_BACK] = right;
-            rotated[FACE_LEFT] = back;
-            rotated[FACE_FRONT] = left;
-        }
-        return rotated;
-    }
-
-    private static int resolveCornerPairRotation(boolean[] sideFlags) {
-        if (sideFlags == null) {
-            return -1;
-        }
-        boolean front = sideFlags[FACE_FRONT];
-        boolean back = sideFlags[FACE_BACK];
-        boolean right = sideFlags[FACE_RIGHT];
-        boolean left = sideFlags[FACE_LEFT];
-        if (!isCornerPair(front, back, right, left)) {
-            return -1;
-        }
-        if (front && right) {
-            return 0;
-        }
-        if (right && back) {
-            return 1;
-        }
-        if (back && left) {
-            return 2;
-        }
-        return 3;
-    }
-
     private static boolean hasSideOpen(boolean[] sideFlags) {
         if (sideFlags == null) {
             return false;
@@ -137,35 +74,22 @@ class Slopes {
         return sideFlags[FACE_FRONT] || sideFlags[FACE_BACK] || sideFlags[FACE_RIGHT] || sideFlags[FACE_LEFT];
     }
 
-    private static boolean[] buildCornerAirFlags(int rotation) {
-        boolean[] flags = new boolean[6];
-        int normalized = ((rotation % 4) + 4) % 4;
-        if (normalized == 0) {
-            flags[FACE_FRONT] = true;
-            flags[FACE_RIGHT] = true;
-        } else if (normalized == 1) {
-            flags[FACE_RIGHT] = true;
-            flags[FACE_BACK] = true;
-        } else if (normalized == 2) {
-            flags[FACE_BACK] = true;
-            flags[FACE_LEFT] = true;
-        } else {
-            flags[FACE_LEFT] = true;
-            flags[FACE_FRONT] = true;
-        }
-        return flags;
+    private static int countSideTrue(boolean[] sideFlags) {
+        int count = 0;
+        if (sideFlags[FACE_FRONT]) count++;
+        if (sideFlags[FACE_BACK]) count++;
+        if (sideFlags[FACE_RIGHT]) count++;
+        if (sideFlags[FACE_LEFT]) count++;
+        return count;
     }
 
-    private static boolean isCornerPair(boolean front, boolean back, boolean right, boolean left) {
-        int count = 0;
-        if (front) count++;
-        if (back) count++;
-        if (right) count++;
-        if (left) count++;
-        if (count != 2) {
-            return false;
-        }
-        return (front && right) || (right && back) || (back && left) || (left && front);
+    private static boolean[] buildOppositeSideFlags(boolean[] sideSame) {
+        boolean[] flags = new boolean[6];
+        flags[FACE_FRONT] = !sideSame[FACE_FRONT];
+        flags[FACE_BACK] = !sideSame[FACE_BACK];
+        flags[FACE_RIGHT] = !sideSame[FACE_RIGHT];
+        flags[FACE_LEFT] = !sideSame[FACE_LEFT];
+        return flags;
     }
 
     private static void appendTriangleWithNormalUp(FloatCollector collector,
