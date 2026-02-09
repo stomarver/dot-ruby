@@ -16,8 +16,11 @@ class Slopes {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
         boolean[] effectiveSide = sideAir;
-        if (!hasSideOpen(sideAir) && isCornerPair(sideSloped)) {
-            effectiveSide = sideSloped;
+        if (!hasSideOpen(sideAir)) {
+            boolean[] cornerSide = selectCornerSide(sideSloped);
+            if (cornerSide != null) {
+                effectiveSide = cornerSide;
+            }
         }
         boolean[] lower = new boolean[4];
         if (effectiveSide != null && effectiveSide[FACE_FRONT]) {
@@ -119,15 +122,35 @@ class Slopes {
         boolean back = sideFlags[FACE_BACK];
         boolean right = sideFlags[FACE_RIGHT];
         boolean left = sideFlags[FACE_LEFT];
-        int count = 0;
-        if (front) count++;
-        if (back) count++;
-        if (right) count++;
-        if (left) count++;
-        if (count != 2) {
-            return false;
-        }
         return (front && right) || (right && back) || (back && left) || (left && front);
+    }
+
+    private static boolean[] selectCornerSide(boolean[] sideFlags) {
+        if (!isCornerPair(sideFlags)) {
+            return null;
+        }
+        boolean[] selected = new boolean[6];
+        if (sideFlags[FACE_FRONT] && sideFlags[FACE_RIGHT]) {
+            selected[FACE_FRONT] = true;
+            selected[FACE_RIGHT] = true;
+            return selected;
+        }
+        if (sideFlags[FACE_RIGHT] && sideFlags[FACE_BACK]) {
+            selected[FACE_RIGHT] = true;
+            selected[FACE_BACK] = true;
+            return selected;
+        }
+        if (sideFlags[FACE_BACK] && sideFlags[FACE_LEFT]) {
+            selected[FACE_BACK] = true;
+            selected[FACE_LEFT] = true;
+            return selected;
+        }
+        if (sideFlags[FACE_LEFT] && sideFlags[FACE_FRONT]) {
+            selected[FACE_LEFT] = true;
+            selected[FACE_FRONT] = true;
+            return selected;
+        }
+        return null;
     }
 
     private static void appendTriangleWithNormalUp(FloatCollector collector,

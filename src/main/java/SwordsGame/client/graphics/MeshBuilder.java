@@ -135,22 +135,14 @@ public class MeshBuilder {
         if (isSideFaceOpen(sideAir)) {
             return false;
         }
-        return isCornerPair(sideSloped);
+        return hasAdjacentCorner(sideSloped);
     }
 
-    private boolean isCornerPair(boolean[] sideFlags) {
+    private boolean hasAdjacentCorner(boolean[] sideFlags) {
         boolean front = sideFlags[FACE_FRONT];
         boolean back = sideFlags[FACE_BACK];
         boolean right = sideFlags[FACE_RIGHT];
         boolean left = sideFlags[FACE_LEFT];
-        int count = 0;
-        if (front) count++;
-        if (back) count++;
-        if (right) count++;
-        if (left) count++;
-        if (count != 2) {
-            return false;
-        }
         return (front && right) || (right && back) || (back && left) || (left && front);
     }
 
