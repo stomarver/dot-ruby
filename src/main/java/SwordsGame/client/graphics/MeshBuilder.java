@@ -114,6 +114,9 @@ public class MeshBuilder {
                                      float baseX, float baseY, float baseZ, float color, boolean[] sideAir) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(FACE_VERTS[FACE_TOP]);
+        if (sideAir != null && rot % 2 == 0) {
+            verts = rotateTopVerts90(verts);
+        }
         boolean[] lower = new boolean[4];
 
         if (sideAir != null && sideAir[FACE_FRONT]) {
@@ -160,6 +163,16 @@ public class MeshBuilder {
             copy[i][2] = source[i][2];
         }
         return copy;
+    }
+
+    private float[][] rotateTopVerts90(float[][] source) {
+        float[][] rotated = new float[source.length][3];
+        for (int i = 0; i < source.length; i++) {
+            rotated[i][0] = -source[i][2];
+            rotated[i][1] = source[i][1];
+            rotated[i][2] = source[i][0];
+        }
+        return rotated;
     }
 
     private void appendTriangleWithNormalUp(FloatCollector collector,
