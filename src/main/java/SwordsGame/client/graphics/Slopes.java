@@ -39,6 +39,44 @@ class Slopes {
             }
         }
 
+        int loweredCount = 0;
+        for (boolean lowered : lower) {
+            if (lowered) {
+                loweredCount++;
+            }
+        }
+
+        if (loweredCount == 3) {
+            int highIndex = findHighestIndex(lower);
+            int lowIndex = (highIndex + 2) % 4;
+            float[] mid = averageVerts(verts[highIndex], verts[lowIndex]);
+            float[] uvMid = averageUvs(
+                    uv[highIndex * 2], uv[(highIndex * 2) + 1],
+                    uv[lowIndex * 2], uv[(lowIndex * 2) + 1]
+            );
+
+            int next = (highIndex + 1) % 4;
+            int prev = (highIndex + 3) % 4;
+
+            appendTriangleWithNormalUp(collector, verts[highIndex], verts[next], mid, baseX, baseY, baseZ,
+                    uv[highIndex * 2], uv[(highIndex * 2) + 1],
+                    uv[next * 2], uv[(next * 2) + 1],
+                    uvMid[0], uvMid[1], color);
+            appendTriangleWithNormalUp(collector, verts[next], verts[lowIndex], mid, baseX, baseY, baseZ,
+                    uv[next * 2], uv[(next * 2) + 1],
+                    uv[lowIndex * 2], uv[(lowIndex * 2) + 1],
+                    uvMid[0], uvMid[1], color);
+            appendTriangleWithNormalUp(collector, verts[lowIndex], verts[prev], mid, baseX, baseY, baseZ,
+                    uv[lowIndex * 2], uv[(lowIndex * 2) + 1],
+                    uv[prev * 2], uv[(prev * 2) + 1],
+                    uvMid[0], uvMid[1], color);
+            appendTriangleWithNormalUp(collector, verts[prev], verts[highIndex], mid, baseX, baseY, baseZ,
+                    uv[prev * 2], uv[(prev * 2) + 1],
+                    uv[highIndex * 2], uv[(highIndex * 2) + 1],
+                    uvMid[0], uvMid[1], color);
+            return;
+        }
+
         float[] center = averageVerts(verts[0], verts[2]);
         float[] uvCenter = averageUvs(uv[0], uv[1], uv[4], uv[5]);
 
@@ -128,5 +166,14 @@ class Slopes {
 
     private static float[] averageUvs(float u0, float v0, float u1, float v1) {
         return new float[] { (u0 + u1) * 0.5f, (v0 + v1) * 0.5f };
+    }
+
+    private static int findHighestIndex(boolean[] lowered) {
+        for (int i = 0; i < lowered.length; i++) {
+            if (!lowered[i]) {
+                return i;
+            }
+        }
+        return 0;
     }
 }
