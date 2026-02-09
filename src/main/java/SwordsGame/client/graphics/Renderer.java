@@ -29,6 +29,7 @@ public class Renderer {
     private static final float MOON_DIFFUSE_G = 0.3f;
     private static final float MOON_DIFFUSE_B = 0.45f;
     private static final float SUN_TRANSITION_ELEVATION = 0.6f;
+    private static final float HORIZON_BLEND_ELEVATION = 0.12f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -124,10 +125,16 @@ public class Renderer {
     }
 
     public void applySunLight() {
-        boolean sunAboveHorizon = sunDirY >= 0.0f;
-        float dirX = sunAboveHorizon ? sunDirX : -sunDirX;
-        float dirY = sunAboveHorizon ? sunDirY : -sunDirY;
-        float dirZ = sunAboveHorizon ? sunDirZ : -sunDirZ;
+        float blend = smoothstep(-HORIZON_BLEND_ELEVATION, HORIZON_BLEND_ELEVATION, sunDirY);
+        float dirX = lerp(-sunDirX, sunDirX, blend);
+        float dirY = lerp(-sunDirY, sunDirY, blend);
+        float dirZ = lerp(-sunDirZ, sunDirZ, blend);
+        float length = (float) Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+        if (length > 0.0f) {
+            dirX /= length;
+            dirY /= length;
+            dirZ /= length;
+        }
         float[] lightPosition = { dirX, dirY, dirZ, 0.0f };
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
     }
@@ -147,24 +154,30 @@ public class Renderer {
 
     private void updateEnvironmentFromSun() {
         float elevation = sunDirY;
-        if (elevation >= 0.0f) {
-            float warm = clamp(1.0f - (elevation / SUN_TRANSITION_ELEVATION), 0.0f, 1.0f);
-            ambientR = lerp(DAY_AMBIENT_R, WARM_AMBIENT_R, warm);
-            ambientG = lerp(DAY_AMBIENT_G, WARM_AMBIENT_G, warm);
-            ambientB = lerp(DAY_AMBIENT_B, WARM_AMBIENT_B, warm);
-            diffuseR = lerp(DAY_DIFFUSE_R, WARM_DIFFUSE_R, warm);
-            diffuseG = lerp(DAY_DIFFUSE_G, WARM_DIFFUSE_G, warm);
-            diffuseB = lerp(DAY_DIFFUSE_B, WARM_DIFFUSE_B, warm);
-            return;
-        }
-
+        float warm = clamp(1.0f - (elevation / SUN_TRANSITION_ELEVATION), 0.0f, 1.0f);
         float night = clamp((-elevation) / SUN_TRANSITION_ELEVATION, 0.0f, 1.0f);
-        ambientR = lerp(WARM_AMBIENT_R, MOON_AMBIENT_R, night);
-        ambientG = lerp(WARM_AMBIENT_G, MOON_AMBIENT_G, night);
-        ambientB = lerp(WARM_AMBIENT_B, MOON_AMBIENT_B, night);
-        diffuseR = lerp(WARM_DIFFUSE_R, MOON_DIFFUSE_R, night);
-        diffuseG = lerp(WARM_DIFFUSE_G, MOON_DIFFUSE_G, night);
-        diffuseB = lerp(WARM_DIFFUSE_B, MOON_DIFFUSE_B, night);
+        float horizonBlend = smoothstep(-HORIZON_BLEND_ELEVATION, HORIZON_BLEND_ELEVATION, elevation);
+
+        float sunAmbientR = lerp(DAY_AMBIENT_R, WARM_AMBIENT_R, warm);
+        float sunAmbientG = lerp(DAY_AMBIENT_G, WARM_AMBIENT_G, warm);
+        float sunAmbientB = lerp(DAY_AMBIENT_B, WARM_AMBIENT_B, warm);
+        float sunDiffuseR = lerp(DAY_DIFFUSE_R, WARM_DIFFUSE_R, warm);
+        float sunDiffuseG = lerp(DAY_DIFFUSE_G, WARM_DIFFUSE_G, warm);
+        float sunDiffuseB = lerp(DAY_DIFFUSE_B, WARM_DIFFUSE_B, warm);
+
+        float moonAmbientR = lerp(WARM_AMBIENT_R, MOON_AMBIENT_R, night);
+        float moonAmbientG = lerp(WARM_AMBIENT_G, MOON_AMBIENT_G, night);
+        float moonAmbientB = lerp(WARM_AMBIENT_B, MOON_AMBIENT_B, night);
+        float moonDiffuseR = lerp(WARM_DIFFUSE_R, MOON_DIFFUSE_R, night);
+        float moonDiffuseG = lerp(WARM_DIFFUSE_G, MOON_DIFFUSE_G, night);
+        float moonDiffuseB = lerp(WARM_DIFFUSE_B, MOON_DIFFUSE_B, night);
+
+        ambientR = lerp(moonAmbientR, sunAmbientR, horizonBlend);
+        ambientG = lerp(moonAmbientG, sunAmbientG, horizonBlend);
+        ambientB = lerp(moonAmbientB, sunAmbientB, horizonBlend);
+        diffuseR = lerp(moonDiffuseR, sunDiffuseR, horizonBlend);
+        diffuseG = lerp(moonDiffuseG, sunDiffuseG, horizonBlend);
+        diffuseB = lerp(moonDiffuseB, sunDiffuseB, horizonBlend);
     }
 
     private float lerp(float from, float to, float t) {
@@ -179,5 +192,10 @@ public class Renderer {
             return max;
         }
         return value;
+    }
+
+    private float smoothstep(float edge0, float edge1, float value) {
+        float t = clamp((value - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+        return t * t * (3.0f - 2.0f * t);
     }
 }
