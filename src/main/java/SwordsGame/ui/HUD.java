@@ -86,13 +86,10 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        float debugX = 135.0f;
-        float sunY = 28.0f;
-        float cameraBaseY = 44.0f;
         float textYOffset = info.getTextYOffset();
 
         text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2 + textYOffset, 1);
-        info.renderDebug(debugX, sunY, cameraBaseY, 1.0f);
+        info.renderDebug(1.0f);
 
         messageSystem.draw(text);
     }

@@ -104,27 +104,7 @@ public class Base {
         if (hud == null || camera == null || chunkManager == null) {
             return;
         }
-        hud.setSunInfo(String.format("^2Sun^0\n^3yaw^0 %.1f\n^4pitch^0 %.1f", sun.getYaw(), sun.getPitch()));
-        hud.setCameraInfo(buildCameraInfo());
-    }
-
-    private String buildCameraInfo() {
-        float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
-        int worldBlockX = (int) Math.floor((-camera.getX() / World.BLOCK_SCALE) + totalOffsetBlocks);
-        int worldBlockZ = (int) Math.floor((-camera.getZ() / World.BLOCK_SCALE) + totalOffsetBlocks);
-        int maxBlock = chunkManager.getWorldSizeInBlocks() - 1;
-        worldBlockX = clamp(worldBlockX, 0, maxBlock);
-        worldBlockZ = clamp(worldBlockZ, 0, maxBlock);
-        int chunkX = worldBlockX / SwordsGame.server.Chunk.SIZE;
-        int chunkZ = worldBlockZ / SwordsGame.server.Chunk.SIZE;
-        int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
-        int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
-        return String.format(
-                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)",
-                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
-    }
-
-    private int clamp(int value, int min, int max) {
-        return Math.max(min, Math.min(max, value));
+        hud.setSunInfo("");
+        hud.setCameraInfo("");
     }
 }

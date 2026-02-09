@@ -3,6 +3,9 @@ package SwordsGame.ui;
 public class Info {
     private static final float TEXT_Y_OFFSET = -20.0f;
     private static final float DEBUG_LINE_GAP = 10.0f;
+    private static final float DEBUG_MODULE_GAP = 20.0f;
+    private static final float DEBUG_X = 130.0f;
+    private static final float DEBUG_Y = 10.0f;
 
     private final Text text;
     private String sunInfo = "";
@@ -20,14 +23,14 @@ public class Info {
         this.cameraInfo = info == null ? "" : info;
     }
 
-    public void renderDebug(float x, float sunY, float cameraBaseY, float scale) {
-        float nextDebugY = sunY + TEXT_Y_OFFSET;
+    public void renderDebug(float scale) {
+        float currentY = DEBUG_Y + TEXT_Y_OFFSET;
         if (!sunInfo.isEmpty()) {
-            nextDebugY = drawDebugLines(sunInfo, x, sunY + TEXT_Y_OFFSET, scale);
+            currentY = drawDebugLines(sunInfo, DEBUG_X, currentY, scale);
+            currentY += DEBUG_MODULE_GAP;
         }
         if (!cameraInfo.isEmpty()) {
-            float cameraY = Math.max(cameraBaseY + TEXT_Y_OFFSET, nextDebugY + DEBUG_LINE_GAP);
-            drawDebugLines(cameraInfo, x, cameraY, scale);
+            drawDebugLines(cameraInfo, DEBUG_X, currentY, scale);
         }
     }
 
@@ -43,6 +46,6 @@ public class Info {
             text.draw(line, Anchor.LEFT, Anchor.TOP, x, currentY, scale);
             currentY += step;
         }
-        return currentY - step;
+        return currentY - step + DEBUG_LINE_GAP;
     }
 }
