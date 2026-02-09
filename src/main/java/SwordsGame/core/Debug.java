@@ -8,7 +8,7 @@ import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.server.environment.Sun;
+import SwordsGame.server.environment.DayNightCycle;
 import SwordsGame.ui.Cursor;
 import SwordsGame.ui.HUD;
 import SwordsGame.utils.Discord;
@@ -24,7 +24,7 @@ public class Debug {
     private World world;
     private Camera camera;
     private ChunkManager chunkManager;
-    private Sun sun;
+    private DayNightCycle sun;
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
     private boolean resetSunHeld = false;
@@ -44,7 +44,7 @@ public class Debug {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
-        sun = new Sun();
+        sun = new DayNightCycle();
 
         Discord.init();
         Registry.init();
@@ -103,7 +103,7 @@ public class Debug {
             sun.rotateYaw(step);
         }
         handleSunReset(windowHandle);
-        float[] sunDirection = sun.getDirection();
+        float[] sunDirection = sun.getSunDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }
 

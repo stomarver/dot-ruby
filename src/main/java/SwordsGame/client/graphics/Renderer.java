@@ -10,24 +10,24 @@ public class Renderer {
     private static final float CLEAR_B = 1.0f;
     private static final float DEFAULT_SUN_YAW = 45.0f;
     private static final float DEFAULT_SUN_PITCH = 50.0f;
-    private static final float DAY_AMBIENT_R = 0.35f;
-    private static final float DAY_AMBIENT_G = 0.35f;
-    private static final float DAY_AMBIENT_B = 0.35f;
-    private static final float DAY_DIFFUSE_R = 0.95f;
-    private static final float DAY_DIFFUSE_G = 0.95f;
-    private static final float DAY_DIFFUSE_B = 0.95f;
+    private static final float DAY_AMBIENT_R = 0.36f;
+    private static final float DAY_AMBIENT_G = 0.34f;
+    private static final float DAY_AMBIENT_B = 0.28f;
+    private static final float DAY_DIFFUSE_R = 0.98f;
+    private static final float DAY_DIFFUSE_G = 0.92f;
+    private static final float DAY_DIFFUSE_B = 0.82f;
     private static final float WARM_AMBIENT_R = 0.45f;
     private static final float WARM_AMBIENT_G = 0.32f;
     private static final float WARM_AMBIENT_B = 0.22f;
     private static final float WARM_DIFFUSE_R = 1.0f;
     private static final float WARM_DIFFUSE_G = 0.8f;
     private static final float WARM_DIFFUSE_B = 0.65f;
-    private static final float NIGHT_AMBIENT_R = 0.12f;
-    private static final float NIGHT_AMBIENT_G = 0.14f;
-    private static final float NIGHT_AMBIENT_B = 0.2f;
-    private static final float NIGHT_DIFFUSE_R = 0.35f;
-    private static final float NIGHT_DIFFUSE_G = 0.4f;
-    private static final float NIGHT_DIFFUSE_B = 0.55f;
+    private static final float MOON_AMBIENT_R = 0.08f;
+    private static final float MOON_AMBIENT_G = 0.1f;
+    private static final float MOON_AMBIENT_B = 0.16f;
+    private static final float MOON_DIFFUSE_R = 0.25f;
+    private static final float MOON_DIFFUSE_G = 0.3f;
+    private static final float MOON_DIFFUSE_B = 0.45f;
     private static final float SUN_TRANSITION_ELEVATION = 0.6f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
@@ -124,7 +124,11 @@ public class Renderer {
     }
 
     public void applySunLight() {
-        float[] lightPosition = { sunDirX, sunDirY, sunDirZ, 0.0f };
+        boolean sunAboveHorizon = sunDirY >= 0.0f;
+        float dirX = sunAboveHorizon ? sunDirX : -sunDirX;
+        float dirY = sunAboveHorizon ? sunDirY : -sunDirY;
+        float dirZ = sunAboveHorizon ? sunDirZ : -sunDirZ;
+        float[] lightPosition = { dirX, dirY, dirZ, 0.0f };
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
     }
 
@@ -155,12 +159,12 @@ public class Renderer {
         }
 
         float night = clamp((-elevation) / SUN_TRANSITION_ELEVATION, 0.0f, 1.0f);
-        ambientR = lerp(DAY_AMBIENT_R, NIGHT_AMBIENT_R, night);
-        ambientG = lerp(DAY_AMBIENT_G, NIGHT_AMBIENT_G, night);
-        ambientB = lerp(DAY_AMBIENT_B, NIGHT_AMBIENT_B, night);
-        diffuseR = lerp(DAY_DIFFUSE_R, NIGHT_DIFFUSE_R, night);
-        diffuseG = lerp(DAY_DIFFUSE_G, NIGHT_DIFFUSE_G, night);
-        diffuseB = lerp(DAY_DIFFUSE_B, NIGHT_DIFFUSE_B, night);
+        ambientR = lerp(WARM_AMBIENT_R, MOON_AMBIENT_R, night);
+        ambientG = lerp(WARM_AMBIENT_G, MOON_AMBIENT_G, night);
+        ambientB = lerp(WARM_AMBIENT_B, MOON_AMBIENT_B, night);
+        diffuseR = lerp(WARM_DIFFUSE_R, MOON_DIFFUSE_R, night);
+        diffuseG = lerp(WARM_DIFFUSE_G, MOON_DIFFUSE_G, night);
+        diffuseB = lerp(WARM_DIFFUSE_B, MOON_DIFFUSE_B, night);
     }
 
     private float lerp(float from, float to, float t) {

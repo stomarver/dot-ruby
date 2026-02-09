@@ -11,7 +11,7 @@ import SwordsGame.ui.HUD;
 import SwordsGame.ui.Cursor;
 import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.server.environment.Sun;
+import SwordsGame.server.environment.DayNightCycle;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -24,7 +24,7 @@ public class Base {
     private World world;
     private Camera camera;
     private ChunkManager chunkManager;
-    private Sun sun;
+    private DayNightCycle sun;
 
 
     public static void main(String[] args) {
@@ -39,7 +39,7 @@ public class Base {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
-        sun = new Sun();
+        sun = new DayNightCycle();
 
         Discord.init();
         Registry.init();
@@ -96,7 +96,7 @@ public class Base {
     }
 
     private void updateSunState() {
-        float[] sunDirection = sun.getDirection();
+        float[] sunDirection = sun.getSunDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }
 
