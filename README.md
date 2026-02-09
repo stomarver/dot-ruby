@@ -5,7 +5,7 @@
 ***
   ### Features
  - You can bomb up a cobble blocks by clicking near of it.
- - You can write a text from term**o**nal (when you launch game from it)
+ - --You can write a text from term**o**nal (when you launch game from it)-- (implemented in future)
  - Screenshots saving in
      - win [USER\Picures\SwordsGame\] 
      - linux [~/Pictures/SwordsGame/]
