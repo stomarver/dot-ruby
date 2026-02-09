@@ -88,7 +88,7 @@ public class HUD {
 
         float textYOffset = info.getTextYOffset();
 
-        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2 + textYOffset, 1);
+        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
         info.renderDebug(1.0f);
 
         messageSystem.draw(text);

@@ -1,11 +1,11 @@
 package SwordsGame.ui;
 
 public class Info {
-    private static final float TEXT_Y_OFFSET = -20.0f;
-    private static final float DEBUG_LINE_GAP = 10.0f;
-    private static final float DEBUG_MODULE_GAP = 20.0f;
+    private static final float TEXT_Y_OFFSET = 10.0f;
+    private static final float DEBUG_LINE_GAP = 1.0f;
+    private static final float DEBUG_MODULE_GAP = 40.0f;
     private static final float DEBUG_X = 130.0f;
-    private static final float DEBUG_Y = 10.0f;
+    private static final float DEBUG_Y = 1.0f;
 
     private final Text text;
     private String sunInfo = "";
