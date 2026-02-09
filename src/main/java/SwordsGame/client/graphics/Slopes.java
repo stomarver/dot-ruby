@@ -129,6 +129,9 @@ class Slopes {
         if (!isCornerPair(sideFlags)) {
             return null;
         }
+        if (countSideFlags(sideFlags) == 4) {
+            return null;
+        }
         boolean[] selected = new boolean[6];
         if (sideFlags[FACE_FRONT] && sideFlags[FACE_RIGHT]) {
             selected[FACE_FRONT] = true;
@@ -151,6 +154,15 @@ class Slopes {
             return selected;
         }
         return null;
+    }
+
+    private static int countSideFlags(boolean[] sideFlags) {
+        int count = 0;
+        if (sideFlags[FACE_FRONT]) count++;
+        if (sideFlags[FACE_BACK]) count++;
+        if (sideFlags[FACE_RIGHT]) count++;
+        if (sideFlags[FACE_LEFT]) count++;
+        return count;
     }
 
     private static void appendTriangleWithNormalUp(FloatCollector collector,

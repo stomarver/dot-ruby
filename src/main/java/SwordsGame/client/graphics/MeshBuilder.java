@@ -135,6 +135,10 @@ public class MeshBuilder {
         if (isSideFaceOpen(sideAir)) {
             return false;
         }
+        int slopedCount = countSlopedSides(sideSloped);
+        if (slopedCount == 4) {
+            return false;
+        }
         return hasAdjacentCorner(sideSloped);
     }
 
@@ -144,6 +148,15 @@ public class MeshBuilder {
         boolean right = sideFlags[FACE_RIGHT];
         boolean left = sideFlags[FACE_LEFT];
         return (front && right) || (right && back) || (back && left) || (left && front);
+    }
+
+    private int countSlopedSides(boolean[] sideFlags) {
+        int count = 0;
+        if (sideFlags[FACE_FRONT]) count++;
+        if (sideFlags[FACE_BACK]) count++;
+        if (sideFlags[FACE_RIGHT]) count++;
+        if (sideFlags[FACE_LEFT]) count++;
+        return count;
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
