@@ -11,9 +11,6 @@
      - linux [~/Pictures/SwordsGame/]
  - Working Discord RPC!
  - Weird Graphics
-   <A HREF="http://theintraclinic.com">
-  <IMG SRC="http://theintraclinic.com/buttons/btn2.gif">
-</A>
 
 ***
   ### Known Issues
@@ -22,8 +19,7 @@
 - *Disgusting code structure and complete lack of understanding of Java/LWJGL by the lead developer*
 ***
 
-<img align="left"  width="45%" hspace="10" src="https://github.com/user-attachments/assets/6eca2e7e-f827-4da4-bc76-f9d6d0a068b1" />
-<img align="right"  width="45%" hspace="10" src="https://github.com/user-attachments/assets/619fa03a-f4f8-493f-9cd7-18d9142b637b" />
-<br clear="both">
+   <A HREF="http://theintraclinic.com">
+  <IMG SRC="http://theintraclinic.com/buttons/btn2.gif">
+</A>
 
-***
