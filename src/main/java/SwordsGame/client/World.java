@@ -368,7 +368,10 @@ public class World {
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, sideAir, sideSloped, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    boolean slopeBlocked = currentProps != null
+                            && currentProps.isSloped()
+                            && isSlopeBlocked(cm, wx, y + 1, wz);
+                    builder.addBlock(type, seed, faces, sideAir, sideSloped, slopeBlocked, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }

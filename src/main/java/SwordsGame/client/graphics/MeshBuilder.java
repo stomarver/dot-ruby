@@ -43,6 +43,7 @@ public class MeshBuilder {
     }
 
     public void addBlock(byte typeId, int seed, boolean[] faces, boolean[] sideAir, boolean[] sideSloped,
+                         boolean slopeBlocked,
                          int wx, int wy, int wz, float totalOffset, float scale) {
         Block block = Registry.get(typeId);
         if (block == null) return;
@@ -57,6 +58,7 @@ public class MeshBuilder {
         float baseY = wy * scale;
         float baseZ = (wz - totalOffset) * scale;
         boolean slopeTop = props.isSloped()
+                && !slopeBlocked
                 && faces[FACE_TOP]
                 && (isSideFaceOpen(sideAir) || isInnerCorner(sideAir, sideSloped));
 
