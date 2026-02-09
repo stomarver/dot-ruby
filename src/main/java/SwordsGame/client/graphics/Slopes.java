@@ -16,8 +16,10 @@ class Slopes {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(MeshBuilder.FACE_VERTS[FACE_TOP]);
         boolean[] effectiveSideAir = sideAir;
-        if (!hasSideOpen(effectiveSideAir) && sideSame != null && countSideTrue(sideSame) >= 2) {
-            effectiveSideAir = buildOppositeSideFlags(sideSame);
+        if (isInCorner(sideAir, sideSame)) {
+            effectiveSideAir = buildOppositeCornerFlags(sideSame);
+        } else if (isInSlope(sideAir, sideSame)) {
+            effectiveSideAir = buildOppositeSlopeFlags(sideSame);
         }
 
         boolean[] lower = new boolean[4];
@@ -83,12 +85,65 @@ class Slopes {
         return count;
     }
 
-    private static boolean[] buildOppositeSideFlags(boolean[] sideSame) {
+    private static boolean isCornerPair(boolean[] sideFlags) {
+        if (sideFlags == null) {
+            return false;
+        }
+        boolean front = sideFlags[FACE_FRONT];
+        boolean back = sideFlags[FACE_BACK];
+        boolean right = sideFlags[FACE_RIGHT];
+        boolean left = sideFlags[FACE_LEFT];
+        int count = 0;
+        if (front) count++;
+        if (back) count++;
+        if (right) count++;
+        if (left) count++;
+        if (count != 2) {
+            return false;
+        }
+        return (front && right) || (right && back) || (back && left) || (left && front);
+    }
+
+    private static boolean isOutCorner(boolean[] sideAir) {
+        return isCornerPair(sideAir);
+    }
+
+    private static boolean isInCorner(boolean[] sideAir, boolean[] sideSame) {
+        return !hasSideOpen(sideAir) && isCornerPair(sideSame);
+    }
+
+    private static boolean isOutSlope(boolean[] sideAir) {
+        return countSideTrue(sideAir) == 1;
+    }
+
+    private static boolean isInSlope(boolean[] sideAir, boolean[] sideSame) {
+        return !hasSideOpen(sideAir) && countSideTrue(sideSame) == 1;
+    }
+
+    private static boolean isSlope(boolean[] sideAir, boolean[] sideSame) {
+        return isOutSlope(sideAir) || isInSlope(sideAir, sideSame);
+    }
+
+    private static boolean[] buildOppositeCornerFlags(boolean[] sideSame) {
         boolean[] flags = new boolean[6];
         flags[FACE_FRONT] = !sideSame[FACE_FRONT];
         flags[FACE_BACK] = !sideSame[FACE_BACK];
         flags[FACE_RIGHT] = !sideSame[FACE_RIGHT];
         flags[FACE_LEFT] = !sideSame[FACE_LEFT];
+        return flags;
+    }
+
+    private static boolean[] buildOppositeSlopeFlags(boolean[] sideSame) {
+        boolean[] flags = new boolean[6];
+        if (sideSame[FACE_FRONT]) {
+            flags[FACE_BACK] = true;
+        } else if (sideSame[FACE_BACK]) {
+            flags[FACE_FRONT] = true;
+        } else if (sideSame[FACE_RIGHT]) {
+            flags[FACE_LEFT] = true;
+        } else if (sideSame[FACE_LEFT]) {
+            flags[FACE_RIGHT] = true;
+        }
         return flags;
     }
 

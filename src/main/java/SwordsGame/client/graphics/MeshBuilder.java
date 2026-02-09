@@ -58,7 +58,7 @@ public class MeshBuilder {
         float baseZ = (wz - totalOffset) * scale;
         boolean slopeTop = props.isSloped()
                 && faces[FACE_TOP]
-                && (isSideFaceOpen(sideAir) || hasCornerPair(sideSame));
+                && (isSideFaceOpen(sideAir) || hasCornerPair(sideSame) || hasSingleSide(sideSame));
 
         for (int face = 0; face < 6; face++) {
             if (topOnly && face != FACE_TOP) continue;
@@ -145,6 +145,18 @@ public class MeshBuilder {
             return false;
         }
         return (front && right) || (right && back) || (back && left) || (left && front);
+    }
+
+    private boolean hasSingleSide(boolean[] sideSame) {
+        if (sideSame == null) {
+            return false;
+        }
+        int count = 0;
+        if (sideSame[FACE_FRONT]) count++;
+        if (sideSame[FACE_BACK]) count++;
+        if (sideSame[FACE_RIGHT]) count++;
+        if (sideSame[FACE_LEFT]) count++;
+        return count == 1;
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
