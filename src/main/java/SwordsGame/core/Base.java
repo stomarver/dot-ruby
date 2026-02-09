@@ -11,6 +11,7 @@ import SwordsGame.ui.HUD;
 import SwordsGame.ui.Cursor;
 import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.environment.Sun;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -23,6 +24,7 @@ public class Base {
     private World world;
     private Camera camera;
     private ChunkManager chunkManager;
+    private Sun sun;
 
 
     public static void main(String[] args) {
@@ -37,6 +39,7 @@ public class Base {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
+        sun = new Sun();
 
         Discord.init();
         Registry.init();
@@ -49,6 +52,8 @@ public class Base {
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
+            updateSunState();
+            updateHudInfo();
 
             window.beginRenderToFBO();
             renderer.setup3D(window);
@@ -88,5 +93,38 @@ public class Base {
         TextureLoader.finishCleanup();
         window.destroy();
         System.exit(0);
+    }
+
+    private void updateSunState() {
+        float[] sunDirection = sun.getDirection();
+        renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
+    }
+
+    private void updateHudInfo() {
+        if (hud == null || camera == null || chunkManager == null) {
+            return;
+        }
+        hud.setSunInfo(String.format("Sun: yaw %.1f pitch %.1f", sun.getYaw(), sun.getPitch()));
+        hud.setCameraInfo(buildCameraInfo());
+    }
+
+    private String buildCameraInfo() {
+        float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
+        int worldBlockX = (int) Math.floor((-camera.getX() / World.BLOCK_SCALE) + totalOffsetBlocks);
+        int worldBlockZ = (int) Math.floor((-camera.getZ() / World.BLOCK_SCALE) + totalOffsetBlocks);
+        int maxBlock = chunkManager.getWorldSizeInBlocks() - 1;
+        worldBlockX = clamp(worldBlockX, 0, maxBlock);
+        worldBlockZ = clamp(worldBlockZ, 0, maxBlock);
+        int chunkX = worldBlockX / SwordsGame.server.Chunk.SIZE;
+        int chunkZ = worldBlockZ / SwordsGame.server.Chunk.SIZE;
+        int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
+        int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
+        return String.format(
+                "Camera: pos (%.1f, %.1f) chunk (%d, %d) local (%d, %d)",
+                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }

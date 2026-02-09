@@ -8,6 +8,7 @@ import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.environment.Sun;
 import SwordsGame.ui.Cursor;
 import SwordsGame.ui.HUD;
 import SwordsGame.utils.Discord;
@@ -23,10 +24,9 @@ public class Debug {
     private World world;
     private Camera camera;
     private ChunkManager chunkManager;
+    private Sun sun;
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
-    private float sunYaw = 45.0f;
-    private float sunPitch = 50.0f;
     private boolean resetSunHeld = false;
 
 
@@ -42,6 +42,7 @@ public class Debug {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
+        sun = new Sun();
 
         Discord.init();
         Registry.init();
@@ -56,6 +57,7 @@ public class Debug {
             camera.update(window, chunkManager, renderer);
             updateSunControls(window.getHandle());
             updateBoundsToggle(window.getHandle());
+            updateHudInfo();
 
             window.beginRenderToFBO();
             renderer.setup3D(window);
@@ -92,14 +94,13 @@ public class Debug {
     private void updateSunControls(long windowHandle) {
         float step = 1.5f;
         if (glfwGetKey(windowHandle, GLFW_KEY_Y) == GLFW_PRESS) {
-            sunYaw -= step;
+            sun.rotateYaw(-step);
         }
         if (glfwGetKey(windowHandle, GLFW_KEY_U) == GLFW_PRESS) {
-            sunYaw += step;
+            sun.rotateYaw(step);
         }
         handleSunReset(windowHandle);
-        sunYaw = normalizeAngle(sunYaw);
-        float[] sunDirection = rotateAroundTiltedAxis(sunYaw, sunPitch);
+        float[] sunDirection = sun.getDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }
 
@@ -114,59 +115,37 @@ public class Debug {
     private void handleSunReset(long windowHandle) {
         boolean resetPressed = glfwGetKey(windowHandle, GLFW_KEY_R) == GLFW_PRESS;
         if (resetPressed && !resetSunHeld) {
-            sunYaw = 45.0f;
-            sunPitch = 50.0f;
+            sun.reset();
         }
         resetSunHeld = resetPressed;
     }
 
-    private float[] rotateAroundTiltedAxis(float yawDegrees, float pitchDegrees) {
-        float tilt = (float) Math.toRadians(30.0f);
-        float axisX = (float) Math.cos(tilt);
-        float axisY = 0.0f;
-        float axisZ = (float) Math.sin(tilt);
-
-        float upX = 0.0f;
-        float upY = 1.0f;
-        float upZ = 0.0f;
-
-        float baseX = upY * axisZ - upZ * axisY;
-        float baseY = upZ * axisX - upX * axisZ;
-        float baseZ = upX * axisY - upY * axisX;
-        float baseLength = (float) Math.sqrt(baseX * baseX + baseY * baseY + baseZ * baseZ);
-        baseX /= baseLength;
-        baseY /= baseLength;
-        baseZ /= baseLength;
-
-        float perpX = axisY * baseZ - axisZ * baseY;
-        float perpY = axisZ * baseX - axisX * baseZ;
-        float perpZ = axisX * baseY - axisY * baseX;
-
-        float pitch = (float) Math.toRadians(pitchDegrees);
-        float cosPitch = (float) Math.cos(pitch);
-        float sinPitch = (float) Math.sin(pitch);
-
-        float dirX = (baseX * cosPitch) + (perpX * sinPitch);
-        float dirY = (baseY * cosPitch) + (perpY * sinPitch);
-        float dirZ = (baseZ * cosPitch) + (perpZ * sinPitch);
-
-        float yaw = (float) Math.toRadians(yawDegrees);
-        float cosYaw = (float) Math.cos(yaw);
-        float sinYaw = (float) Math.sin(yaw);
-        float dot = (axisX * dirX) + (axisY * dirY) + (axisZ * dirZ);
-
-        float rotX = (dirX * cosYaw) + ((axisY * dirZ - axisZ * dirY) * sinYaw) + (axisX * dot * (1.0f - cosYaw));
-        float rotY = (dirY * cosYaw) + ((axisZ * dirX - axisX * dirZ) * sinYaw) + (axisY * dot * (1.0f - cosYaw));
-        float rotZ = (dirZ * cosYaw) + ((axisX * dirY - axisY * dirX) * sinYaw) + (axisZ * dot * (1.0f - cosYaw));
-        return new float[] { rotX, rotY, rotZ };
+    private void updateHudInfo() {
+        if (hud == null || camera == null || chunkManager == null) {
+            return;
+        }
+        hud.setSunInfo(String.format("Sun: yaw %.1f pitch %.1f", sun.getYaw(), sun.getPitch()));
+        hud.setCameraInfo(buildCameraInfo());
     }
 
-    private float normalizeAngle(float angle) {
-        float result = angle % 360.0f;
-        if (result < 0) {
-            result += 360.0f;
-        }
-        return result;
+    private String buildCameraInfo() {
+        float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
+        int worldBlockX = (int) Math.floor((-camera.getX() / World.BLOCK_SCALE) + totalOffsetBlocks);
+        int worldBlockZ = (int) Math.floor((-camera.getZ() / World.BLOCK_SCALE) + totalOffsetBlocks);
+        int maxBlock = chunkManager.getWorldSizeInBlocks() - 1;
+        worldBlockX = clamp(worldBlockX, 0, maxBlock);
+        worldBlockZ = clamp(worldBlockZ, 0, maxBlock);
+        int chunkX = worldBlockX / SwordsGame.server.Chunk.SIZE;
+        int chunkZ = worldBlockZ / SwordsGame.server.Chunk.SIZE;
+        int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
+        int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
+        return String.format(
+                "Camera: pos (%.1f, %.1f) chunk (%d, %d) local (%d, %d)",
+                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private void cleanup() {

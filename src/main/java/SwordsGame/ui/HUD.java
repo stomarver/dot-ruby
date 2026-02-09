@@ -20,6 +20,8 @@ public class HUD {
     private final Sprite sprite;
     private final Message messageSystem;
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
+    private String sunInfo = "";
+    private String cameraInfo = "";
 
     private final TextureLoader.Texture charFrameTex;
     private final TextureLoader.Texture separatorTex;
@@ -86,8 +88,22 @@ public class HUD {
 
         text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 15, 2, 1);
         text.draw("^2WIP", Anchor.CENTER, Anchor.TOP, 0, 10, 1, Wave.MEDIUM);
+        if (!sunInfo.isEmpty()) {
+            text.draw(sunInfo, Anchor.LEFT, Anchor.TOP, 15, 28, 1);
+        }
+        if (!cameraInfo.isEmpty()) {
+            text.draw(cameraInfo, Anchor.LEFT, Anchor.TOP, 15, 44, 1);
+        }
 
         messageSystem.draw(text);
+    }
+
+    public void setSunInfo(String info) {
+        this.sunInfo = info == null ? "" : info;
+    }
+
+    public void setCameraInfo(String info) {
+        this.cameraInfo = info == null ? "" : info;
     }
 
     public void cleanup() {
