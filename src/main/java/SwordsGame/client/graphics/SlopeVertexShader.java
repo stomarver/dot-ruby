@@ -1,7 +1,7 @@
 package SwordsGame.client.graphics;
 
 public class SlopeVertexShader {
-    private static final float BOTTOM = TOP - 2.0f;
+    private static final float BOTTOM = -1.0f;
     private static final float DIAGONAL_DROP = 0.75f;
     private static final float EPSILON = 0.001f;
 
