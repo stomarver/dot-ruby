@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import SwordsGame.client.blocks.Type;
 import SwordsGame.client.graphics.BlockRenderer;
 import SwordsGame.client.graphics.ChunkMesh;
 import SwordsGame.client.graphics.MeshBuilder;
@@ -208,7 +209,17 @@ public class World {
         int worldX = currentChunk.x * Chunk.SIZE + x;
         int worldZ = currentChunk.z * Chunk.SIZE + z;
         byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
-        return neighborType == 0;
+        if (neighborType != 0) {
+            return false;
+        }
+        int aboveY = y + 1;
+        if (aboveY < Chunk.HEIGHT) {
+            byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
+            if (aboveType == Type.GRASS.id) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void markChunkDirty(Chunk chunk) {
