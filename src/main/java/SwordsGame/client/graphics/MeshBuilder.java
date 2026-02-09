@@ -43,7 +43,8 @@ public class MeshBuilder {
         this.useVertexColor = useVertexColor;
     }
 
-    public void addBlock(byte typeId, int seed, boolean[] faces, int wx, int wy, int wz, float totalOffset, float scale) {
+    public void addBlock(byte typeId, int seed, boolean[] faces, boolean[] sideAir,
+                         int wx, int wy, int wz, float totalOffset, float scale) {
         Block block = Registry.get(typeId);
         if (block == null) return;
 
@@ -56,8 +57,7 @@ public class MeshBuilder {
         float baseX = (wx - totalOffset) * scale;
         float baseY = wy * scale;
         float baseZ = (wz - totalOffset) * scale;
-        boolean hasSideAir = isSideFaceOpen(faces);
-        boolean slopeGrassTop = block.getType() == Type.GRASS && faces[FACE_TOP] && hasSideAir;
+        boolean slopeGrassTop = block.getType() == Type.GRASS && faces[FACE_TOP] && isSideFaceOpen(sideAir);
 
         for (int face = 0; face < 6; face++) {
             if (topOnly && face != FACE_TOP) continue;
@@ -69,7 +69,7 @@ public class MeshBuilder {
             Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
             if (slopeGrassTop && face == FACE_TOP) {
-                appendSlopedTopFace(collector, block, rot, baseX, baseY, baseZ, colorMod, faces);
+                appendSlopedTopFace(collector, block, rot, baseX, baseY, baseZ, colorMod, sideAir);
             } else {
                 appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod);
             }
@@ -111,24 +111,24 @@ public class MeshBuilder {
     }
 
     private void appendSlopedTopFace(FloatCollector collector, Block block, int rot,
-                                     float baseX, float baseY, float baseZ, float color, boolean[] faces) {
+                                     float baseX, float baseY, float baseZ, float color, boolean[] sideAir) {
         float[] uv = block.getUv(rot);
         float[][] verts = copyFaceVerts(FACE_VERTS[FACE_TOP]);
         boolean[] lower = new boolean[4];
 
-        if (faces[FACE_FRONT]) {
+        if (sideAir != null && sideAir[FACE_FRONT]) {
             lower[1] = true;
             lower[2] = true;
         }
-        if (faces[FACE_BACK]) {
+        if (sideAir != null && sideAir[FACE_BACK]) {
             lower[0] = true;
             lower[3] = true;
         }
-        if (faces[FACE_RIGHT]) {
+        if (sideAir != null && sideAir[FACE_RIGHT]) {
             lower[2] = true;
             lower[3] = true;
         }
-        if (faces[FACE_LEFT]) {
+        if (sideAir != null && sideAir[FACE_LEFT]) {
             lower[0] = true;
             lower[1] = true;
         }
@@ -185,8 +185,11 @@ public class MeshBuilder {
         return new float[] {nx / length, ny / length, nz / length};
     }
 
-    private boolean isSideFaceOpen(boolean[] faces) {
-        return faces[FACE_FRONT] || faces[FACE_BACK] || faces[FACE_RIGHT] || faces[FACE_LEFT];
+    private boolean isSideFaceOpen(boolean[] sideAir) {
+        if (sideAir == null) {
+            return false;
+        }
+        return sideAir[FACE_FRONT] || sideAir[FACE_BACK] || sideAir[FACE_RIGHT] || sideAir[FACE_LEFT];
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,

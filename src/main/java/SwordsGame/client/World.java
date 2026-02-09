@@ -202,6 +202,15 @@ public class World {
         return neighborType == 0 || neighborType != currentType;
     }
 
+    private boolean isAir(ChunkManager cm, Chunk currentChunk, int x, int y, int z) {
+        if (y < 0) return false;
+        if (y >= Chunk.HEIGHT) return true;
+        int worldX = currentChunk.x * Chunk.SIZE + x;
+        int worldZ = currentChunk.z * Chunk.SIZE + z;
+        byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
+        return neighborType == 0;
+    }
+
     public void markChunkDirty(Chunk chunk) {
         ChunkRenderData data = chunkCache.remove(chunk);
         if (data != null) {
@@ -297,10 +306,16 @@ public class World {
 
                     if (!isAnyFaceVisible(faces)) continue;
 
+                    boolean[] sideAir = new boolean[6];
+                    sideAir[0] = isAir(cm, chunk, x, y, z + 1);
+                    sideAir[1] = isAir(cm, chunk, x, y, z - 1);
+                    sideAir[4] = isAir(cm, chunk, x + 1, y, z);
+                    sideAir[5] = isAir(cm, chunk, x - 1, y, z);
+
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    builder.addBlock(type, seed, faces, sideAir, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }
