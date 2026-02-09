@@ -29,6 +29,7 @@ public class MeshBuilder {
     private final Map<Integer, FloatCollector> emissive = new HashMap<>();
     private final boolean topOnly;
     private final boolean useVertexColor;
+    private final SlopeVertexShader slopeShader = new SlopeVertexShader();
 
     public MeshBuilder(boolean topOnly, boolean useVertexColor) {
         this.topOnly = topOnly;
@@ -57,7 +58,8 @@ public class MeshBuilder {
 
             Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
-            appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod);
+            SlopeVertexShader shader = props.hasVertexSmoothing() ? slopeShader : null;
+            appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod, faces, shader);
         }
     }
 
@@ -81,25 +83,33 @@ public class MeshBuilder {
     }
 
     private void appendFace(FloatCollector collector, int face, Block block, int rot,
-                            float baseX, float baseY, float baseZ, float color) {
+                            float baseX, float baseY, float baseZ, float color,
+                            boolean[] faces, SlopeVertexShader shader) {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[face];
         float[][] verts = FACE_VERTS[face];
 
-        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color);
-        addVertex(collector, verts[1], baseX, baseY, baseZ, normal, uv[2], uv[3], color);
-        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color);
+        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color, faces, shader);
+        addVertex(collector, verts[1], baseX, baseY, baseZ, normal, uv[2], uv[3], color, faces, shader);
+        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color, faces, shader);
 
-        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color);
-        addVertex(collector, verts[3], baseX, baseY, baseZ, normal, uv[6], uv[7], color);
-        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color);
+        addVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color, faces, shader);
+        addVertex(collector, verts[3], baseX, baseY, baseZ, normal, uv[6], uv[7], color, faces, shader);
+        addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color, faces, shader);
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
-                           float[] normal, float u, float vTex, float color) {
-        float x = baseX + (v[0] * World.BLOCK_SIZE);
-        float y = baseY + (v[1] * World.BLOCK_SIZE);
-        float z = baseZ + (v[2] * World.BLOCK_SIZE);
+                           float[] normal, float u, float vTex, float color,
+                           boolean[] faces, SlopeVertexShader shader) {
+        float localX = v[0];
+        float localY = v[1];
+        float localZ = v[2];
+        if (shader != null) {
+            localY = shader.adjustY(localX, localY, localZ, faces);
+        }
+        float x = baseX + (localX * World.BLOCK_SIZE);
+        float y = baseY + (localY * World.BLOCK_SIZE);
+        float z = baseZ + (localZ * World.BLOCK_SIZE);
         collector.add(
                 x, y, z,
                 normal[0], normal[1], normal[2],
