@@ -42,7 +42,7 @@ public class MeshBuilder {
         this.useVertexColor = useVertexColor;
     }
 
-    public void addBlock(byte typeId, int seed, boolean[] faces, boolean[] sideAir,
+    public void addBlock(byte typeId, int seed, boolean[] faces, boolean[] sideAir, boolean[] sideSloped,
                          int wx, int wy, int wz, float totalOffset, float scale) {
         Block block = Registry.get(typeId);
         if (block == null) return;
@@ -58,7 +58,7 @@ public class MeshBuilder {
         float baseZ = (wz - totalOffset) * scale;
         boolean slopeTop = props.isSloped()
                 && faces[FACE_TOP]
-                && isSideFaceOpen(sideAir);
+                && (isSideFaceOpen(sideAir) || isInnerCorner(sideAir, sideSloped));
 
         for (int face = 0; face < 6; face++) {
             if (topOnly && face != FACE_TOP) continue;
@@ -78,7 +78,8 @@ public class MeshBuilder {
                         baseY,
                         baseZ,
                         colorMod,
-                        sideAir
+                        sideAir,
+                        sideSloped
                 );
             } else {
                 appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod);
@@ -125,6 +126,32 @@ public class MeshBuilder {
             return false;
         }
         return sideAir[FACE_FRONT] || sideAir[FACE_BACK] || sideAir[FACE_RIGHT] || sideAir[FACE_LEFT];
+    }
+
+    private boolean isInnerCorner(boolean[] sideAir, boolean[] sideSloped) {
+        if (sideAir == null || sideSloped == null) {
+            return false;
+        }
+        if (isSideFaceOpen(sideAir)) {
+            return false;
+        }
+        return isCornerPair(sideSloped);
+    }
+
+    private boolean isCornerPair(boolean[] sideFlags) {
+        boolean front = sideFlags[FACE_FRONT];
+        boolean back = sideFlags[FACE_BACK];
+        boolean right = sideFlags[FACE_RIGHT];
+        boolean left = sideFlags[FACE_LEFT];
+        int count = 0;
+        if (front) count++;
+        if (back) count++;
+        if (right) count++;
+        if (left) count++;
+        if (count != 2) {
+            return false;
+        }
+        return (front && right) || (right && back) || (back && left) || (left && front);
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,

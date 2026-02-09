@@ -359,10 +359,16 @@ public class World {
                     sideAir[4] = isAir(cm, chunk, x + 1, y, z, currentProps);
                     sideAir[5] = isAir(cm, chunk, x - 1, y, z, currentProps);
 
+                    boolean[] sideSloped = new boolean[6];
+                    sideSloped[0] = isSlopedAt(cm, chunk, x, y, z + 1);
+                    sideSloped[1] = isSlopedAt(cm, chunk, x, y, z - 1);
+                    sideSloped[4] = isSlopedAt(cm, chunk, x + 1, y, z);
+                    sideSloped[5] = isSlopedAt(cm, chunk, x - 1, y, z);
+
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, sideAir, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    builder.addBlock(type, seed, faces, sideAir, sideSloped, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }
@@ -377,5 +383,22 @@ public class World {
             }
         }
         return false;
+    }
+
+    private boolean isSlopedAt(ChunkManager cm, Chunk currentChunk, int x, int y, int z) {
+        if (y < 0 || y >= Chunk.HEIGHT) {
+            return false;
+        }
+        int worldX = currentChunk.x * Chunk.SIZE + x;
+        int worldZ = currentChunk.z * Chunk.SIZE + z;
+        byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
+        if (neighborType == 0) {
+            return false;
+        }
+        Block neighborBlock = Registry.get(neighborType);
+        if (neighborBlock == null) {
+            return false;
+        }
+        return neighborBlock.getProperties().isSloped();
     }
 }
