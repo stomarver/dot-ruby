@@ -34,6 +34,8 @@ public final class RenderRegistry {
             throw new IllegalStateException("Groovy ScriptEngine not found");
         }
         engine.put("registry", new RenderRegistryApi());
+        engine.put("Type", Type.class);
+        engine.put("Paths", SwordsGame.client.assets.Paths.class);
         eval(engine, "import SwordsGame.server.data.blocks.Type\n" +
                 "import SwordsGame.client.assets.Paths\n" +
                 "def blocks(Closure c){ registry.blocks(c) }");
@@ -179,7 +181,7 @@ public final class RenderRegistry {
     }
 
     private static void configure(Closure<?> closure, Object delegate) {
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        closure.setResolveStrategy(Closure.OWNER_FIRST);
         closure.setDelegate(delegate);
         closure.call();
     }

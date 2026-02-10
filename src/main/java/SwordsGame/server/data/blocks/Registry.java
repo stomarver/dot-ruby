@@ -1,5 +1,6 @@
 package SwordsGame.server.data.blocks;
 
+import SwordsGame.client.assets.Paths;
 import groovy.lang.Closure;
 
 import javax.script.ScriptEngine;
@@ -10,40 +11,6 @@ import java.util.Map;
 
 public final class Registry {
     private static final Map<Type, BlockData> DATA = new LinkedHashMap<>();
-    private static final String DEFAULT_BLOCKS_DSL = String.join("\n",
-            "blocks {",
-            "    air {",
-            "        type Type.AIR",
-            "        props { nonSolid }",
-            "    }",
-            "",
-            "    grass {",
-            "        type Type.GRASS",
-            "        texture Paths.BLOCK_GRASS",
-            "        props {",
-            "            randomRotation",
-            "            randomColor",
-            "            smoothing",
-            "            hardness 0.6f",
-            "        }",
-            "    }",
-            "",
-            "    cobble {",
-            "        type Type.COBBLE",
-            "        texture Paths.BLOCK_COBBLE",
-            "        props { hardness 2.0f }",
-            "    }",
-            "",
-            "    stone {",
-            "        type Type.STONE",
-            "        texture Paths.BLOCK_STONE",
-            "        props {",
-            "            smoothing",
-            "            hardness 3.0f",
-            "        }",
-            "    }",
-            "}");
-
     private static final StringBuilder ACTIVE_SCRIPTS = new StringBuilder();
 
     private Registry() {
@@ -56,7 +23,7 @@ public final class Registry {
     public static void resetToDefaults() {
         DATA.clear();
         ACTIVE_SCRIPTS.setLength(0);
-        registerScript(DEFAULT_BLOCKS_DSL);
+        registerScript(defaultBlocksDsl());
     }
 
     public static void registerScripts(Collection<String> scripts) {
@@ -76,8 +43,13 @@ public final class Registry {
         if (engine == null) {
             throw new IllegalStateException("Groovy ScriptEngine not found");
         }
+
         engine.put("registry", new DataRegistryApi());
-        eval(engine, "import SwordsGame.server.data.blocks.Type\n" +
+        engine.put("Type", Type.class);
+        engine.put("Paths", Paths.class);
+
+        eval(engine,
+                "import SwordsGame.server.data.blocks.Type\n" +
                 "import SwordsGame.client.assets.Paths\n" +
                 "def blocks(Closure c){ registry.blocks(c) }");
         eval(engine, script);
@@ -115,6 +87,38 @@ public final class Registry {
         } catch (Exception e) {
             throw new RuntimeException("Groovy block data DSL eval failed", e);
         }
+    }
+
+    private static String defaultBlocksDsl() {
+        return "blocks {\n" +
+                "    air {\n" +
+                "        type Type.AIR\n" +
+                "        props { nonSolid }\n" +
+                "    }\n\n" +
+                "    grass {\n" +
+                "        type Type.GRASS\n" +
+                "        texture Paths.BLOCK_GRASS\n" +
+                "        props {\n" +
+                "            randomRotation\n" +
+                "            randomColor\n" +
+                "            smoothing\n" +
+                "            hardness 0.6f\n" +
+                "        }\n" +
+                "    }\n\n" +
+                "    cobble {\n" +
+                "        type Type.COBBLE\n" +
+                "        texture Paths.BLOCK_COBBLE\n" +
+                "        props { hardness 2.0f }\n" +
+                "    }\n\n" +
+                "    stone {\n" +
+                "        type Type.STONE\n" +
+                "        texture Paths.BLOCK_STONE\n" +
+                "        props {\n" +
+                "            smoothing\n" +
+                "            hardness 3.0f\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
     }
 
     public static final class DataRegistryApi {
@@ -163,7 +167,7 @@ public final class Registry {
         private float hardness = 1.0f;
 
         public boolean getNonSolid() { solid = false; return true; }
-        public void nonSolid(boolean enabled) { solid = !enabled ? true : false; }
+        public void nonSolid(boolean enabled) { solid = !enabled; }
         public void solid(boolean enabled) { solid = enabled; }
         public void hardness(float value) { hardness = value; }
 
@@ -180,7 +184,7 @@ public final class Registry {
     }
 
     private static void configure(Closure<?> closure, Object delegate) {
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        closure.setResolveStrategy(Closure.OWNER_FIRST);
         closure.setDelegate(delegate);
         closure.call();
     }
