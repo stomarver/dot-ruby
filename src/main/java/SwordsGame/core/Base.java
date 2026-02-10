@@ -2,16 +2,19 @@ package SwordsGame.core;
 
 import SwordsGame.client.Camera;
 import SwordsGame.client.World;
-import SwordsGame.client.assets.Paths;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.server.data.blocks.Registry;
+import SwordsGame.client.data.blocks.RenderRegistry;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.ui.HUD;
 import SwordsGame.ui.Cursor;
+import SwordsGame.ui.data.text.TextRegistry;
 import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.environment.DayNightCycle;
 import SwordsGame.server.environment.Sun;
+import SwordsGame.server.tick.TickSystem;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -25,6 +28,8 @@ public class Base {
     private Camera camera;
     private ChunkManager chunkManager;
     private Sun sun;
+    private DayNightCycle dayNightCycle;
+    private TickSystem tickSystem;
 
 
     public static void main(String[] args) {
@@ -40,19 +45,25 @@ public class Base {
         world = new World();
         camera = new Camera();
         sun = new Sun();
+        dayNightCycle = new DayNightCycle(sun);
+        tickSystem = new TickSystem(40);
 
         Discord.init();
         Registry.init();
+        RenderRegistry.initFromServerDsl();
+        TextRegistry.init();
 
-        font = new Font(Paths.FONT_MAIN);
-        hud = new HUD(font, 960, 540);
+        font = new Font("textures/fonts/font.png");
+        hud = new HUD(font, window.getVirtualWidth(), window.getVirtualHeight());
 
         cursor = new Cursor();
         TextureLoader.finishLoading();
+        tickSystem.start(glfwGetTime());
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
-            updateSunState();
+            tickSystem.advance(glfwGetTime(), () -> dayNightCycle.tick());
+            updateSunState(tickSystem.getInterpolationAlpha());
             updateHudInfo();
 
             window.beginRenderToFBO();
@@ -89,13 +100,14 @@ public class Base {
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
-        Registry.destroy();
+        RenderRegistry.destroy();
         TextureLoader.finishCleanup();
         window.destroy();
         System.exit(0);
     }
 
-    private void updateSunState() {
+    private void updateSunState(float alpha) {
+        sun.setYaw(dayNightCycle.getInterpolatedYaw(alpha));
         float[] sunDirection = sun.getDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }

@@ -7,8 +7,10 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Camera {
-    private static final float ORTHO_WIDTH = 720.0f;
-    private static final float ORTHO_HEIGHT = 540.0f;
+    private static final float ORTHO_BASE_HEIGHT = 540.0f;
+    private float orthoWidth = 720.0f;
+    private float orthoHeight = ORTHO_BASE_HEIGHT;
+
     private float x = 0, z = 0;
     private float zoom = 0.5f;
     private float targetRotationY = 45.0f;
@@ -30,10 +32,11 @@ public class Camera {
     public float getZoom() { return zoom; }
     public float getRotation() { return currentRotationY; }
     public float getPitch() { return PITCH; }
-    public float getOrthoWidth() { return ORTHO_WIDTH; }
-    public float getOrthoHeight() { return ORTHO_HEIGHT; }
+    public float getOrthoWidth() { return orthoWidth; }
+    public float getOrthoHeight() { return orthoHeight; }
 
     public void update(Window window, ChunkManager chunkManager, Renderer renderer) {
+        refreshOrthoProjection(renderer);
         long windowHandle = window.getHandle();
 
         float angleRad = (float) Math.toRadians(currentRotationY);
@@ -102,6 +105,14 @@ public class Camera {
         glRotatef(PITCH, 1, 0, 0);
         glRotatef(currentRotationY, 0, 1, 0);
         glTranslatef(x, 0, z);
+    }
+
+    private void refreshOrthoProjection(Renderer renderer) {
+        float viewportW = Math.max(1, renderer.getViewportWidth());
+        float viewportH = Math.max(1, renderer.getViewportHeight());
+        float aspect = viewportW / viewportH;
+        orthoHeight = ORTHO_BASE_HEIGHT;
+        orthoWidth = ORTHO_BASE_HEIGHT * aspect;
     }
 
     private void clampPosition(ChunkManager chunkManager, Renderer renderer) {

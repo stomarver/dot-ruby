@@ -1,88 +1,54 @@
-# Синтаксис текста и регистрация блоков
+# Syntax (Java 8 + Groovy JSR223)
 
-## Система текста
+## Пакетная структура
+- Server data blocks: `SwordsGame.server.data.blocks`
+- Client render blocks: `SwordsGame.client.data.blocks`
+- UI text data: `SwordsGame.ui.data.text`
 
-### Базовый вывод
-Текст рисуется через класс `SwordsGame.ui.Text`. Основные методы:
+## Пути ресурсов
+- Блоки: `src/main/resources/textures/blocks/*`
+- Шрифты: `src/main/resources/textures/fonts/*`
+- UI: `src/main/resources/textures/ui/*`
 
-- `draw(String text, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale)`
-- `draw(String text, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale, Wave wave)`
-- `draw(String text, Anchor anchor, float x, float y, float scale)`
+## Block DSL
+Server DSL: `src/main/resources/data/server/blocks/blocks.dsl`  
+Client DSL: `src/main/resources/data/client/blocks/blocks.dsl`
 
-Параметры задают:
-- **Anchor** — точку привязки (лево/центр/право по X и верх/центр/низ по Y).
-- **x, y** — смещения от привязки в пикселях.
-- **scale** — масштаб символов.
+Тип блока задаётся по секции:
 
-### Разделение строк
-Используйте `\n` для переноса строк. Шаг между строками рассчитывается через `Text.getLineStep(scale)`.
+```groovy
+blocks {
+    grass {
+        texture "grass.png"      // автоматически станет textures/blocks/grass.png
+        props {
+            hardness 0.6f
+            aoAffected true
+        }
+    }
 
-### Цветовые коды
-Внутри строки поддерживаются цветовые коды формата `^<цифра>`:
-
-- `^1` — красный
-- `^2` — зелёный
-- `^3` — синий
-- `^4` — жёлтый
-- `^5` — фиолетовый
-- любые другие цифры (например `^0`) сбрасывают цвет в белый
-
-Пример:
-```
-"^2Зелёный ^1красный ^0обычный"
-```
-
-### Анимации текста
-Анимации задаются параметрами метода, а не внутри строки:
-
-- `Text.Shake` — дрожание (`SLOW`, `MEDIUM`, `FAST`)
-- `Text.Wave` — волна (`SLOW`, `MEDIUM`, `FAST`)
-- `Text.Crit` — критический «толчок» (`SLOW`, `MEDIUM`, `FAST`)
-
-Например, `draw(text, ax, ay, x, y, scale, Text.Wave.MEDIUM)` включает волну.
-
-## Регистрация блоков
-
-### 1) Добавьте тип блока
-В `SwordsGame.client.blocks.Type` добавьте новый элемент перечисления с уникальным `id` и именем:
-```java
-NEW_BLOCK(4, "New Block")
-```
-`id` используется как сетевой идентификатор и хранится в чанках.
-
-### 2) Создайте класс блока
-В `SwordsGame.client.blocks` создайте класс, который наследуется от `Block`:
-```java
-public class NewBlock extends Block {
-    public NewBlock() {
-        super(Type.NEW_BLOCK, Paths.BLOCK_NEW,
-                new BlockProperties()
-                        .randomRotation()
-                        .randomColor());
+    glass {
+        texture "glass.png"
+        props {
+            transparent
+            nonSolid
+            hardness 0.3f
+            aoAffected false
+        }
     }
 }
 ```
-Свойства задаются через `BlockProperties`:
-- `randomRotation()` — случайный поворот текстуры
-- `randomColor()` — случайный оттенок
-- `emission()` — свечение (отключает освещение)
-- `transparent()` — прозрачность
-- `nonSolid()` — делает блок не-твёрдым
-- `smoothing()` — включает сглаживание верхней грани
-- `hardness(float)` — прочность
 
-### 3) Пропишите путь к текстуре
-В `SwordsGame.client.assets.Paths` добавьте путь к текстуре:
-```java
-public static final String BLOCK_NEW = "blocks/new.png";
-```
-Файл должен находиться в `src/main/resources/blocks/`.
+### Что делает `hardness`
+`hardness` — логическая «твёрдость» блока (серверные данные + клиентские метаданные). Сейчас это значение хранится в `BlockData/BlockProperties` и предназначено для геймплейных механик (скорость ломания, требования инструмента, баланс урона по блоку и т.п.).
 
-### 4) Зарегистрируйте блок
-В `SwordsGame.client.blocks.Registry.init()` зарегистрируйте новый блок:
-```java
-register(Type.NEW_BLOCK, new NewBlock());
+## UI Text DSL
+Ресурс: `src/main/resources/data/ui/text/text.dsl`
+
+```groovy
+text {
+    key "hud.title", "Грунт"
+    key "hud.example", "Boss defeated!\\n+1000 gold ^4CRITICAL^0 hit!"
+}
 ```
 
-### 5) Серверная генерация (при необходимости)
-Если блок участвует в генерации мира или логике сервера, используйте `Type.NEW_BLOCK.id` в нужных местах (например, в `Terrain.generate`).
+Пример нового текстового класса: `SwordsGame.ui.ExampleTextOverlay`.

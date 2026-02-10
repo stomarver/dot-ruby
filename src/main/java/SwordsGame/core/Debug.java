@@ -2,15 +2,18 @@ package SwordsGame.core;
 
 import SwordsGame.client.Camera;
 import SwordsGame.client.World;
-import SwordsGame.client.assets.Paths;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.server.data.blocks.Registry;
+import SwordsGame.client.data.blocks.RenderRegistry;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.environment.DayNightCycle;
 import SwordsGame.server.environment.Sun;
+import SwordsGame.server.tick.TickSystem;
 import SwordsGame.ui.Cursor;
 import SwordsGame.ui.HUD;
+import SwordsGame.ui.data.text.TextRegistry;
 import SwordsGame.utils.Discord;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -25,6 +28,8 @@ public class Debug {
     private Camera camera;
     private ChunkManager chunkManager;
     private Sun sun;
+    private DayNightCycle dayNightCycle;
+    private TickSystem tickSystem;
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
     private boolean resetSunHeld = false;
@@ -45,18 +50,24 @@ public class Debug {
         world = new World();
         camera = new Camera();
         sun = new Sun();
+        dayNightCycle = new DayNightCycle(sun);
+        tickSystem = new TickSystem(40);
 
         Discord.init();
         Registry.init();
+        RenderRegistry.initFromServerDsl();
+        TextRegistry.init();
 
-        font = new Font(Paths.FONT_MAIN);
-        hud = new HUD(font, 960, 540);
+        font = new Font("textures/fonts/font.png");
+        hud = new HUD(font, window.getVirtualWidth(), window.getVirtualHeight());
 
         cursor = new Cursor();
         TextureLoader.finishLoading();
+        tickSystem.start(glfwGetTime());
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
+            tickSystem.advance(glfwGetTime(), () -> dayNightCycle.tick());
             updateSunControls(window.getHandle());
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
@@ -98,11 +109,14 @@ public class Debug {
         float step = 1.5f;
         if (glfwGetKey(windowHandle, GLFW_KEY_Y) == GLFW_PRESS) {
             sun.rotateYaw(-step);
+            dayNightCycle.syncFromSun();
         }
         if (glfwGetKey(windowHandle, GLFW_KEY_U) == GLFW_PRESS) {
             sun.rotateYaw(step);
+            dayNightCycle.syncFromSun();
         }
         handleSunReset(windowHandle);
+        sun.setYaw(dayNightCycle.getInterpolatedYaw(tickSystem.getInterpolationAlpha()));
         float[] sunDirection = sun.getDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }
@@ -127,6 +141,7 @@ public class Debug {
         boolean resetPressed = glfwGetKey(windowHandle, GLFW_KEY_R) == GLFW_PRESS;
         if (resetPressed && !resetSunHeld) {
             sun.reset();
+            dayNightCycle.syncFromSun();
         }
         resetSunHeld = resetPressed;
     }
@@ -169,7 +184,7 @@ public class Debug {
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
-        Registry.destroy();
+        RenderRegistry.destroy();
         TextureLoader.finishCleanup();
         window.destroy();
         System.exit(0);

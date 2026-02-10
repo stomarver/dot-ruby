@@ -1,10 +1,11 @@
-package SwordsGame.client.blocks;
+package SwordsGame.server.data.blocks;
 
 public enum Type {
     AIR(0, "Air"),
     COBBLE(1, "Cobblestone"),
     GRASS(2, "Grass"),
-    STONE(3, "Stone");
+    STONE(3, "Stone"),
+    GLASS(4, "Glass");
 
     public final byte id;
     public final String name;
