@@ -3,12 +3,12 @@
 ## Пакетная структура (RTS/multiplayer-ready)
 
 - Server data blocks: `SwordsGame.server.data.blocks`
-- Client render blocks: `SwordsGame.client.blocks`
+- Client render blocks: `SwordsGame.client.data.blocks`
 
 ## DSL файлы
 
-- Server DSL: `src/main/resources/SwordsGame/server/data/blocks/blocks.dsl`
-- Client DSL: `src/main/resources/SwordsGame/client/blocks/blocks.dsl`
+- Server DSL: `src/main/resources/data/server/blocks/blocks.dsl`
+- Client DSL: `src/main/resources/data/client/blocks/blocks.dsl`
 
 Оба файла используют один и тот же Groovy-стиль, но:
 - server-файл влияет на логические данные блока,
@@ -62,7 +62,7 @@ Server (`SwordsGame.server.data.blocks.Registry`):
 - `registerScript(String script)`
 - `registerScripts(Collection<String> scripts)`
 
-Client (`SwordsGame.client.blocks.RenderRegistry`):
+Client (`SwordsGame.client.data.blocks.RenderRegistry`):
 - `initFromServerDsl()` (загружает client DSL файл)
 - `registerScript(String script)`
 

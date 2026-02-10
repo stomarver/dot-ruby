@@ -1,4 +1,4 @@
-package SwordsGame.client.blocks;
+package SwordsGame.client.data.blocks;
 
 import SwordsGame.client.assets.Paths;
 import SwordsGame.client.graphics.Block;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 public final class RenderRegistry {
     private static final Map<Type, Block> REGISTRY = new LinkedHashMap<>();
-    private static final String DSL_RESOURCE = "/SwordsGame/client/blocks/blocks.dsl";
+    private static final String DSL_RESOURCE = "/data/client/blocks/blocks.dsl";
     private static boolean destroyed;
 
     private RenderRegistry() {
@@ -43,11 +43,11 @@ public final class RenderRegistry {
         engine.put("registry", new RenderRegistryApi());
         engine.put("Paths", Paths.class);
 
-        eval(engine,
-                "import SwordsGame.server.data.blocks.Type\n" +
+        String fullScript = "import SwordsGame.server.data.blocks.Type\n" +
                 "import SwordsGame.client.assets.Paths\n" +
-                "def blocks(Closure c){ registry.blocks(c) }");
-        eval(engine, script);
+                "def blocks(Closure c){ registry.blocks(c) }\n" +
+                script;
+        eval(engine, fullScript);
     }
 
     public static Block get(Type type) {

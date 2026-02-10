@@ -1,7 +1,7 @@
 package SwordsGame.client.graphics;
 
 import SwordsGame.client.World;
-import SwordsGame.client.blocks.RenderRegistry;
+import SwordsGame.client.data.blocks.RenderRegistry;
 
 import java.util.HashMap;
 import java.util.Map;

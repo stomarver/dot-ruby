@@ -16,7 +16,7 @@ import java.util.Map;
 public final class Registry {
     private static final Map<Type, BlockData> DATA = new LinkedHashMap<>();
     private static final StringBuilder ACTIVE_SCRIPTS = new StringBuilder();
-    private static final String DSL_RESOURCE = "/SwordsGame/server/data/blocks/blocks.dsl";
+    private static final String DSL_RESOURCE = "/data/server/blocks/blocks.dsl";
 
     private Registry() {
     }
@@ -49,10 +49,11 @@ public final class Registry {
         }
 
         engine.put("registry", new DataRegistryApi());
-        eval(engine,
-                "import SwordsGame.server.data.blocks.Type\n" +
-                "def blocks(Closure c){ registry.blocks(c) }");
-        eval(engine, script);
+
+        String fullScript = "import SwordsGame.server.data.blocks.Type\n" +
+                "def blocks(Closure c){ registry.blocks(c) }\n" +
+                script;
+        eval(engine, fullScript);
 
         if (ACTIVE_SCRIPTS.length() > 0) ACTIVE_SCRIPTS.append("\n\n");
         ACTIVE_SCRIPTS.append(script.trim());

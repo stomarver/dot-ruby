@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import SwordsGame.client.blocks.RenderRegistry;
+import SwordsGame.client.data.blocks.RenderRegistry;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockRenderer;
 import SwordsGame.client.graphics.ChunkMesh;

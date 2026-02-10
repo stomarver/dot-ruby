@@ -4,7 +4,7 @@ import SwordsGame.client.Camera;
 import SwordsGame.client.World;
 import SwordsGame.client.assets.Paths;
 import SwordsGame.server.data.blocks.Registry;
-import SwordsGame.client.blocks.RenderRegistry;
+import SwordsGame.client.data.blocks.RenderRegistry;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
