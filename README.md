@@ -27,3 +27,11 @@
 - *Terrible optimization at maximum camera distance*
 - *Incorrect positioning of block outlines relative to the cursor*
 - *Disgusting code structure and complete lack of understanding of Java/LWJGL by the lead developer*
+
+
+***
+### Build Troubleshooting
+- If you see `Could not find or load main class org.gradle.wrapper.GradleWrapperMain`, verify the wrapper jar exists in `gradle/wrapper/gradle-wrapper.jar` and re-checkout the branch (the file is committed in this repo).
+- If you see `Unsupported class file major version 69`, run Gradle with JDK 21 explicitly:
+  - `JAVA_HOME=$HOME/.local/share/mise/installs/java/21 PATH=$HOME/.local/share/mise/installs/java/21/bin:$PATH ./gradlew compileJava`
+- Project bytecode target is Java 8 compatibility layer (configured in `build.gradle`).
