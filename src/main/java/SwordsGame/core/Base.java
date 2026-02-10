@@ -11,7 +11,9 @@ import SwordsGame.ui.HUD;
 import SwordsGame.ui.Cursor;
 import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.environment.DayNightCycle;
 import SwordsGame.server.environment.Sun;
+import SwordsGame.core.tick.TickSystem;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -25,6 +27,8 @@ public class Base {
     private Camera camera;
     private ChunkManager chunkManager;
     private Sun sun;
+    private DayNightCycle dayNightCycle;
+    private TickSystem tickSystem;
 
 
     public static void main(String[] args) {
@@ -40,6 +44,8 @@ public class Base {
         world = new World();
         camera = new Camera();
         sun = new Sun();
+        dayNightCycle = new DayNightCycle(sun);
+        tickSystem = new TickSystem(40);
 
         Discord.init();
         Registry.init();
@@ -49,10 +55,12 @@ public class Base {
 
         cursor = new Cursor();
         TextureLoader.finishLoading();
+        tickSystem.start(glfwGetTime());
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
-            updateSunState();
+            tickSystem.update(glfwGetTime(), () -> dayNightCycle.tick());
+            updateSunState(tickSystem.getInterpolationAlpha());
             updateHudInfo();
 
             window.beginRenderToFBO();
@@ -95,7 +103,8 @@ public class Base {
         System.exit(0);
     }
 
-    private void updateSunState() {
+    private void updateSunState(float alpha) {
+        sun.setYaw(dayNightCycle.getInterpolatedYaw(alpha));
         float[] sunDirection = sun.getDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }

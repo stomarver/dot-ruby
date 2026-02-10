@@ -73,7 +73,7 @@ public class Block {
         }
         TextureLoader.Texture[] loaded = new TextureLoader.Texture[count];
         for (int i = 0; i < count; i++) {
-            loaded[i] = TextureLoader.loadTexture(texturePaths[i], false);
+            loaded[i] = TextureLoader.loadTexture(texturePaths[i]);
         }
         return loaded;
     }

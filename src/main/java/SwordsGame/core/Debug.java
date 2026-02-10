@@ -8,7 +8,9 @@ import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.environment.DayNightCycle;
 import SwordsGame.server.environment.Sun;
+import SwordsGame.core.tick.TickSystem;
 import SwordsGame.ui.Cursor;
 import SwordsGame.ui.HUD;
 import SwordsGame.utils.Discord;
@@ -25,6 +27,8 @@ public class Debug {
     private Camera camera;
     private ChunkManager chunkManager;
     private Sun sun;
+    private DayNightCycle dayNightCycle;
+    private TickSystem tickSystem;
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
     private boolean resetSunHeld = false;
@@ -45,6 +49,8 @@ public class Debug {
         world = new World();
         camera = new Camera();
         sun = new Sun();
+        dayNightCycle = new DayNightCycle(sun);
+        tickSystem = new TickSystem(40);
 
         Discord.init();
         Registry.init();
@@ -54,9 +60,11 @@ public class Debug {
 
         cursor = new Cursor();
         TextureLoader.finishLoading();
+        tickSystem.start(glfwGetTime());
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
+            tickSystem.update(glfwGetTime(), () -> dayNightCycle.tick());
             updateSunControls(window.getHandle());
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
@@ -98,11 +106,14 @@ public class Debug {
         float step = 1.5f;
         if (glfwGetKey(windowHandle, GLFW_KEY_Y) == GLFW_PRESS) {
             sun.rotateYaw(-step);
+            dayNightCycle.syncFromSun();
         }
         if (glfwGetKey(windowHandle, GLFW_KEY_U) == GLFW_PRESS) {
             sun.rotateYaw(step);
+            dayNightCycle.syncFromSun();
         }
         handleSunReset(windowHandle);
+        sun.setYaw(dayNightCycle.getInterpolatedYaw(tickSystem.getInterpolationAlpha()));
         float[] sunDirection = sun.getDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
     }
@@ -127,6 +138,7 @@ public class Debug {
         boolean resetPressed = glfwGetKey(windowHandle, GLFW_KEY_R) == GLFW_PRESS;
         if (resetPressed && !resetSunHeld) {
             sun.reset();
+            dayNightCycle.syncFromSun();
         }
         resetSunHeld = resetPressed;
     }

@@ -11,6 +11,7 @@ import SwordsGame.client.graphics.ChunkMesh;
 import SwordsGame.client.graphics.MeshBuilder;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.client.blocks.Type;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
@@ -201,7 +202,9 @@ public class World {
         int worldX = currentChunk.x * Chunk.SIZE + x;
         int worldZ = currentChunk.z * Chunk.SIZE + z;
         byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
-        return neighborType == 0 || neighborType != currentType;
+        if (neighborType == 0) return true;
+        if (currentType == Type.STONE.id && neighborType == Type.COBBLE.id) return false;
+        return neighborType != currentType;
     }
 
     public void markChunkDirty(Chunk chunk) {
@@ -314,7 +317,8 @@ public class World {
                     int wx = chunk.x * Chunk.SIZE + x;
                     int wz = chunk.z * Chunk.SIZE + z;
                     int seed = (wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791);
-                    builder.addBlock(type, seed, faces, wx, y, wz, totalOffset, BLOCK_SCALE);
+                    float[][] ao = computeAmbientOcclusion(cm, wx, y, wz, faces, type);
+                    builder.addBlock(type, seed, faces, ao, wx, y, wz, totalOffset, BLOCK_SCALE);
                 }
             }
         }
@@ -351,4 +355,72 @@ public class World {
         Block above = Registry.get(aboveType);
         return above != null && above.getProperties().hasSmoothing();
     }
+
+    private float[][] computeAmbientOcclusion(ChunkManager cm, int wx, int wy, int wz, boolean[] visibleFaces, byte currentType) {
+        float[][] ao = new float[6][4];
+        for (int face = 0; face < 6; face++) {
+            if (!visibleFaces[face]) {
+                for (int i = 0; i < 4; i++) ao[face][i] = 1.0f;
+                continue;
+            }
+            for (int vertex = 0; vertex < 4; vertex++) {
+                ao[face][vertex] = faceVertexAo(cm, wx, wy, wz, face, vertex, currentType);
+            }
+        }
+        return ao;
+    }
+
+    private float faceVertexAo(ChunkManager cm, int wx, int wy, int wz, int face, int vertex, byte currentType) {
+        int[] sideA = sampleOffset(face, vertex, true);
+        int[] sideB = sampleOffset(face, vertex, false);
+        boolean a = isOccluder(cm, wx + sideA[0], wy + sideA[1], wz + sideA[2], currentType);
+        boolean b = isOccluder(cm, wx + sideB[0], wy + sideB[1], wz + sideB[2], currentType);
+        boolean corner = isOccluder(cm, wx + sideA[0] + sideB[0], wy + sideA[1] + sideB[1], wz + sideA[2] + sideB[2], currentType);
+        int value = (a && b) ? 0 : 3 - ((a ? 1 : 0) + (b ? 1 : 0) + (corner ? 1 : 0));
+        return 0.55f + (value * 0.15f);
+    }
+
+    private boolean isOccluder(ChunkManager cm, int wx, int wy, int wz, byte currentType) {
+        byte type = cm.getBlockAtWorld(wx, wy, wz);
+        if (type == 0 || type == currentType) {
+            return false;
+        }
+        Block block = Registry.get(type);
+        return block != null && block.getProperties().isSolid() && !block.getProperties().isTransparent();
+    }
+
+    private int[] sampleOffset(int face, int vertex, boolean first) {
+        switch (face) {
+            case 2: return topOffset(vertex, first);
+            case 3: return bottomOffset(vertex, first);
+            case 0: return frontOffset(vertex, first);
+            case 1: return backOffset(vertex, first);
+            case 4: return rightOffset(vertex, first);
+            default: return leftOffset(vertex, first);
+        }
+    }
+
+    private int[] topOffset(int vertex, boolean first) {
+        int[][] sideX = {{-1,0,0},{-1,0,0},{1,0,0},{1,0,0}};
+        int[][] sideZ = {{0,0,-1},{0,0,1},{0,0,1},{0,0,-1}};
+        return first ? sideX[vertex] : sideZ[vertex];
+    }
+
+    private int[] bottomOffset(int vertex, boolean first) { return topOffset(vertex, first); }
+
+    private int[] frontOffset(int vertex, boolean first) {
+        int[][] sideX = {{-1,0,0},{-1,0,0},{1,0,0},{1,0,0}};
+        int[][] sideY = {{0,-1,0},{0,1,0},{0,1,0},{0,-1,0}};
+        return first ? sideX[vertex] : sideY[vertex];
+    }
+
+    private int[] backOffset(int vertex, boolean first) { return frontOffset(vertex, first); }
+
+    private int[] rightOffset(int vertex, boolean first) {
+        int[][] sideZ = {{0,0,-1},{0,0,-1},{0,0,1},{0,0,1}};
+        int[][] sideY = {{0,-1,0},{0,1,0},{0,1,0},{0,-1,0}};
+        return first ? sideZ[vertex] : sideY[vertex];
+    }
+
+    private int[] leftOffset(int vertex, boolean first) { return rightOffset(vertex, first); }
 }

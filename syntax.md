@@ -1,88 +1,107 @@
-# Синтаксис текста и регистрация блоков
+# Syntax DSL (Java 8)
 
-## Система текста
+## Text DSL
 
-### Базовый вывод
-Текст рисуется через класс `SwordsGame.ui.Text`. Основные методы:
-
-- `draw(String text, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale)`
-- `draw(String text, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale, Wave wave)`
-- `draw(String text, Anchor anchor, float x, float y, float scale)`
-
-Параметры задают:
-- **Anchor** — точку привязки (лево/центр/право по X и верх/центр/низ по Y).
-- **x, y** — смещения от привязки в пикселях.
-- **scale** — масштаб символов.
-
-### Разделение строк
-Используйте `\n` для переноса строк. Шаг между строками рассчитывается через `Text.getLineStep(scale)`.
-
-### Цветовые коды
-Внутри строки поддерживаются цветовые коды формата `^<цифра>`:
-
-- `^1` — красный
-- `^2` — зелёный
-- `^3` — синий
-- `^4` — жёлтый
-- `^5` — фиолетовый
-- любые другие цифры (например `^0`) сбрасывают цвет в белый
-
-Пример:
-```
-"^2Зелёный ^1красный ^0обычный"
-```
-
-### Анимации текста
-Анимации задаются параметрами метода, а не внутри строки:
-
-- `Text.Shake` — дрожание (`SLOW`, `MEDIUM`, `FAST`)
-- `Text.Wave` — волна (`SLOW`, `MEDIUM`, `FAST`)
-- `Text.Crit` — критический «толчок» (`SLOW`, `MEDIUM`, `FAST`)
-
-Например, `draw(text, ax, ay, x, y, scale, Text.Wave.MEDIUM)` включает волну.
-
-## Регистрация блоков
-
-### 1) Добавьте тип блока
-В `SwordsGame.client.blocks.Type` добавьте новый элемент перечисления с уникальным `id` и именем:
 ```java
-NEW_BLOCK(4, "New Block")
+text.draw(d -> {
+    d.content("Boss defeated!\n+1000 gold ^4CRITICAL^0 hit!");
+    d.center(); // or left(), right(), top(), bottom()
+    d.pos(0, -80);
+    d.scale(1.8f);
+    d.wave("medium");
+    d.shake("fast");
+    d.crit("medium");
+});
 ```
-`id` используется как сетевой идентификатор и хранится в чанках.
 
-### 2) Создайте класс блока
-В `SwordsGame.client.blocks` создайте класс, который наследуется от `Block`:
+### Supported text options
+- `content(String)` — text body, supports `\n` and color tags `^0..^9`.
+- Anchors: `center() | left() | right() | top() | bottom()`.
+- `pos(float x, float y)` — offset relative to selected anchor.
+- `scale(float)` — glyph scaling.
+- Effects (optional):
+  - `wave("slow|medium|fast")`
+  - `shake("slow|medium|fast")`
+  - `crit("slow|medium|fast")`
+
+If an effect is omitted, it is disabled.
+
+---
+
+## Block registration DSL
+
 ```java
-public class NewBlock extends Block {
-    public NewBlock() {
-        super(Type.NEW_BLOCK, Paths.BLOCK_NEW,
-                new BlockProperties()
-                        .randomRotation()
-                        .randomColor());
-    }
-}
-```
-Свойства задаются через `BlockProperties`:
-- `randomRotation()` — случайный поворот текстуры
-- `randomColor()` — случайный оттенок
-- `emission()` — свечение (отключает освещение)
-- `transparent()` — прозрачность
-- `nonSolid()` — делает блок не-твёрдым
-- `smoothing()` — включает сглаживание верхней грани
-- `hardness(float)` — прочность
+Registry.blocks(def -> {
+    def.air(b -> {
+        b.type(Type.AIR);
+        b.props(p -> p.nonSolid());
+    });
 
-### 3) Пропишите путь к текстуре
-В `SwordsGame.client.assets.Paths` добавьте путь к текстуре:
+    def.grass(b -> {
+        b.type(Type.GRASS);
+        b.texture(Paths.BLOCK_GRASS);
+        b.props(p -> p.randomRotation().randomColor().smoothing().hardness(0.6f));
+    });
+
+    def.cobble(b -> {
+        b.type(Type.COBBLE);
+        b.texture(Paths.BLOCK_COBBLE);
+        b.props(p -> p.hardness(2.0f));
+    });
+
+    def.stone(b -> {
+        b.type(Type.STONE);
+        b.texture(Paths.BLOCK_STONE);
+        b.props(p -> p.smoothing().hardness(3.0f));
+    });
+
+    def.define(b -> {
+        b.type(Type.LOG_OAK);
+        b.top(Paths.LOG_OAK_TOP);
+        b.bottom(Paths.LOG_OAK_BOTTOM);
+        b.side(Paths.LOG_OAK_SIDE);
+        b.props(p -> p.hardness(2.0f).randomRotation(false));
+    });
+});
+```
+
+### Block DSL
+- `type(Type)` — required.
+- Textures:
+  - `texture(path)` for single-texture blocks.
+  - `top(path)`, `bottom(path)`, `side(path)` for 3-way block texturing.
+- `props(Consumer<PropsDsl>)` — block properties.
+
+### Props DSL
+Flags are off by default:
+- `randomRotation()` / `randomRotation(boolean)`
+- `randomColor()` / `randomColor(boolean)`
+- `emission()` / `emission(boolean)`
+- `transparent()` / `transparent(boolean)`
+- `smoothing()` / `smoothing(boolean)`
+- `nonSolid()` / `nonSolid(boolean)`
+- `solid(boolean)`
+- `hardness(float)`
+
+---
+
+## Texture loading option: toggleBlack
+
+Texture loader now supports options:
+
 ```java
-public static final String BLOCK_NEW = "blocks/new.png";
-```
-Файл должен находиться в `src/main/resources/blocks/`.
-
-### 4) Зарегистрируйте блок
-В `SwordsGame.client.blocks.Registry.init()` зарегистрируйте новый блок:
-```java
-register(Type.NEW_BLOCK, new NewBlock());
+TextureLoader.loadTexture("fonts/font.png");
+TextureLoader.loadTexture("my/path.png", TextureLoader.LoadOptions.of(true));
 ```
 
-### 5) Серверная генерация (при необходимости)
-Если блок участвует в генерации мира или логике сервера, используйте `Type.NEW_BLOCK.id` в нужных местах (например, в `Terrain.generate`).
+Rules:
+- `toggleBlack` means pure black pixels become transparent.
+- Default profile applies `toggleBlack=true` **only** to `font.png`.
+
+---
+
+## Tick / DayNight conventions
+
+- Simulation tick cap: **40 TPS**.
+- Day/night update: **+1 yaw every 4 ticks** (10 updates/sec at 40 TPS).
+- Rendering uses interpolation between previous/current sun yaw for smoother animation.

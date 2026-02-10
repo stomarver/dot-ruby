@@ -21,6 +21,27 @@ public class TextureLoader {
     private static boolean isReleasing = false;
     private static final Map<String, Texture> cache = new HashMap<>();
 
+    public static class LoadOptions {
+        private final boolean toggleBlack;
+
+        private LoadOptions(boolean toggleBlack) {
+            this.toggleBlack = toggleBlack;
+        }
+
+        public boolean isToggleBlack() {
+            return toggleBlack;
+        }
+
+        public static LoadOptions defaultsFor(String path) {
+            String normalized = path == null ? "" : path.replace('\\', '/').toLowerCase();
+            return new LoadOptions(normalized.endsWith("font.png"));
+        }
+
+        public static LoadOptions of(boolean toggleBlack) {
+            return new LoadOptions(toggleBlack);
+        }
+    }
+
     public static class Texture {
         public final int id;
         public final int width, height;
@@ -32,7 +53,15 @@ public class TextureLoader {
         }
     }
 
+    public static Texture loadTexture(String path) {
+        return loadTexture(path, LoadOptions.defaultsFor(path));
+    }
+
     public static Texture loadTexture(String path, boolean removeBlack) {
+        return loadTexture(path, LoadOptions.of(removeBlack));
+    }
+
+    public static Texture loadTexture(String path, LoadOptions options) {
         Texture cached = cache.get(path);
         if (cached != null) return cached;
         if (loadCount == 0) {
@@ -56,7 +85,7 @@ public class TextureLoader {
             width = w.get(0);
             height = h.get(0);
 
-            if (removeBlack) processTransparency(image, width * height);
+            if (options != null && options.isToggleBlack()) processTransparency(image, width * height);
 
             int id = glGenTextures();
             glBindTexture(GL_TEXTURE_2D, id);

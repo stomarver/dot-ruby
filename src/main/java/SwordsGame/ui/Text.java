@@ -4,6 +4,7 @@ import SwordsGame.client.graphics.Font;
 
 import static org.lwjgl.opengl.GL11.*;
 import java.util.Random;
+import java.util.function.Consumer;
 
 public class Text {
     private final Font font;
@@ -37,6 +38,17 @@ public class Text {
 
     public void draw(String t, Anchor a, float x, float y, float s) {
         drawInternal(t, a, x, y, s, true, Shake.NONE, Wave.NONE, Crit.NONE, 0);
+    }
+
+
+
+    public void draw(Consumer<DrawDsl> script) {
+        DrawDsl dsl = new DrawDsl();
+        script.accept(dsl);
+        Anchor.TypeX anchorX = dsl.anchorX != null ? dsl.anchorX : Anchor.TypeX.CENTER;
+        Anchor.TypeY anchorY = dsl.anchorY != null ? dsl.anchorY : Anchor.TypeY.CENTER;
+        drawInternal(dsl.content, buildAnchor(anchorX, anchorY), dsl.offsetX, dsl.offsetY,
+                dsl.scale, true, dsl.shake, dsl.wave, dsl.crit, 0f);
     }
 
     public float getLineStep(float scale) {
@@ -190,4 +202,53 @@ public class Text {
         glTexCoord2f(u2, v2); glVertex2f(dx+d.diacriticWidth*s, dy+d.diacriticHeight*s);
         glTexCoord2f(u1, v2); glVertex2f(dx, dy+d.diacriticHeight*s);
     }
+
+    public final class DrawDsl {
+        private String content = "";
+        private Anchor.TypeX anchorX;
+        private Anchor.TypeY anchorY;
+        private float offsetX;
+        private float offsetY;
+        private float scale = 1.0f;
+        private Shake shake = Shake.NONE;
+        private Wave wave = Wave.NONE;
+        private Crit crit = Crit.NONE;
+
+        public void content(String value) { this.content = value == null ? "" : value; }
+        public void center() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.CENTER; }
+        public void left() { this.anchorX = Anchor.TypeX.LEFT; this.anchorY = Anchor.TypeY.CENTER; }
+        public void right() { this.anchorX = Anchor.TypeX.RIGHT; this.anchorY = Anchor.TypeY.CENTER; }
+        public void top() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.TOP; }
+        public void bottom() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.BOTTOM; }
+        public void pos(float x, float y) { this.offsetX = x; this.offsetY = y; }
+        public void scale(float value) { this.scale = value; }
+        public void wave(String mode) { this.wave = parseWave(mode); }
+        public void shake(String mode) { this.shake = parseShake(mode); }
+        public void crit(String mode) { this.crit = parseCrit(mode); }
+    }
+
+    private Wave parseWave(String mode) {
+        if (mode == null) return Wave.NONE;
+        if ("slow".equalsIgnoreCase(mode)) return Wave.SLOW;
+        if ("medium".equalsIgnoreCase(mode)) return Wave.MEDIUM;
+        if ("fast".equalsIgnoreCase(mode)) return Wave.FAST;
+        return Wave.NONE;
+    }
+
+    private Shake parseShake(String mode) {
+        if (mode == null) return Shake.NONE;
+        if ("slow".equalsIgnoreCase(mode)) return Shake.SLOW;
+        if ("medium".equalsIgnoreCase(mode)) return Shake.MEDIUM;
+        if ("fast".equalsIgnoreCase(mode)) return Shake.FAST;
+        return Shake.NONE;
+    }
+
+    private Crit parseCrit(String mode) {
+        if (mode == null) return Crit.NONE;
+        if ("slow".equalsIgnoreCase(mode)) return Crit.SLOW;
+        if ("medium".equalsIgnoreCase(mode)) return Crit.MEDIUM;
+        if ("fast".equalsIgnoreCase(mode)) return Crit.FAST;
+        return Crit.NONE;
+    }
+
 }
