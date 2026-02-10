@@ -1,7 +1,6 @@
 package SwordsGame.server.data.blocks;
 
 import groovy.lang.Closure;
-import groovy.lang.MissingMethodException;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -10,7 +9,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public final class Registry {
@@ -112,31 +110,15 @@ public final class Registry {
     }
 
     public static final class BlocksDsl {
-        public void define(Type type, Closure<?> closure) {
+        public void air(Closure<?> closure) { define(Type.AIR, closure); }
+        public void grass(Closure<?> closure) { define(Type.GRASS, closure); }
+        public void cobble(Closure<?> closure) { define(Type.COBBLE, closure); }
+        public void stone(Closure<?> closure) { define(Type.STONE, closure); }
+
+        private void define(Type type, Closure<?> closure) {
             BlockDsl dsl = new BlockDsl(type);
             configure(closure, dsl);
             dsl.register();
-        }
-
-        public Object invokeMethod(String name, Object args) {
-            Type type = resolveType(name);
-            if (type == null) {
-                throw new MissingMethodException(name, getClass(), toArgs(args));
-            }
-            Object[] arr = toArgs(args);
-            if (arr.length != 1 || !(arr[0] instanceof Closure)) {
-                throw new IllegalArgumentException("Block declaration expects a closure: " + name + " { ... }");
-            }
-            define(type, (Closure<?>) arr[0]);
-            return null;
-        }
-
-        private Type resolveType(String name) {
-            String normalized = name.toUpperCase(Locale.ROOT);
-            for (Type type : Type.values()) {
-                if (type.name().equals(normalized)) return type;
-            }
-            return null;
         }
     }
 
@@ -148,7 +130,6 @@ public final class Registry {
             this.blockType = blockType;
         }
 
-        public void type(Type ignored) { }
         public void texture(String ignored) { }
         public void top(String ignored) { }
         public void bottom(String ignored) { }
@@ -182,12 +163,6 @@ public final class Registry {
         public void transparent(boolean ignored) { }
         public boolean getSmoothing() { return true; }
         public void smoothing(boolean ignored) { }
-    }
-
-    private static Object[] toArgs(Object args) {
-        if (args == null) return new Object[0];
-        if (args instanceof Object[]) return (Object[]) args;
-        return new Object[]{args};
     }
 
     private static void configure(Closure<?> closure, Object delegate) {

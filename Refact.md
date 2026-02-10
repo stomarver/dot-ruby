@@ -2,13 +2,13 @@
 
 ## Ключевые изменения
 
-- Исправлена ошибка Groovy DSL (`No such property: Type`) через стабильный ScriptEngine binding и корректный closure delegate flow.
+- Исправлена ошибка Groovy DSL (`No such property: Type`) через стабильный ScriptEngine binding и устранение проблем резолвинга DSL-методов в одном script unit.
 - Server block-логика закреплена в `SwordsGame.server.data.blocks`.
 - Client render block-логика закреплена в `SwordsGame.client.data.blocks.RenderRegistry`.
 - Введены два отдельных DSL-файла:
   - `data/server/blocks/blocks.dsl`
   - `data/client/blocks/blocks.dsl`
-- DSL упрощён: тип блока выводится по имени секции (`stone { ... }`), без обязательного `type Type.STONE`.
+- DSL упрощён: тип блока выводится по имени секции (`stone { ... }`), legacy `type Type.*` удалён.
 
 ## Почему структура лучше
 
