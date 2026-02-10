@@ -161,8 +161,6 @@ public final class Registry {
         public void emission(boolean ignored) { }
         public boolean getTransparent() { return true; }
         public void transparent(boolean ignored) { }
-        public boolean getSmoothing() { return true; }
-        public void smoothing(boolean ignored) { }
     }
 
     private static void configure(Closure<?> closure, Object delegate) {

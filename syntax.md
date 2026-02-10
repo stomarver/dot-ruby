@@ -31,7 +31,6 @@ blocks {
         props {
             randomRotation
             randomColor
-            smoothing
             hardness 0.6f
         }
     }
@@ -44,7 +43,6 @@ blocks {
     stone {
         texture Paths.BLOCK_STONE
         props {
-            smoothing
             hardness 3.0f
         }
     }

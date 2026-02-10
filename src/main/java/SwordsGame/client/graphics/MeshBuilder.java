@@ -1,6 +1,5 @@
 package SwordsGame.client.graphics;
 
-import SwordsGame.client.Smoothing;
 import SwordsGame.client.World;
 import SwordsGame.client.data.blocks.RenderRegistry;
 import java.util.HashMap;
@@ -56,18 +55,13 @@ public class MeshBuilder {
 
         for (int face = 0; face < 6; face++) {
             if (topOnly && face != 2) continue;
-            if (props.hasSmoothing() && face != 2) continue;
             if (!faces[face]) continue;
             int textureId = block.getTextureId(face);
             if (textureId == 0) continue;
 
             Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
-            if (props.hasSmoothing() && face == 2) {
-                appendSmoothedTopFace(collector, block, rot, baseX, baseY, baseZ, colorMod, faces, ao);
-            } else {
-                appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod, ao);
-            }
+            appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod, ao);
         }
     }
 
@@ -105,22 +99,6 @@ public class MeshBuilder {
         addVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color * getAo(ao, face, 0));
     }
 
-    private void appendSmoothedTopFace(FloatCollector collector, Block block, int rot,
-                                       float baseX, float baseY, float baseZ, float color, boolean[] faces, float[][] ao) {
-        float[] uv = block.getUv(rot);
-        float[] normal = FACE_NORMALS[2];
-        float[][] verts = FACE_VERTS[2];
-        Smoothing smoothing = new Smoothing(faces);
-
-        addSmoothedVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color * getAo(ao, 2, 0), smoothing, 0);
-        addSmoothedVertex(collector, verts[1], baseX, baseY, baseZ, normal, uv[2], uv[3], color * getAo(ao, 2, 1), smoothing, 1);
-        addSmoothedVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color * getAo(ao, 2, 2), smoothing, 2);
-
-        addSmoothedVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color * getAo(ao, 2, 2), smoothing, 2);
-        addSmoothedVertex(collector, verts[3], baseX, baseY, baseZ, normal, uv[6], uv[7], color * getAo(ao, 2, 3), smoothing, 3);
-        addSmoothedVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color * getAo(ao, 2, 0), smoothing, 0);
-    }
-
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
                            float[] normal, float u, float vTex, float color) {
         float x = baseX + (v[0] * World.BLOCK_SIZE);
@@ -131,21 +109,6 @@ public class MeshBuilder {
                 normal[0], normal[1], normal[2],
                 u, vTex,
                 color, color, color
-        );
-    }
-
-    private void addSmoothedVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
-                                   float[] normal, float u, float vTex, float color, Smoothing smoothing, int index) {
-        float yOffset = smoothing.shouldLowerTopVertex(index) ? -World.BLOCK_SCALE : 0.0f;
-        float slopeOcclusion = yOffset < 0.0f ? 0.85f : 1.0f;
-        float x = baseX + (v[0] * World.BLOCK_SIZE);
-        float y = baseY + (v[1] * World.BLOCK_SIZE) + yOffset;
-        float z = baseZ + (v[2] * World.BLOCK_SIZE);
-        collector.add(
-                x, y, z,
-                normal[0], normal[1], normal[2],
-                u, vTex,
-                color * slopeOcclusion, color * slopeOcclusion, color * slopeOcclusion
         );
     }
 

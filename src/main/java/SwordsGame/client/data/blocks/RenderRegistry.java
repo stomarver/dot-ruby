@@ -173,7 +173,6 @@ public final class RenderRegistry {
         private boolean emission;
         private boolean transparent;
         private boolean nonSolid;
-        private boolean smoothing;
         private float hardness = 1.0f;
 
         public boolean getRandomRotation() { randomRotation = true; return true; }
@@ -184,8 +183,6 @@ public final class RenderRegistry {
         public void emission(boolean enabled) { emission = enabled; }
         public boolean getTransparent() { transparent = true; return true; }
         public void transparent(boolean enabled) { transparent = enabled; }
-        public boolean getSmoothing() { smoothing = true; return true; }
-        public void smoothing(boolean enabled) { smoothing = enabled; }
         public boolean getNonSolid() { nonSolid = true; return true; }
         public void nonSolid(boolean enabled) { nonSolid = enabled; }
         public void solid(boolean enabled) { nonSolid = !enabled; }
@@ -197,7 +194,6 @@ public final class RenderRegistry {
             if (randomColor) p.randomColor();
             if (emission) p.emission();
             if (transparent) p.transparent();
-            if (smoothing) p.smoothing();
             if (nonSolid) p.nonSolid();
             return p;
         }

@@ -292,26 +292,14 @@ public class World {
                     byte type = chunk.getBlock(x, y, z);
                     if (type == 0) continue;
 
-                    Block block = RenderRegistry.get(type);
-                    boolean hasSmoothing = block != null && block.getProperties().hasSmoothing();
                     boolean[] faces = new boolean[6];
-                    if (hasSmoothing) {
-                        faces[0] = isSmoothingOpen(cm, chunk, x, y, z + 1);
-                        faces[1] = isSmoothingOpen(cm, chunk, x, y, z - 1);
-                        faces[2] = isTransparent(cm, chunk, x, y + 1, z, type);
-                        faces[3] = isTransparent(cm, chunk, x, y - 1, z, type);
-                        faces[4] = isSmoothingOpen(cm, chunk, x + 1, y, z);
-                        faces[5] = isSmoothingOpen(cm, chunk, x - 1, y, z);
-                    } else {
-                        faces[0] = isTransparent(cm, chunk, x, y, z + 1, type);
-                        faces[1] = isTransparent(cm, chunk, x, y, z - 1, type);
-                        faces[2] = isTransparent(cm, chunk, x, y + 1, z, type);
-                        faces[3] = isTransparent(cm, chunk, x, y - 1, z, type);
-                        faces[4] = isTransparent(cm, chunk, x + 1, y, z, type);
-                        faces[5] = isTransparent(cm, chunk, x - 1, y, z, type);
-                    }
+                    faces[0] = isTransparent(cm, chunk, x, y, z + 1, type);
+                    faces[1] = isTransparent(cm, chunk, x, y, z - 1, type);
+                    faces[2] = isTransparent(cm, chunk, x, y + 1, z, type);
+                    faces[3] = isTransparent(cm, chunk, x, y - 1, z, type);
+                    faces[4] = isTransparent(cm, chunk, x + 1, y, z, type);
+                    faces[5] = isTransparent(cm, chunk, x - 1, y, z, type);
 
-                    if (hasSmoothing && !faces[2]) continue;
                     if (!isAnyFaceVisible(faces)) continue;
 
                     int wx = chunk.x * Chunk.SIZE + x;
@@ -333,27 +321,6 @@ public class World {
             }
         }
         return false;
-    }
-
-    private boolean isSmoothingOpen(ChunkManager cm, Chunk currentChunk, int x, int y, int z) {
-        if (y < 0) return false;
-        if (y >= Chunk.HEIGHT) return true;
-        int worldX = currentChunk.x * Chunk.SIZE + x;
-        int worldZ = currentChunk.z * Chunk.SIZE + z;
-        byte neighborType = cm.getBlockAtWorld(worldX, y, worldZ);
-        if (neighborType == 0) {
-            return !hasSmoothingLimiter(cm, worldX, y, worldZ);
-        }
-        Block neighbor = RenderRegistry.get(neighborType);
-        return neighbor == null || !neighbor.getProperties().isSolid();
-    }
-
-    private boolean hasSmoothingLimiter(ChunkManager cm, int worldX, int y, int worldZ) {
-        int aboveY = y + 1;
-        if (aboveY >= Chunk.HEIGHT) return false;
-        byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
-        Block above = RenderRegistry.get(aboveType);
-        return above != null && above.getProperties().hasSmoothing();
     }
 
     private float[][] computeAmbientOcclusion(ChunkManager cm, int wx, int wy, int wz, boolean[] visibleFaces, byte currentType) {
