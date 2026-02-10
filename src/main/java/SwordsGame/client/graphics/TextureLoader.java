@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.nio.ByteOrder;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -21,6 +22,27 @@ public class TextureLoader {
     private static boolean isReleasing = false;
     private static final Map<String, Texture> cache = new HashMap<>();
 
+    public static class LoadOptions {
+        private final boolean toggleBlack;
+
+        private LoadOptions(boolean toggleBlack) {
+            this.toggleBlack = toggleBlack;
+        }
+
+        public boolean isToggleBlack() {
+            return toggleBlack;
+        }
+
+        public static LoadOptions defaultsFor(String path) {
+            String normalized = path == null ? "" : path.replace('\\', '/').toLowerCase();
+            return new LoadOptions(normalized.endsWith("font.png"));
+        }
+
+        public static LoadOptions of(boolean toggleBlack) {
+            return new LoadOptions(toggleBlack);
+        }
+    }
+
     public static class Texture {
         public final int id;
         public final int width, height;
@@ -32,7 +54,15 @@ public class TextureLoader {
         }
     }
 
+    public static Texture loadTexture(String path) {
+        return loadTexture(path, LoadOptions.defaultsFor(path));
+    }
+
     public static Texture loadTexture(String path, boolean removeBlack) {
+        return loadTexture(path, LoadOptions.of(removeBlack));
+    }
+
+    public static Texture loadTexture(String path, LoadOptions options) {
         Texture cached = cache.get(path);
         if (cached != null) return cached;
         if (loadCount == 0) {
@@ -46,7 +76,16 @@ public class TextureLoader {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer w = stack.mallocInt(1), h = stack.mallocInt(1), comp = stack.mallocInt(1);
 
-            byte[] data = readResource(path);
+            byte[] data;
+            try {
+                data = readResource(path);
+            } catch (RuntimeException missing) {
+                Texture fallback = createFallbackTexture(path);
+                cache.put(path, fallback);
+                System.out.printf("[ID: %d] | %-15s | [fallback %dx%d]%n", fallback.id, path, fallback.width, fallback.height);
+                return fallback;
+            }
+
             ByteBuffer buffer = stack.malloc(data.length).put(data);
             buffer.flip();
 
@@ -56,7 +95,7 @@ public class TextureLoader {
             width = w.get(0);
             height = h.get(0);
 
-            if (removeBlack) processTransparency(image, width * height);
+            if (options != null && options.isToggleBlack()) processTransparency(image, width * height);
 
             int id = glGenTextures();
             glBindTexture(GL_TEXTURE_2D, id);
@@ -109,6 +148,27 @@ public class TextureLoader {
             isReleasing = false;
         }
         cache.clear();
+    }
+
+
+    private static Texture createFallbackTexture(String path) {
+        int id = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, id);
+
+        ByteBuffer px = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder());
+        if (path != null && path.replace('\\','/').toLowerCase().endsWith("glass.png")) {
+            px.put((byte) 200).put((byte) 240).put((byte) 255).put((byte) 96);
+        } else {
+            px.put((byte) 255).put((byte) 0).put((byte) 255).put((byte) 255);
+        }
+        px.flip();
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, px);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        return new Texture(id, 1, 1);
     }
 
     private static void processTransparency(ByteBuffer buf, int pixels) {

@@ -1,6 +1,6 @@
 package SwordsGame.server;
 
-import SwordsGame.client.blocks.Type;
+import SwordsGame.server.data.blocks.Type;
 
 public class Terrain {
     private static double rawNoise(int x, int z) {
@@ -50,7 +50,15 @@ public class Terrain {
                 double finalMask = body + edges;
                 boolean isPillar = finalMask > 0.6;
 
+                boolean hasGlassColumn = getNoise((wx + 5000) * 0.14, (wz - 5000) * 0.14) > 0.82;
+                int glassTopY = Chunk.HEIGHT - 1;
+
                 for (int y = 0; y < Chunk.HEIGHT; y++) {
+                    if (hasGlassColumn && y <= glassTopY) {
+                        chunk.setBlock(x, y, z, Type.GLASS.id);
+                        continue;
+                    }
+
                     if (isPillar) {
                         if (y == pillarTopY) {
                             chunk.setBlock(x, y, z, Type.GRASS.id);
