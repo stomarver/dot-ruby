@@ -1,11 +1,8 @@
-# Syntax (Groovy DSL)
+# Syntax (Integrated Groovy DSL)
 
-## Требования
-- Используется Groovy DSL через `groovy-jsr223`.
-- Синтаксис без Java-скобок/`;`.
-- Флаги-параметры можно писать декларативно одной строкой.
+DSL встроен в код игры и исполняется через `groovy-jsr223` (без внешнего `blocks.dsl` в resources).
 
-## DSL текста
+## Text DSL
 
 ```groovy
 text.draw {
@@ -19,29 +16,24 @@ text.draw {
 }
 ```
 
-Доступные якоря:
+Якоря:
 - `center`
 - `left`
 - `right`
 - `top`
 - `bottom`
 
-Эффекты принимают `slow | medium | fast`.
-Если эффект не указан — он выключен.
-
-## DSL блоков
+## Blocks DSL
 
 ```groovy
 blocks {
     air {
         type Type.AIR
-        props {
-            nonSolid
-        }
+        props { nonSolid }
     }
 
     grass {
-        type    Type.GRASS
+        type Type.GRASS
         texture Paths.BLOCK_GRASS
         props {
             randomRotation
@@ -52,15 +44,13 @@ blocks {
     }
 
     cobble {
-        type    Type.COBBLE
+        type Type.COBBLE
         texture Paths.BLOCK_COBBLE
-        props {
-            hardness 2.0f
-        }
+        props { hardness 2.0f }
     }
 
     stone {
-        type    Type.STONE
+        type Type.STONE
         texture Paths.BLOCK_STONE
         props {
             smoothing
@@ -70,7 +60,7 @@ blocks {
 }
 ```
 
-Поддержка свойств (`props`):
+Поддержка props:
 - `randomRotation`
 - `randomColor`
 - `emission`
@@ -79,15 +69,9 @@ blocks {
 - `nonSolid`
 - `hardness <float>`
 
-Явное выключение флагов:
-- `randomRotation false`
-- `randomColor false`
-- `emission false`
-- `transparent false`
-- `smoothing false`
-- `nonSolid false`
+Отключение флагов: `randomRotation false`, `randomColor false`, и т.д.
 
-## TextureLoader
+## Modding API
 
-`toggleBlack` настраивается через `TextureLoader.LoadOptions`.
-По умолчанию `toggleBlack=true` только для `font.png`.
+- `Registry.registerScript(String script)` — регистрация/расширение блоков пользовательским Groovy DSL-скриптом во время запуска.
+- Базовый встроенный DSL загружается в `Registry.init()` автоматически.

@@ -43,7 +43,15 @@ public class Info {
         float step = text.getLineStep(scale) + DEBUG_LINE_GAP;
         float currentY = y;
         for (String line : lines) {
-            text.draw(line, Anchor.LEFT, Anchor.TOP, x, currentY, scale);
+            final String content = line;
+            final float drawY = currentY;
+            text.draw(d -> {
+                d.content(content);
+                d.left();
+                d.top();
+                d.pos(x, drawY);
+                d.scale(scale);
+            });
             currentY += step;
         }
         return currentY - step + DEBUG_LINE_GAP;

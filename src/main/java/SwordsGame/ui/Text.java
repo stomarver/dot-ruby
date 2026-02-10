@@ -248,13 +248,13 @@ public class Text {
         public void content(String value) { this.content = value == null ? "" : value; }
         public void center() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.CENTER; }
         public boolean getCenter() { center(); return true; }
-        public void left() { this.anchorX = Anchor.TypeX.LEFT; this.anchorY = Anchor.TypeY.CENTER; }
+        public void left() { this.anchorX = Anchor.TypeX.LEFT; if (this.anchorY == null) this.anchorY = Anchor.TypeY.TOP; }
         public boolean getLeft() { left(); return true; }
-        public void right() { this.anchorX = Anchor.TypeX.RIGHT; this.anchorY = Anchor.TypeY.CENTER; }
+        public void right() { this.anchorX = Anchor.TypeX.RIGHT; if (this.anchorY == null) this.anchorY = Anchor.TypeY.TOP; }
         public boolean getRight() { right(); return true; }
-        public void top() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.TOP; }
+        public void top() { if (this.anchorX == null) this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.TOP; }
         public boolean getTop() { top(); return true; }
-        public void bottom() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.BOTTOM; }
+        public void bottom() { if (this.anchorX == null) this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.BOTTOM; }
         public boolean getBottom() { bottom(); return true; }
         public void pos(float x, float y) { this.offsetX = x; this.offsetY = y; }
         public void scale(float value) { this.scale = value; }

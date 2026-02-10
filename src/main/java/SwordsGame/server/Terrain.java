@@ -53,7 +53,7 @@ public class Terrain {
                 for (int y = 0; y < Chunk.HEIGHT; y++) {
                     if (isPillar) {
                         if (y == pillarTopY) {
-                            chunk.setBlock(x, y, z, Type.COBBLE.id);
+                            chunk.setBlock(x, y, z, Type.GRASS.id);
                         } else if (y < pillarTopY && y > groundY) {
                             chunk.setBlock(x, y, z, Type.COBBLE.id);
                         } else if (y <= groundY) {

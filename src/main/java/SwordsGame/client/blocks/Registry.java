@@ -8,27 +8,60 @@ import groovy.lang.Closure;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class Registry {
-    private static final Map<Type, Block> registry = new HashMap<>();
-    private static boolean destroyed = false;
+public final class Registry {
+    private static final Map<Type, Block> REGISTRY = new LinkedHashMap<>();
+    private static final String DEFAULT_BLOCKS_DSL = String.join("\n",
+            "blocks {",
+            "    air {",
+            "        type Type.AIR",
+            "        props { nonSolid }",
+            "    }",
+            "",
+            "    grass {",
+            "        type Type.GRASS",
+            "        texture Paths.BLOCK_GRASS",
+            "        props {",
+            "            randomRotation",
+            "            randomColor",
+            "            smoothing",
+            "            hardness 0.6f",
+            "        }",
+            "    }",
+            "",
+            "    cobble {",
+            "        type Type.COBBLE",
+            "        texture Paths.BLOCK_COBBLE",
+            "        props { hardness 2.0f }",
+            "    }",
+            "",
+            "    stone {",
+            "        type Type.STONE",
+            "        texture Paths.BLOCK_STONE",
+            "        props {",
+            "            smoothing",
+            "            hardness 3.0f",
+            "        }",
+            "    }",
+            "}");
+
+    private static boolean destroyed;
+
+    private Registry() {
+    }
 
     public static void init() {
         destroyed = false;
-        registry.clear();
-        try {
-            evalGroovyDsl(readResource("/dsl/blocks.dsl"));
-        } catch (Exception e) {
-            System.err.println("[Registry] Failed to load Groovy block DSL, fallback to defaults: " + e.getMessage());
-            registerDefaults();
-        }
+        REGISTRY.clear();
+        registerScript(DEFAULT_BLOCKS_DSL);
     }
 
-    public static void evalGroovyDsl(String script) {
+    public static void registerScript(String script) {
+        if (script == null || script.trim().isEmpty()) {
+            throw new IllegalArgumentException("Block DSL script must not be empty");
+        }
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("groovy");
         if (engine == null) {
             throw new IllegalStateException("Groovy ScriptEngine not found");
@@ -36,13 +69,8 @@ public class Registry {
         engine.put("registry", new GroovyRegistryApi());
         engine.put("Type", Type.class);
         engine.put("Paths", Paths.class);
-        runPrelude(engine);
+        eval(engine, "def blocks(Closure c){ registry.blocks(c) }");
         eval(engine, script);
-    }
-
-    private static void runPrelude(ScriptEngine engine) {
-        String prelude = "def blocks(Closure c){ registry.blocks(c) }";
-        eval(engine, prelude);
     }
 
     private static void eval(ScriptEngine engine, String script) {
@@ -53,43 +81,16 @@ public class Registry {
         }
     }
 
-    private static String readResource(String path) {
-        try (InputStream is = Registry.class.getResourceAsStream(path)) {
-            if (is == null) {
-                throw new IllegalStateException("Resource not found: " + path);
-            }
-            java.io.ByteArrayOutputStream os = new java.io.ByteArrayOutputStream();
-            byte[] chunk = new byte[4096];
-            int n;
-            while ((n = is.read(chunk)) != -1) {
-                os.write(chunk, 0, n);
-            }
-            return new String(os.toByteArray(), StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to read resource: " + path, e);
-        }
-    }
-
-    private static void registerDefaults() {
-        register(Type.AIR, null);
-        register(Type.GRASS, new Block(Type.GRASS, Paths.BLOCK_GRASS,
-                new BlockProperties().randomRotation().randomColor().smoothing().hardness(0.6f)));
-        register(Type.COBBLE, new Block(Type.COBBLE, Paths.BLOCK_COBBLE,
-                new BlockProperties().hardness(2.0f)));
-        register(Type.STONE, new Block(Type.STONE, Paths.BLOCK_STONE,
-                new BlockProperties().smoothing().hardness(3.0f)));
-    }
-
     public static void register(Type type, Block block) {
-        registry.put(type, block);
+        REGISTRY.put(type, block);
     }
 
     public static Block get(Type type) {
-        return registry.get(type);
+        return REGISTRY.get(type);
     }
 
     public static Block get(byte id) {
-        return registry.get(Type.fromId(id));
+        return REGISTRY.get(Type.fromId(id));
     }
 
     public static boolean isTransparent(byte id) {
@@ -113,7 +114,7 @@ public class Registry {
         if (destroyed) {
             return;
         }
-        for (Block block : registry.values()) {
+        for (Block block : REGISTRY.values()) {
             if (block != null) {
                 block.destroy();
             }
@@ -122,19 +123,17 @@ public class Registry {
         destroyed = true;
     }
 
-    public static class GroovyRegistryApi {
+    public static final class GroovyRegistryApi {
         public void blocks(Closure<?> closure) {
-            BlocksDsl dsl = new BlocksDsl();
-            configure(closure, dsl);
+            configure(closure, new BlocksDsl());
         }
     }
 
-    public static class BlocksDsl {
+    public static final class BlocksDsl {
         public void air(Closure<?> closure) { define(closure); }
         public void grass(Closure<?> closure) { define(closure); }
         public void cobble(Closure<?> closure) { define(closure); }
         public void stone(Closure<?> closure) { define(closure); }
-
         public void define(Closure<?> closure) {
             BlockDsl dsl = new BlockDsl();
             configure(closure, dsl);
@@ -142,7 +141,7 @@ public class Registry {
         }
     }
 
-    public static class BlockDsl {
+    public static final class BlockDsl {
         private Type type;
         private String texture;
         private String top;
@@ -150,11 +149,11 @@ public class Registry {
         private String side;
         private final PropsDsl props = new PropsDsl();
 
-        public void type(Type value) { this.type = value; }
-        public void texture(String value) { this.texture = value; }
-        public void top(String value) { this.top = value; }
-        public void bottom(String value) { this.bottom = value; }
-        public void side(String value) { this.side = value; }
+        public void type(Type value) { type = value; }
+        public void texture(String value) { texture = value; }
+        public void top(String value) { top = value; }
+        public void bottom(String value) { bottom = value; }
+        public void side(String value) { side = value; }
 
         public void props(Closure<?> closure) {
             configure(closure, props);
@@ -164,19 +163,18 @@ public class Registry {
             if (type == null) {
                 throw new IllegalStateException("Block type is required");
             }
-            Block block;
             if (texture == null && top == null && bottom == null && side == null) {
-                block = null;
-            } else if (texture != null) {
-                block = new Block(type, texture, props.build());
-            } else {
-                block = new Block(type, top, bottom, side, props.build());
+                Registry.register(type, null);
+                return;
             }
+            Block block = texture != null
+                    ? new Block(type, texture, props.build())
+                    : new Block(type, top, bottom, side, props.build());
             Registry.register(type, block);
         }
     }
 
-    public static class PropsDsl {
+    public static final class PropsDsl {
         private boolean randomRotation;
         private boolean randomColor;
         private boolean emission;
@@ -201,14 +199,14 @@ public class Registry {
         public void hardness(float value) { hardness = value; }
 
         BlockProperties build() {
-            BlockProperties properties = new BlockProperties().hardness(hardness);
-            if (randomRotation) properties.randomRotation();
-            if (randomColor) properties.randomColor();
-            if (emission) properties.emission();
-            if (transparent) properties.transparent();
-            if (smoothing) properties.smoothing();
-            if (nonSolid) properties.nonSolid();
-            return properties;
+            BlockProperties p = new BlockProperties().hardness(hardness);
+            if (randomRotation) p.randomRotation();
+            if (randomColor) p.randomColor();
+            if (emission) p.emission();
+            if (transparent) p.transparent();
+            if (smoothing) p.smoothing();
+            if (nonSolid) p.nonSolid();
+            return p;
         }
     }
 

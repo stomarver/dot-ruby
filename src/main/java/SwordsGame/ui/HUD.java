@@ -60,7 +60,7 @@ public class HUD {
     }
 
     private TextureLoader.Texture load(String path) {
-        TextureLoader.Texture t = TextureLoader.loadTexture(path, true);
+        TextureLoader.Texture t = TextureLoader.loadTexture(path);
         textures.add(t);
         return t;
     }
@@ -86,9 +86,13 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        float textYOffset = info.getTextYOffset();
-
-        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
+        text.draw(d -> {
+            d.content("Грунт");
+            d.left();
+            d.top();
+            d.pos(10, 2);
+            d.scale(1.0f);
+        });
         info.renderDebug(1.0f);
 
         messageSystem.draw(text);
