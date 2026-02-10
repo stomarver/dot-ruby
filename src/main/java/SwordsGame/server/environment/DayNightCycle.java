@@ -20,7 +20,7 @@ public class DayNightCycle {
 
     public void tick() {
         tickAccumulator++;
-        if (tickAccumulator >= 4) {
+        if (tickAccumulator >= 12) {
             tickAccumulator = 0;
             previousYaw = currentYaw;
             sun.rotateYaw(1.0f);

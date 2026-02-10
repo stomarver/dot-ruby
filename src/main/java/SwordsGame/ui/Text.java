@@ -5,6 +5,8 @@ import SwordsGame.client.graphics.Font;
 import static org.lwjgl.opengl.GL11.*;
 import java.util.Random;
 import java.util.function.Consumer;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 public class Text {
     private final Font font;
@@ -49,6 +51,21 @@ public class Text {
         Anchor.TypeY anchorY = dsl.anchorY != null ? dsl.anchorY : Anchor.TypeY.CENTER;
         drawInternal(dsl.content, buildAnchor(anchorX, anchorY), dsl.offsetX, dsl.offsetY,
                 dsl.scale, true, dsl.shake, dsl.wave, dsl.crit, 0f);
+    }
+
+
+
+    public void drawGroovy(String script) {
+        try {
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("groovy");
+            if (engine == null) {
+                throw new IllegalStateException("Groovy ScriptEngine not found");
+            }
+            engine.put("text", new GroovyTextApi());
+            engine.eval(script);
+        } catch (Exception e) {
+            throw new RuntimeException("Text Groovy DSL failed", e);
+        }
     }
 
     public float getLineStep(float scale) {
@@ -203,6 +220,20 @@ public class Text {
         glTexCoord2f(u1, v2); glVertex2f(dx, dy+d.diacriticHeight*s);
     }
 
+
+    public final class GroovyTextApi {
+        public void draw(groovy.lang.Closure<?> closure) {
+            DrawDsl dsl = new DrawDsl();
+            closure.setResolveStrategy(groovy.lang.Closure.DELEGATE_FIRST);
+            closure.setDelegate(dsl);
+            closure.call();
+            Anchor.TypeX anchorX = dsl.anchorX != null ? dsl.anchorX : Anchor.TypeX.CENTER;
+            Anchor.TypeY anchorY = dsl.anchorY != null ? dsl.anchorY : Anchor.TypeY.CENTER;
+            drawInternal(dsl.content, buildAnchor(anchorX, anchorY), dsl.offsetX, dsl.offsetY,
+                    dsl.scale, true, dsl.shake, dsl.wave, dsl.crit, 0f);
+        }
+    }
+
     public final class DrawDsl {
         private String content = "";
         private Anchor.TypeX anchorX;
@@ -216,10 +247,15 @@ public class Text {
 
         public void content(String value) { this.content = value == null ? "" : value; }
         public void center() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.CENTER; }
+        public boolean getCenter() { center(); return true; }
         public void left() { this.anchorX = Anchor.TypeX.LEFT; this.anchorY = Anchor.TypeY.CENTER; }
+        public boolean getLeft() { left(); return true; }
         public void right() { this.anchorX = Anchor.TypeX.RIGHT; this.anchorY = Anchor.TypeY.CENTER; }
+        public boolean getRight() { right(); return true; }
         public void top() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.TOP; }
+        public boolean getTop() { top(); return true; }
         public void bottom() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.BOTTOM; }
+        public boolean getBottom() { bottom(); return true; }
         public void pos(float x, float y) { this.offsetX = x; this.offsetY = y; }
         public void scale(float value) { this.scale = value; }
         public void wave(String mode) { this.wave = parseWave(mode); }

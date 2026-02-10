@@ -40,6 +40,9 @@ dependencies {
     // Discord RPC (локальный файл) и JNA
     implementation files('libs/java-discord-rpc-2.0.1-all.jar')
     implementation 'net.java.dev.jna:jna:5.12.0'
+
+    implementation 'org.codehaus.groovy:groovy:3.0.22'
+    implementation 'org.codehaus.groovy:groovy-jsr223:3.0.22'
 }
 
 // ===== VERSION GENERATION =====

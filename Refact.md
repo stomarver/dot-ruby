@@ -1,28 +1,15 @@
-# Refact Summary
+# Refact
 
-## Architecture
-- Added fixed-tick pipeline (`TickSystem`, 40 TPS cap).
-- Connected `Base` and `Debug` to tick updates.
-- Added `DayNightCycle` server-side object with client interpolation support.
+## Что исправлено относительно прошлого рефакторинга
 
-## Rendering
-- Added depth fog in 3D pass (EXP2 distance fog with radial-like attenuation).
-- Added vertex ambient occlusion pipeline:
-  - AO computed per visible face and per vertex.
-  - AO transferred to mesh color buffer.
-  - Top smoothing now darkens lowered vertices for slope-aware shading.
+- Удалён Fog из рендера.
+- Тиковая система переписана и перенесена в серверный слой (`SwordsGame.server.tick`).
+- Обновление DayNightCycle замедлено (обновление yaw теперь реже).
+- Регистрация блоков переведена на Groovy DSL (`groovy-jsr223`) с синтаксисом без лишних скобок и `;`.
+- Удалены классы `Stone.java`, `Grass.java`, `Cobble.java` — блоки теперь задаются только через DSL/Registry.
+- `syntax.md` переписан под Groovy DSL формат.
 
-## World / Terrain
-- Terrain pillars now use `cobble` at top and body, with `stone` underlayer.
-- Visibility logic keeps buried stone faces hidden until they contact air.
+## Архитектурная заметка
 
-## DSL and Declarative syntax
-- Rebuilt block registration as declarative DSL in `Registry`:
-  - `blocks { ... }` style through Java-8 lambda API.
-  - Declarative props profile (`PropsDsl`).
-- Added declarative text draw DSL in `Text.draw(d -> { ... })`.
-- Rewrote `syntax.md` to document the new syntax and conventions.
-
-## Asset Loading
-- Added texture load options with `toggleBlack` support.
-- Default `toggleBlack` profile is enabled only for `font.png`.
+- `Registry` загружает `/dsl/blocks.dsl` и исполняет его через Groovy ScriptEngine.
+- `Text` поддерживает `drawGroovy(script)` с `text.draw { ... }` синтаксисом.

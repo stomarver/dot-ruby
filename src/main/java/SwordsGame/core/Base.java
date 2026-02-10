@@ -13,7 +13,7 @@ import SwordsGame.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.environment.DayNightCycle;
 import SwordsGame.server.environment.Sun;
-import SwordsGame.core.tick.TickSystem;
+import SwordsGame.server.tick.TickSystem;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -59,7 +59,7 @@ public class Base {
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
-            tickSystem.update(glfwGetTime(), () -> dayNightCycle.tick());
+            tickSystem.advance(glfwGetTime(), () -> dayNightCycle.tick());
             updateSunState(tickSystem.getInterpolationAlpha());
             updateHudInfo();
 

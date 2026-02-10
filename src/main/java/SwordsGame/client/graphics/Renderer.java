@@ -29,7 +29,6 @@ public class Renderer {
     private static final float NIGHT_DIFFUSE_G = 0.4f;
     private static final float NIGHT_DIFFUSE_B = 0.55f;
     private static final float SUN_TRANSITION_ELEVATION = 0.6f;
-    private static final float FOG_DENSITY = 0.0018f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -80,8 +79,6 @@ public class Renderer {
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
 
-        setupDepthFog();
-
         setupLighting();
     }
 
@@ -95,7 +92,6 @@ public class Renderer {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
-        glDisable(GL_FOG);
         glDisable(GL_CULL_FACE);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
@@ -143,15 +139,6 @@ public class Renderer {
 
         glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
-    }
-
-    private void setupDepthFog() {
-        glEnable(GL_FOG);
-        glFogi(GL_FOG_MODE, GL_EXP2);
-        float[] fogColor = { CLEAR_R * 0.8f, CLEAR_G * 0.8f, CLEAR_B * 0.9f, 1.0f };
-        glFogfv(GL_FOG_COLOR, fogColor);
-        glFogf(GL_FOG_DENSITY, FOG_DENSITY);
-        glHint(GL_FOG_HINT, GL_NICEST);
     }
 
     private void updateEnvironmentFromSun() {

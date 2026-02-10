@@ -4,10 +4,14 @@ import SwordsGame.client.assets.Paths;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockProperties;
 import SwordsGame.client.graphics.BlockRenderer;
+import groovy.lang.Closure;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class Registry {
     private static final Map<Type, Block> registry = new HashMap<>();
@@ -16,45 +20,68 @@ public class Registry {
     public static void init() {
         destroyed = false;
         registry.clear();
-
-        blocks(def -> {
-            def.air(b -> {
-                b.type(Type.AIR);
-                b.props(p -> p.nonSolid());
-            });
-            def.grass(b -> {
-                b.type(Type.GRASS);
-                b.texture(Paths.BLOCK_GRASS);
-                b.props(p -> p.randomRotation().randomColor().smoothing().hardness(0.6f));
-            });
-            def.cobble(b -> {
-                b.type(Type.COBBLE);
-                b.texture(Paths.BLOCK_COBBLE);
-                b.props(p -> p.hardness(2.0f));
-            });
-            def.stone(b -> {
-                b.type(Type.STONE);
-                b.texture(Paths.BLOCK_STONE);
-                b.props(p -> p.smoothing().hardness(3.0f));
-            });
-        });
+        try {
+            evalGroovyDsl(readResource("/dsl/blocks.dsl"));
+        } catch (Exception e) {
+            System.err.println("[Registry] Failed to load Groovy block DSL, fallback to defaults: " + e.getMessage());
+            registerDefaults();
+        }
     }
 
-    public static void blocks(Consumer<BlocksDsl> script) {
-        BlocksDsl dsl = new BlocksDsl();
-        script.accept(dsl);
+    public static void evalGroovyDsl(String script) {
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("groovy");
+        if (engine == null) {
+            throw new IllegalStateException("Groovy ScriptEngine not found");
+        }
+        engine.put("registry", new GroovyRegistryApi());
+        engine.put("Type", Type.class);
+        engine.put("Paths", Paths.class);
+        runPrelude(engine);
+        eval(engine, script);
+    }
+
+    private static void runPrelude(ScriptEngine engine) {
+        String prelude = "def blocks(Closure c){ registry.blocks(c) }";
+        eval(engine, prelude);
+    }
+
+    private static void eval(ScriptEngine engine, String script) {
+        try {
+            engine.eval(script);
+        } catch (Exception e) {
+            throw new RuntimeException("Groovy DSL eval failed", e);
+        }
+    }
+
+    private static String readResource(String path) {
+        try (InputStream is = Registry.class.getResourceAsStream(path)) {
+            if (is == null) {
+                throw new IllegalStateException("Resource not found: " + path);
+            }
+            java.io.ByteArrayOutputStream os = new java.io.ByteArrayOutputStream();
+            byte[] chunk = new byte[4096];
+            int n;
+            while ((n = is.read(chunk)) != -1) {
+                os.write(chunk, 0, n);
+            }
+            return new String(os.toByteArray(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read resource: " + path, e);
+        }
+    }
+
+    private static void registerDefaults() {
+        register(Type.AIR, null);
+        register(Type.GRASS, new Block(Type.GRASS, Paths.BLOCK_GRASS,
+                new BlockProperties().randomRotation().randomColor().smoothing().hardness(0.6f)));
+        register(Type.COBBLE, new Block(Type.COBBLE, Paths.BLOCK_COBBLE,
+                new BlockProperties().hardness(2.0f)));
+        register(Type.STONE, new Block(Type.STONE, Paths.BLOCK_STONE,
+                new BlockProperties().smoothing().hardness(3.0f)));
     }
 
     public static void register(Type type, Block block) {
         registry.put(type, block);
-    }
-
-    public static void draw(byte id, int seed, boolean[] faces) {
-        Type type = Type.fromId(id);
-        Block block = registry.get(type);
-        if (block != null) {
-            block.draw(seed, faces);
-        }
     }
 
     public static Block get(Type type) {
@@ -75,6 +102,13 @@ public class Registry {
         return block != null && block.getProperties().isSolid();
     }
 
+    public static void draw(byte id, int seed, boolean[] faces) {
+        Block block = get(id);
+        if (block != null) {
+            block.draw(seed, faces);
+        }
+    }
+
     public static void destroy() {
         if (destroyed) {
             return;
@@ -88,52 +122,61 @@ public class Registry {
         destroyed = true;
     }
 
-    public static final class BlocksDsl {
-        public void air(Consumer<BlockDsl> c) { define(c); }
-        public void grass(Consumer<BlockDsl> c) { define(c); }
-        public void cobble(Consumer<BlockDsl> c) { define(c); }
-        public void stone(Consumer<BlockDsl> c) { define(c); }
+    public static class GroovyRegistryApi {
+        public void blocks(Closure<?> closure) {
+            BlocksDsl dsl = new BlocksDsl();
+            configure(closure, dsl);
+        }
+    }
 
-        public void define(Consumer<BlockDsl> c) {
+    public static class BlocksDsl {
+        public void air(Closure<?> closure) { define(closure); }
+        public void grass(Closure<?> closure) { define(closure); }
+        public void cobble(Closure<?> closure) { define(closure); }
+        public void stone(Closure<?> closure) { define(closure); }
+
+        public void define(Closure<?> closure) {
             BlockDsl dsl = new BlockDsl();
-            c.accept(dsl);
+            configure(closure, dsl);
             dsl.register();
         }
     }
 
-    public static final class BlockDsl {
+    public static class BlockDsl {
         private Type type;
         private String texture;
         private String top;
         private String bottom;
         private String side;
-        private final PropsDsl propsDsl = new PropsDsl();
+        private final PropsDsl props = new PropsDsl();
 
         public void type(Type value) { this.type = value; }
         public void texture(String value) { this.texture = value; }
         public void top(String value) { this.top = value; }
         public void bottom(String value) { this.bottom = value; }
         public void side(String value) { this.side = value; }
-        public void props(Consumer<PropsDsl> c) { c.accept(propsDsl); }
+
+        public void props(Closure<?> closure) {
+            configure(closure, props);
+        }
 
         void register() {
             if (type == null) {
-                throw new IllegalStateException("Block DSL requires type");
+                throw new IllegalStateException("Block type is required");
             }
-            BlockProperties properties = propsDsl.build();
             Block block;
             if (texture == null && top == null && bottom == null && side == null) {
                 block = null;
             } else if (texture != null) {
-                block = new Block(type, texture, properties);
+                block = new Block(type, texture, props.build());
             } else {
-                block = new Block(type, top, bottom, side, properties);
+                block = new Block(type, top, bottom, side, props.build());
             }
             Registry.register(type, block);
         }
     }
 
-    public static final class PropsDsl {
+    public static class PropsDsl {
         private boolean randomRotation;
         private boolean randomColor;
         private boolean emission;
@@ -142,20 +185,20 @@ public class Registry {
         private boolean smoothing;
         private float hardness = 1.0f;
 
-        public PropsDsl randomRotation() { this.randomRotation = true; return this; }
-        public PropsDsl randomRotation(boolean enabled) { this.randomRotation = enabled; return this; }
-        public PropsDsl randomColor() { this.randomColor = true; return this; }
-        public PropsDsl randomColor(boolean enabled) { this.randomColor = enabled; return this; }
-        public PropsDsl emission() { this.emission = true; return this; }
-        public PropsDsl emission(boolean enabled) { this.emission = enabled; return this; }
-        public PropsDsl transparent() { this.transparent = true; return this; }
-        public PropsDsl transparent(boolean enabled) { this.transparent = enabled; return this; }
-        public PropsDsl smoothing() { this.smoothing = true; return this; }
-        public PropsDsl smoothing(boolean enabled) { this.smoothing = enabled; return this; }
-        public PropsDsl nonSolid() { this.nonSolid = true; return this; }
-        public PropsDsl nonSolid(boolean enabled) { this.nonSolid = enabled; return this; }
-        public PropsDsl solid(boolean enabled) { this.nonSolid = !enabled; return this; }
-        public PropsDsl hardness(float value) { this.hardness = value; return this; }
+        public boolean getRandomRotation() { randomRotation = true; return true; }
+        public void randomRotation(boolean enabled) { randomRotation = enabled; }
+        public boolean getRandomColor() { randomColor = true; return true; }
+        public void randomColor(boolean enabled) { randomColor = enabled; }
+        public boolean getEmission() { emission = true; return true; }
+        public void emission(boolean enabled) { emission = enabled; }
+        public boolean getTransparent() { transparent = true; return true; }
+        public void transparent(boolean enabled) { transparent = enabled; }
+        public boolean getSmoothing() { smoothing = true; return true; }
+        public void smoothing(boolean enabled) { smoothing = enabled; }
+        public boolean getNonSolid() { nonSolid = true; return true; }
+        public void nonSolid(boolean enabled) { nonSolid = enabled; }
+        public void solid(boolean enabled) { nonSolid = !enabled; }
+        public void hardness(float value) { hardness = value; }
 
         BlockProperties build() {
             BlockProperties properties = new BlockProperties().hardness(hardness);
@@ -167,5 +210,11 @@ public class Registry {
             if (nonSolid) properties.nonSolid();
             return properties;
         }
+    }
+
+    private static void configure(Closure<?> closure, Object delegate) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        closure.setDelegate(delegate);
+        closure.call();
     }
 }
