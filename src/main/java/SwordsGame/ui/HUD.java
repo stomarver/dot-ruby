@@ -86,13 +86,7 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        text.draw(d -> {
-            d.content("Грунт");
-            d.left();
-            d.top();
-            d.pos(10, 2);
-            d.scale(1.0f);
-        });
+        text.draw(d -> d.text("Грунт").leftTop().at(10, 2).size(1.0f));
         info.renderDebug(1.0f);
 
         messageSystem.draw(text);

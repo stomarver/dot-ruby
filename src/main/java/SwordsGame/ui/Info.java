@@ -38,20 +38,13 @@ public class Info {
         return TEXT_Y_OFFSET;
     }
 
-    private float drawDebugLines(String content, float x, float y, float scale) {
-        String[] lines = content.split("\n");
+    private float drawDebugLines(String rawContent, float x, float y, float scale) {
+        String[] lines = rawContent.split("\n");
         float step = text.getLineStep(scale) + DEBUG_LINE_GAP;
         float currentY = y;
         for (String line : lines) {
-            final String content = line;
             final float drawY = currentY;
-            text.draw(d -> {
-                d.content(content);
-                d.left();
-                d.top();
-                d.pos(x, drawY);
-                d.scale(scale);
-            });
+            text.draw(d -> d.text(line).leftTop().at(x, drawY).size(scale));
             currentY += step;
         }
         return currentY - step + DEBUG_LINE_GAP;

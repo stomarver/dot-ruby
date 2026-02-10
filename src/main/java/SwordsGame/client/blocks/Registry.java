@@ -8,6 +8,7 @@ import groovy.lang.Closure;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -54,8 +55,23 @@ public final class Registry {
 
     public static void init() {
         destroyed = false;
+        resetToDefaults();
+    }
+
+
+
+    public static void resetToDefaults() {
         REGISTRY.clear();
         registerScript(DEFAULT_BLOCKS_DSL);
+    }
+
+    public static void registerScripts(Collection<String> scripts) {
+        if (scripts == null) {
+            return;
+        }
+        for (String script : scripts) {
+            registerScript(script);
+        }
     }
 
     public static void registerScript(String script) {

@@ -40,15 +40,8 @@ public class Message {
 
                 glColor4f(1, 1, 1, alpha);
 
-                final String msg = e.text;
                 final int drawOffset = offset;
-                renderer.draw(d -> {
-                    d.content(msg);
-                    d.left();
-                    d.bottom();
-                    d.pos(130, -10 - drawOffset);
-                    d.scale(1.0f);
-                });
+                renderer.draw(d -> d.text(e.text).leftBottom().at(130, -10 - drawOffset).size(1.0f));
 
                 offset += 20;
             }
