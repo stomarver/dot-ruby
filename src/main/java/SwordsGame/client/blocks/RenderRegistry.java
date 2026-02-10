@@ -1,19 +1,25 @@
 package SwordsGame.client.blocks;
 
+import SwordsGame.client.assets.Paths;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockProperties;
 import SwordsGame.client.graphics.BlockRenderer;
-import SwordsGame.server.data.blocks.Registry;
 import SwordsGame.server.data.blocks.Type;
 import groovy.lang.Closure;
+import groovy.lang.MissingMethodException;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public final class RenderRegistry {
     private static final Map<Type, Block> REGISTRY = new LinkedHashMap<>();
+    private static final String DSL_RESOURCE = "/SwordsGame/client/blocks/blocks.dsl";
     private static boolean destroyed;
 
     private RenderRegistry() {
@@ -22,7 +28,7 @@ public final class RenderRegistry {
     public static void initFromServerDsl() {
         destroyed = false;
         REGISTRY.clear();
-        registerScript(Registry.getActiveDsl());
+        registerScript(readResource(DSL_RESOURCE));
     }
 
     public static void registerScript(String script) {
@@ -33,10 +39,12 @@ public final class RenderRegistry {
         if (engine == null) {
             throw new IllegalStateException("Groovy ScriptEngine not found");
         }
+
         engine.put("registry", new RenderRegistryApi());
-        engine.put("Type", Type.class);
-        engine.put("Paths", SwordsGame.client.assets.Paths.class);
-        eval(engine, "import SwordsGame.server.data.blocks.Type\n" +
+        engine.put("Paths", Paths.class);
+
+        eval(engine,
+                "import SwordsGame.server.data.blocks.Type\n" +
                 "import SwordsGame.client.assets.Paths\n" +
                 "def blocks(Closure c){ registry.blocks(c) }");
         eval(engine, script);
@@ -92,6 +100,23 @@ public final class RenderRegistry {
         }
     }
 
+    private static String readResource(String path) {
+        try (InputStream is = RenderRegistry.class.getResourceAsStream(path)) {
+            if (is == null) {
+                throw new IllegalStateException("Resource not found: " + path);
+            }
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            byte[] buf = new byte[4096];
+            int n;
+            while ((n = is.read(buf)) != -1) {
+                os.write(buf, 0, n);
+            }
+            return new String(os.toByteArray(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read resource: " + path, e);
+        }
+    }
+
     public static final class RenderRegistryApi {
         public void blocks(Closure<?> closure) {
             configure(closure, new BlocksDsl());
@@ -99,27 +124,47 @@ public final class RenderRegistry {
     }
 
     public static final class BlocksDsl {
-        public void air(Closure<?> closure) { define(closure); }
-        public void grass(Closure<?> closure) { define(closure); }
-        public void cobble(Closure<?> closure) { define(closure); }
-        public void stone(Closure<?> closure) { define(closure); }
-
-        public void define(Closure<?> closure) {
-            BlockDsl dsl = new BlockDsl();
+        public void define(Type type, Closure<?> closure) {
+            BlockDsl dsl = new BlockDsl(type);
             configure(closure, dsl);
             dsl.register();
+        }
+
+        public Object invokeMethod(String name, Object args) {
+            Type type = resolveType(name);
+            if (type == null) {
+                throw new MissingMethodException(name, getClass(), toArgs(args));
+            }
+            Object[] arr = toArgs(args);
+            if (arr.length != 1 || !(arr[0] instanceof Closure)) {
+                throw new IllegalArgumentException("Block declaration expects a closure: " + name + " { ... }");
+            }
+            define(type, (Closure<?>) arr[0]);
+            return null;
+        }
+
+        private Type resolveType(String name) {
+            String normalized = name.toUpperCase(Locale.ROOT);
+            for (Type type : Type.values()) {
+                if (type.name().equals(normalized)) return type;
+            }
+            return null;
         }
     }
 
     public static final class BlockDsl {
-        private Type blockType;
+        private final Type blockType;
         private String texture;
         private String top;
         private String bottom;
         private String side;
         private final PropsDsl props = new PropsDsl();
 
-        public void type(Type value) { this.blockType = value; }
+        private BlockDsl(Type blockType) {
+            this.blockType = blockType;
+        }
+
+        public void type(Type ignored) { }
         public void texture(String value) { this.texture = value; }
         public void top(String value) { this.top = value; }
         public void bottom(String value) { this.bottom = value; }
@@ -130,9 +175,6 @@ public final class RenderRegistry {
         }
 
         void register() {
-            if (blockType == null) {
-                throw new IllegalStateException("Block type is required");
-            }
             if (texture == null && top == null && bottom == null && side == null) {
                 RenderRegistry.register(blockType, null);
                 return;
@@ -180,8 +222,14 @@ public final class RenderRegistry {
         }
     }
 
+    private static Object[] toArgs(Object args) {
+        if (args == null) return new Object[0];
+        if (args instanceof Object[]) return (Object[]) args;
+        return new Object[]{args};
+    }
+
     private static void configure(Closure<?> closure, Object delegate) {
-        closure.setResolveStrategy(Closure.OWNER_FIRST);
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.setDelegate(delegate);
         closure.call();
     }

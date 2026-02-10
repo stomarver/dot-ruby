@@ -1,30 +1,18 @@
 # Refact
 
-## Main structural refactor for multiplayer-ready RTS base
+## Ключевые изменения
 
-- Перенесена регистрация блоков на **server layer**:
-  - `SwordsGame.server.data.blocks.Registry`
-  - `SwordsGame.server.data.blocks.Type`
-  - `SwordsGame.server.data.blocks.BlockData`
-- Исправлена причина ScriptException (`Type.AIR`):
-  - теперь в Groovy prelude используются `import SwordsGame.server.data.blocks.Type` и `import Paths`.
+- Исправлена ошибка Groovy DSL (`No such property: Type`) через стабильный ScriptEngine binding и корректный closure delegate flow.
+- Server block-логика закреплена в `SwordsGame.server.data.blocks`.
+- Client render block-логика закреплена в `SwordsGame.client.blocks.RenderRegistry`.
+- Введены два отдельных DSL-файла:
+  - `SwordsGame/server/data/blocks/blocks.dsl`
+  - `SwordsGame/client/blocks/blocks.dsl`
+- DSL упрощён: тип блока выводится по имени секции (`stone { ... }`), без обязательного `type Type.STONE`.
 
-## Client/Server split
+## Почему структура лучше
 
-- `server.data.blocks.Registry` — authoritative block DSL + logical block data.
-- `client.blocks.RenderRegistry` — только render-аспекты (текстуры/visual props), инициализируется из `Registry.getActiveDsl()`.
-- Инициализация в `Base/Debug`:
-  1) `server Registry.init()`
-  2) `RenderRegistry.initFromServerDsl()`
-
-## UI DSL cleanup
-
-- HUD/Info/Message используют упрощенный `text.draw(...)` синтаксис.
-- Исправлена ошибка в `Info` с конфликтом переменных.
-
-## Goal
-
-Структура стала логичнее для multiplayer RTS:
-- authoritative data/state на сервере,
-- rendering concerns на клиенте,
-- единый DSL формат для modding и расширения.
+- Данные и авторитетная логика блоков находятся на сервере.
+- Рендер и визуальные свойства блоков находятся на клиенте.
+- DSL стал чище и ближе к нативному Groovy-стилю.
+- Подготовка к дальнейшему расширению `server.data` (юниты/постройки/статистика) стала логичнее.

@@ -1,17 +1,22 @@
 package SwordsGame.server.data.blocks;
 
-import SwordsGame.client.assets.Paths;
 import groovy.lang.Closure;
+import groovy.lang.MissingMethodException;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public final class Registry {
     private static final Map<Type, BlockData> DATA = new LinkedHashMap<>();
     private static final StringBuilder ACTIVE_SCRIPTS = new StringBuilder();
+    private static final String DSL_RESOURCE = "/SwordsGame/server/data/blocks/blocks.dsl";
 
     private Registry() {
     }
@@ -23,13 +28,11 @@ public final class Registry {
     public static void resetToDefaults() {
         DATA.clear();
         ACTIVE_SCRIPTS.setLength(0);
-        registerScript(defaultBlocksDsl());
+        registerScript(readResource(DSL_RESOURCE));
     }
 
     public static void registerScripts(Collection<String> scripts) {
-        if (scripts == null) {
-            return;
-        }
+        if (scripts == null) return;
         for (String script : scripts) {
             registerScript(script);
         }
@@ -39,24 +42,19 @@ public final class Registry {
         if (script == null || script.trim().isEmpty()) {
             throw new IllegalArgumentException("Block DSL script must not be empty");
         }
+
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("groovy");
         if (engine == null) {
             throw new IllegalStateException("Groovy ScriptEngine not found");
         }
 
         engine.put("registry", new DataRegistryApi());
-        engine.put("Type", Type.class);
-        engine.put("Paths", Paths.class);
-
         eval(engine,
                 "import SwordsGame.server.data.blocks.Type\n" +
-                "import SwordsGame.client.assets.Paths\n" +
                 "def blocks(Closure c){ registry.blocks(c) }");
         eval(engine, script);
 
-        if (ACTIVE_SCRIPTS.length() > 0) {
-            ACTIVE_SCRIPTS.append("\n\n");
-        }
+        if (ACTIVE_SCRIPTS.length() > 0) ACTIVE_SCRIPTS.append("\n\n");
         ACTIVE_SCRIPTS.append(script.trim());
     }
 
@@ -89,36 +87,21 @@ public final class Registry {
         }
     }
 
-    private static String defaultBlocksDsl() {
-        return "blocks {\n" +
-                "    air {\n" +
-                "        type Type.AIR\n" +
-                "        props { nonSolid }\n" +
-                "    }\n\n" +
-                "    grass {\n" +
-                "        type Type.GRASS\n" +
-                "        texture Paths.BLOCK_GRASS\n" +
-                "        props {\n" +
-                "            randomRotation\n" +
-                "            randomColor\n" +
-                "            smoothing\n" +
-                "            hardness 0.6f\n" +
-                "        }\n" +
-                "    }\n\n" +
-                "    cobble {\n" +
-                "        type Type.COBBLE\n" +
-                "        texture Paths.BLOCK_COBBLE\n" +
-                "        props { hardness 2.0f }\n" +
-                "    }\n\n" +
-                "    stone {\n" +
-                "        type Type.STONE\n" +
-                "        texture Paths.BLOCK_STONE\n" +
-                "        props {\n" +
-                "            smoothing\n" +
-                "            hardness 3.0f\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+    private static String readResource(String path) {
+        try (InputStream is = Registry.class.getResourceAsStream(path)) {
+            if (is == null) {
+                throw new IllegalStateException("Resource not found: " + path);
+            }
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            byte[] buf = new byte[4096];
+            int n;
+            while ((n = is.read(buf)) != -1) {
+                os.write(buf, 0, n);
+            }
+            return new String(os.toByteArray(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read resource: " + path, e);
+        }
     }
 
     public static final class DataRegistryApi {
@@ -128,23 +111,43 @@ public final class Registry {
     }
 
     public static final class BlocksDsl {
-        public void air(Closure<?> closure) { define(closure); }
-        public void grass(Closure<?> closure) { define(closure); }
-        public void cobble(Closure<?> closure) { define(closure); }
-        public void stone(Closure<?> closure) { define(closure); }
-
-        public void define(Closure<?> closure) {
-            BlockDsl dsl = new BlockDsl();
+        public void define(Type type, Closure<?> closure) {
+            BlockDsl dsl = new BlockDsl(type);
             configure(closure, dsl);
             dsl.register();
+        }
+
+        public Object invokeMethod(String name, Object args) {
+            Type type = resolveType(name);
+            if (type == null) {
+                throw new MissingMethodException(name, getClass(), toArgs(args));
+            }
+            Object[] arr = toArgs(args);
+            if (arr.length != 1 || !(arr[0] instanceof Closure)) {
+                throw new IllegalArgumentException("Block declaration expects a closure: " + name + " { ... }");
+            }
+            define(type, (Closure<?>) arr[0]);
+            return null;
+        }
+
+        private Type resolveType(String name) {
+            String normalized = name.toUpperCase(Locale.ROOT);
+            for (Type type : Type.values()) {
+                if (type.name().equals(normalized)) return type;
+            }
+            return null;
         }
     }
 
     public static final class BlockDsl {
-        private Type blockType;
+        private final Type blockType;
         private final PropsDsl props = new PropsDsl();
 
-        public void type(Type value) { this.blockType = value; }
+        private BlockDsl(Type blockType) {
+            this.blockType = blockType;
+        }
+
+        public void type(Type ignored) { }
         public void texture(String ignored) { }
         public void top(String ignored) { }
         public void bottom(String ignored) { }
@@ -155,9 +158,6 @@ public final class Registry {
         }
 
         void register() {
-            if (blockType == null) {
-                throw new IllegalStateException("Block type is required");
-            }
             Registry.register(blockType, new BlockData(blockType, props.solid, props.hardness));
         }
     }
@@ -183,8 +183,14 @@ public final class Registry {
         public void smoothing(boolean ignored) { }
     }
 
+    private static Object[] toArgs(Object args) {
+        if (args == null) return new Object[0];
+        if (args instanceof Object[]) return (Object[]) args;
+        return new Object[]{args};
+    }
+
     private static void configure(Closure<?> closure, Object delegate) {
-        closure.setResolveStrategy(Closure.OWNER_FIRST);
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.setDelegate(delegate);
         closure.call();
     }

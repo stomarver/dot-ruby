@@ -1,26 +1,32 @@
 # Syntax (Java 8 + Groovy JSR223)
 
-## Архитектура регистрации блоков
+## Пакетная структура (RTS/multiplayer-ready)
 
-- **Server authoritative data:** `SwordsGame.server.data.blocks.Registry`
-- **Client render mapping:** `SwordsGame.client.blocks.RenderRegistry`
+- Server data blocks: `SwordsGame.server.data.blocks`
+- Client render blocks: `SwordsGame.client.blocks`
 
-Server хранит data/логические свойства блоков и DSL-скрипты.
-Client строит render-блоки (текстуры/прозрачность/сглаживание) из того же DSL.
+## DSL файлы
+
+- Server DSL: `src/main/resources/SwordsGame/server/data/blocks/blocks.dsl`
+- Client DSL: `src/main/resources/SwordsGame/client/blocks/blocks.dsl`
+
+Оба файла используют один и тот же Groovy-стиль, но:
+- server-файл влияет на логические данные блока,
+- client-файл влияет на визуал (текстуры/props).
 
 ---
 
-## Blocks DSL (единый формат для data/render)
+## Block DSL (без `type Type.STONE`)
+
+Теперь тип блока определяется по имени секции:
 
 ```groovy
 blocks {
     air {
-        type Type.AIR
         props { nonSolid }
     }
 
     grass {
-        type Type.GRASS
         texture Paths.BLOCK_GRASS
         props {
             randomRotation
@@ -31,13 +37,11 @@ blocks {
     }
 
     cobble {
-        type Type.COBBLE
         texture Paths.BLOCK_COBBLE
         props { hardness 2.0f }
     }
 
     stone {
-        type Type.STONE
         texture Paths.BLOCK_STONE
         props {
             smoothing
@@ -47,17 +51,20 @@ blocks {
 }
 ```
 
-### Modding API
+> Опционально `type ...` всё ещё поддержан для совместимости, но больше не обязателен.
 
-Server:
-- `Registry.resetToDefaults()`
-- `Registry.registerScript(String script)`
-- `Registry.registerScripts(Collection<String> scripts)`
-- `Registry.getActiveDsl()`
+---
 
-Client:
-- `RenderRegistry.initFromServerDsl()`
-- `RenderRegistry.registerScript(String script)`
+## Modding API
+
+Server (`SwordsGame.server.data.blocks.Registry`):
+- `resetToDefaults()`
+- `registerScript(String script)`
+- `registerScripts(Collection<String> scripts)`
+
+Client (`SwordsGame.client.blocks.RenderRegistry`):
+- `initFromServerDsl()` (загружает client DSL файл)
+- `registerScript(String script)`
 
 ---
 
@@ -72,11 +79,3 @@ text.draw(d -> d.text("Boss defeated!\n+1000 gold ^4CRITICAL^0 hit!")
         .shake("fast")
         .crit("medium"));
 ```
-
-Aliases:
-- `text(...)` = `content(...)`
-- `at(...)` = `pos(...)`
-- `size(...)` = `scale(...)`
-
-Anchor presets:
-- `leftTop`, `leftBottom`, `rightTop`, `rightBottom`, `centerTop`, `centerBottom`, `center`.
