@@ -137,10 +137,10 @@ public final class Registry {
     }
 
     public static final class BlockDsl {
-        private Type type;
+        private Type blockType;
         private final PropsDsl props = new PropsDsl();
 
-        public void type(Type value) { this.type = value; }
+        public void type(Type value) { this.blockType = value; }
         public void texture(String ignored) { }
         public void top(String ignored) { }
         public void bottom(String ignored) { }
@@ -151,10 +151,10 @@ public final class Registry {
         }
 
         void register() {
-            if (type == null) {
+            if (blockType == null) {
                 throw new IllegalStateException("Block type is required");
             }
-            Registry.register(type, new BlockData(type, props.solid, props.hardness));
+            Registry.register(blockType, new BlockData(blockType, props.solid, props.hardness));
         }
     }
 

@@ -110,14 +110,14 @@ public final class RenderRegistry {
     }
 
     public static final class BlockDsl {
-        private Type type;
+        private Type blockType;
         private String texture;
         private String top;
         private String bottom;
         private String side;
         private final PropsDsl props = new PropsDsl();
 
-        public void type(Type value) { this.type = value; }
+        public void type(Type value) { this.blockType = value; }
         public void texture(String value) { this.texture = value; }
         public void top(String value) { this.top = value; }
         public void bottom(String value) { this.bottom = value; }
@@ -128,17 +128,17 @@ public final class RenderRegistry {
         }
 
         void register() {
-            if (type == null) {
+            if (blockType == null) {
                 throw new IllegalStateException("Block type is required");
             }
             if (texture == null && top == null && bottom == null && side == null) {
-                RenderRegistry.register(type, null);
+                RenderRegistry.register(blockType, null);
                 return;
             }
             Block block = texture != null
-                    ? new Block(type, texture, props.build())
-                    : new Block(type, top, bottom, side, props.build());
-            RenderRegistry.register(type, block);
+                    ? new Block(blockType, texture, props.build())
+                    : new Block(blockType, top, bottom, side, props.build());
+            RenderRegistry.register(blockType, block);
         }
     }
 
