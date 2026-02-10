@@ -20,6 +20,10 @@ public class Sun {
         yaw = normalizeAngle(yaw + delta);
     }
 
+    public void setYaw(float yaw) {
+        this.yaw = normalizeAngle(yaw);
+    }
+
     public void reset() {
         yaw = DEFAULT_YAW;
         pitch = DEFAULT_PITCH;

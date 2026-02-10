@@ -2,11 +2,10 @@ package SwordsGame.ui;
 
 import static org.lwjgl.opengl.GL11.*;
 
-import SwordsGame.client.assets.Paths;
-import SwordsGame.ui.Text.*;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Sprite;
 import SwordsGame.client.graphics.TextureLoader;
+import SwordsGame.ui.data.text.TextRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +20,7 @@ public class HUD {
     private final Message messageSystem;
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
     private final Info info;
+    private final ExampleTextOverlay exampleTextOverlay;
 
     private final TextureLoader.Texture charFrameTex;
     private final TextureLoader.Texture separatorTex;
@@ -34,9 +34,10 @@ public class HUD {
         this.sprite = new Sprite(w, h);
         this.messageSystem = new Message();
         this.info = new Info(text);
+        this.exampleTextOverlay = new ExampleTextOverlay(text);
 
-        this.charFrameTex = load(Paths.UI_CHAR_FRAME);
-        this.separatorTex = load(Paths.UI_SEPARATOR);
+        this.charFrameTex = load("textures/ui/char-frame.png");
+        this.separatorTex = load("textures/ui/separator.png");
 
         startTerminalThread();
     }
@@ -60,7 +61,7 @@ public class HUD {
     }
 
     private TextureLoader.Texture load(String path) {
-        TextureLoader.Texture t = TextureLoader.loadTexture(path, true);
+        TextureLoader.Texture t = TextureLoader.loadTexture(path);
         textures.add(t);
         return t;
     }
@@ -86,10 +87,9 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        float textYOffset = info.getTextYOffset();
-
-        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
+        text.draw(d -> d.text(TextRegistry.get("hud.title", "Грунт")).leftTop().at(10, 2).size(1.0f));
         info.renderDebug(1.0f);
+        exampleTextOverlay.renderDemo();
 
         messageSystem.draw(text);
     }

@@ -4,6 +4,9 @@ import SwordsGame.client.graphics.Font;
 
 import static org.lwjgl.opengl.GL11.*;
 import java.util.Random;
+import java.util.function.Consumer;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 public class Text {
     private final Font font;
@@ -37,6 +40,32 @@ public class Text {
 
     public void draw(String t, Anchor a, float x, float y, float s) {
         drawInternal(t, a, x, y, s, true, Shake.NONE, Wave.NONE, Crit.NONE, 0);
+    }
+
+
+
+    public void draw(Consumer<DrawDsl> script) {
+        DrawDsl dsl = new DrawDsl();
+        script.accept(dsl);
+        Anchor.TypeX anchorX = dsl.anchorX != null ? dsl.anchorX : Anchor.TypeX.CENTER;
+        Anchor.TypeY anchorY = dsl.anchorY != null ? dsl.anchorY : Anchor.TypeY.CENTER;
+        drawInternal(dsl.content, buildAnchor(anchorX, anchorY), dsl.offsetX, dsl.offsetY,
+                dsl.scale, true, dsl.shake, dsl.wave, dsl.crit, 0f);
+    }
+
+
+
+    public void drawGroovy(String script) {
+        try {
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("groovy");
+            if (engine == null) {
+                throw new IllegalStateException("Groovy ScriptEngine not found");
+            }
+            engine.put("text", new GroovyTextApi());
+            engine.eval(script);
+        } catch (Exception e) {
+            throw new RuntimeException("Text Groovy DSL failed", e);
+        }
     }
 
     public float getLineStep(float scale) {
@@ -190,4 +219,81 @@ public class Text {
         glTexCoord2f(u2, v2); glVertex2f(dx+d.diacriticWidth*s, dy+d.diacriticHeight*s);
         glTexCoord2f(u1, v2); glVertex2f(dx, dy+d.diacriticHeight*s);
     }
+
+
+    public final class GroovyTextApi {
+        public void draw(groovy.lang.Closure<?> closure) {
+            DrawDsl dsl = new DrawDsl();
+            closure.setResolveStrategy(groovy.lang.Closure.DELEGATE_FIRST);
+            closure.setDelegate(dsl);
+            closure.call();
+            Anchor.TypeX anchorX = dsl.anchorX != null ? dsl.anchorX : Anchor.TypeX.CENTER;
+            Anchor.TypeY anchorY = dsl.anchorY != null ? dsl.anchorY : Anchor.TypeY.CENTER;
+            drawInternal(dsl.content, buildAnchor(anchorX, anchorY), dsl.offsetX, dsl.offsetY,
+                    dsl.scale, true, dsl.shake, dsl.wave, dsl.crit, 0f);
+        }
+    }
+
+    public final class DrawDsl {
+        private String content = "";
+        private Anchor.TypeX anchorX;
+        private Anchor.TypeY anchorY;
+        private float offsetX;
+        private float offsetY;
+        private float scale = 1.0f;
+        private Shake shake = Shake.NONE;
+        private Wave wave = Wave.NONE;
+        private Crit crit = Crit.NONE;
+
+        public DrawDsl content(String value) { this.content = value == null ? "" : value; return this; }
+        public DrawDsl text(String value) { return content(value); }
+        public DrawDsl center() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.CENTER; return this; }
+        public boolean getCenter() { center(); return true; }
+        public DrawDsl left() { this.anchorX = Anchor.TypeX.LEFT; if (this.anchorY == null) this.anchorY = Anchor.TypeY.TOP; return this; }
+        public boolean getLeft() { left(); return true; }
+        public DrawDsl right() { this.anchorX = Anchor.TypeX.RIGHT; if (this.anchorY == null) this.anchorY = Anchor.TypeY.TOP; return this; }
+        public boolean getRight() { right(); return true; }
+        public DrawDsl top() { if (this.anchorX == null) this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.TOP; return this; }
+        public boolean getTop() { top(); return true; }
+        public DrawDsl bottom() { if (this.anchorX == null) this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.BOTTOM; return this; }
+        public boolean getBottom() { bottom(); return true; }
+        public DrawDsl pos(float x, float y) { this.offsetX = x; this.offsetY = y; return this; }
+        public DrawDsl at(float x, float y) { return pos(x, y); }
+        public DrawDsl scale(float value) { this.scale = value; return this; }
+        public DrawDsl size(float value) { return scale(value); }
+        public DrawDsl wave(String mode) { this.wave = parseWave(mode); return this; }
+        public DrawDsl shake(String mode) { this.shake = parseShake(mode); return this; }
+        public DrawDsl crit(String mode) { this.crit = parseCrit(mode); return this; }
+        public DrawDsl leftTop() { this.anchorX = Anchor.TypeX.LEFT; this.anchorY = Anchor.TypeY.TOP; return this; }
+        public DrawDsl leftBottom() { this.anchorX = Anchor.TypeX.LEFT; this.anchorY = Anchor.TypeY.BOTTOM; return this; }
+        public DrawDsl rightTop() { this.anchorX = Anchor.TypeX.RIGHT; this.anchorY = Anchor.TypeY.TOP; return this; }
+        public DrawDsl rightBottom() { this.anchorX = Anchor.TypeX.RIGHT; this.anchorY = Anchor.TypeY.BOTTOM; return this; }
+        public DrawDsl centerTop() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.TOP; return this; }
+        public DrawDsl centerBottom() { this.anchorX = Anchor.TypeX.CENTER; this.anchorY = Anchor.TypeY.BOTTOM; return this; }
+    }
+
+    private Wave parseWave(String mode) {
+        if (mode == null) return Wave.NONE;
+        if ("slow".equalsIgnoreCase(mode)) return Wave.SLOW;
+        if ("medium".equalsIgnoreCase(mode)) return Wave.MEDIUM;
+        if ("fast".equalsIgnoreCase(mode)) return Wave.FAST;
+        return Wave.NONE;
+    }
+
+    private Shake parseShake(String mode) {
+        if (mode == null) return Shake.NONE;
+        if ("slow".equalsIgnoreCase(mode)) return Shake.SLOW;
+        if ("medium".equalsIgnoreCase(mode)) return Shake.MEDIUM;
+        if ("fast".equalsIgnoreCase(mode)) return Shake.FAST;
+        return Shake.NONE;
+    }
+
+    private Crit parseCrit(String mode) {
+        if (mode == null) return Crit.NONE;
+        if ("slow".equalsIgnoreCase(mode)) return Crit.SLOW;
+        if ("medium".equalsIgnoreCase(mode)) return Crit.MEDIUM;
+        if ("fast".equalsIgnoreCase(mode)) return Crit.FAST;
+        return Crit.NONE;
+    }
+
 }

@@ -4,7 +4,7 @@ import SwordsGame.core.Window;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Renderer {
-    private static final int VIEWPORT_MARGIN_X = 120;
+    private static final float VIEWPORT_MARGIN_RATIO = 0.125f;
     private static final float CLEAR_R = 0.5f;
     private static final float CLEAR_G = 0.8f;
     private static final float CLEAR_B = 1.0f;
@@ -30,7 +30,7 @@ public class Renderer {
     private static final float NIGHT_DIFFUSE_B = 0.55f;
     private static final float SUN_TRANSITION_ELEVATION = 0.6f;
 
-    private int viewportX = VIEWPORT_MARGIN_X;
+    private int viewportX = 120;
     private int viewportY = 0;
     private int viewportWidth = 720;
     private int viewportHeight = 540;
@@ -56,10 +56,11 @@ public class Renderer {
     public void setup3D(Window win) {
         int virtualWidth = win.getVirtualWidth();
         int virtualHeight = win.getVirtualHeight();
-        viewportX = VIEWPORT_MARGIN_X;
+        int marginX = Math.round(virtualWidth * VIEWPORT_MARGIN_RATIO);
+        viewportX = marginX;
         viewportY = 0;
-        viewportWidth = Math.max(1, virtualWidth - (VIEWPORT_MARGIN_X * 2));
-        viewportHeight = virtualHeight;
+        viewportWidth = Math.max(1, virtualWidth - (marginX * 2));
+        viewportHeight = Math.max(1, virtualHeight);
 
         glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1.0f);
         glClearDepth(1.0f);
@@ -67,7 +68,9 @@ public class Renderer {
         glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(-360, 360, -270, 270, -5000, 5000);
+        float halfHeight = 270.0f;
+        float halfWidth = halfHeight * ((float) viewportWidth / (float) viewportHeight);
+        glOrtho(-halfWidth, halfWidth, -halfHeight, halfHeight, -5000, 5000);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 

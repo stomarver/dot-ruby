@@ -27,7 +27,7 @@ public class Font {
     }
 
     public Font(String path) {
-        this.texture = TextureLoader.loadTexture(path, true);
+        this.texture = TextureLoader.loadTexture(path);
         initCharMap();
         initDiacritics();
     }
