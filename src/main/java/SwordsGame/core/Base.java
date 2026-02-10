@@ -3,7 +3,8 @@ package SwordsGame.core;
 import SwordsGame.client.Camera;
 import SwordsGame.client.World;
 import SwordsGame.client.assets.Paths;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.server.data.blocks.Registry;
+import SwordsGame.client.blocks.RenderRegistry;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
@@ -49,6 +50,7 @@ public class Base {
 
         Discord.init();
         Registry.init();
+        RenderRegistry.initFromServerDsl();
 
         font = new Font(Paths.FONT_MAIN);
         hud = new HUD(font, 960, 540);
@@ -97,7 +99,7 @@ public class Base {
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
-        Registry.destroy();
+        RenderRegistry.destroy();
         TextureLoader.finishCleanup();
         window.destroy();
         System.exit(0);

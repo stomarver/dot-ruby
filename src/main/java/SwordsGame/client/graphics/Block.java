@@ -1,6 +1,6 @@
 package SwordsGame.client.graphics;
 
-import SwordsGame.client.blocks.Type;
+import SwordsGame.server.data.blocks.Type;
 import java.util.Objects;
 
 public class Block {

@@ -1,104 +1,43 @@
 package SwordsGame.client.blocks;
 
-import SwordsGame.client.assets.Paths;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockProperties;
 import SwordsGame.client.graphics.BlockRenderer;
+import SwordsGame.server.data.blocks.Registry;
+import SwordsGame.server.data.blocks.Type;
 import groovy.lang.Closure;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public final class Registry {
+public final class RenderRegistry {
     private static final Map<Type, Block> REGISTRY = new LinkedHashMap<>();
-    private static final String DEFAULT_BLOCKS_DSL = String.join("\n",
-            "blocks {",
-            "    air {",
-            "        type Type.AIR",
-            "        props { nonSolid }",
-            "    }",
-            "",
-            "    grass {",
-            "        type Type.GRASS",
-            "        texture Paths.BLOCK_GRASS",
-            "        props {",
-            "            randomRotation",
-            "            randomColor",
-            "            smoothing",
-            "            hardness 0.6f",
-            "        }",
-            "    }",
-            "",
-            "    cobble {",
-            "        type Type.COBBLE",
-            "        texture Paths.BLOCK_COBBLE",
-            "        props { hardness 2.0f }",
-            "    }",
-            "",
-            "    stone {",
-            "        type Type.STONE",
-            "        texture Paths.BLOCK_STONE",
-            "        props {",
-            "            smoothing",
-            "            hardness 3.0f",
-            "        }",
-            "    }",
-            "}");
-
     private static boolean destroyed;
 
-    private Registry() {
+    private RenderRegistry() {
     }
 
-    public static void init() {
+    public static void initFromServerDsl() {
         destroyed = false;
-        resetToDefaults();
-    }
-
-
-
-    public static void resetToDefaults() {
         REGISTRY.clear();
-        registerScript(DEFAULT_BLOCKS_DSL);
-    }
-
-    public static void registerScripts(Collection<String> scripts) {
-        if (scripts == null) {
-            return;
-        }
-        for (String script : scripts) {
-            registerScript(script);
-        }
+        registerScript(Registry.getActiveDsl());
     }
 
     public static void registerScript(String script) {
         if (script == null || script.trim().isEmpty()) {
-            throw new IllegalArgumentException("Block DSL script must not be empty");
+            return;
         }
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("groovy");
         if (engine == null) {
             throw new IllegalStateException("Groovy ScriptEngine not found");
         }
-        engine.put("registry", new GroovyRegistryApi());
-        engine.put("Type", Type.class);
-        engine.put("Paths", Paths.class);
-        eval(engine, "def blocks(Closure c){ registry.blocks(c) }");
+        engine.put("registry", new RenderRegistryApi());
+        eval(engine, "import SwordsGame.server.data.blocks.Type\n" +
+                "import SwordsGame.client.assets.Paths\n" +
+                "def blocks(Closure c){ registry.blocks(c) }");
         eval(engine, script);
-    }
-
-    private static void eval(ScriptEngine engine, String script) {
-        try {
-            engine.eval(script);
-        } catch (Exception e) {
-            throw new RuntimeException("Groovy DSL eval failed", e);
-        }
-    }
-
-    public static void register(Type type, Block block) {
-        REGISTRY.put(type, block);
     }
 
     public static Block get(Type type) {
@@ -139,7 +78,19 @@ public final class Registry {
         destroyed = true;
     }
 
-    public static final class GroovyRegistryApi {
+    private static void register(Type type, Block block) {
+        REGISTRY.put(type, block);
+    }
+
+    private static void eval(ScriptEngine engine, String script) {
+        try {
+            engine.eval(script);
+        } catch (Exception e) {
+            throw new RuntimeException("Groovy render block DSL eval failed", e);
+        }
+    }
+
+    public static final class RenderRegistryApi {
         public void blocks(Closure<?> closure) {
             configure(closure, new BlocksDsl());
         }
@@ -150,6 +101,7 @@ public final class Registry {
         public void grass(Closure<?> closure) { define(closure); }
         public void cobble(Closure<?> closure) { define(closure); }
         public void stone(Closure<?> closure) { define(closure); }
+
         public void define(Closure<?> closure) {
             BlockDsl dsl = new BlockDsl();
             configure(closure, dsl);
@@ -165,11 +117,11 @@ public final class Registry {
         private String side;
         private final PropsDsl props = new PropsDsl();
 
-        public void type(Type value) { type = value; }
-        public void texture(String value) { texture = value; }
-        public void top(String value) { top = value; }
-        public void bottom(String value) { bottom = value; }
-        public void side(String value) { side = value; }
+        public void type(Type value) { this.type = value; }
+        public void texture(String value) { this.texture = value; }
+        public void top(String value) { this.top = value; }
+        public void bottom(String value) { this.bottom = value; }
+        public void side(String value) { this.side = value; }
 
         public void props(Closure<?> closure) {
             configure(closure, props);
@@ -180,13 +132,13 @@ public final class Registry {
                 throw new IllegalStateException("Block type is required");
             }
             if (texture == null && top == null && bottom == null && side == null) {
-                Registry.register(type, null);
+                RenderRegistry.register(type, null);
                 return;
             }
             Block block = texture != null
                     ? new Block(type, texture, props.build())
                     : new Block(type, top, bottom, side, props.build());
-            Registry.register(type, block);
+            RenderRegistry.register(type, block);
         }
     }
 

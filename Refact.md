@@ -1,17 +1,30 @@
 # Refact
 
-## Что исправлено в этой итерации
+## Main structural refactor for multiplayer-ready RTS base
 
-- Исправлена ошибка в `Info.java` (конфликт имени `content` в цикле рендера строк).
-- Сильнее упрощён синтаксис text DSL:
-  - добавлены короткие якоря `leftTop/leftBottom/rightTop/rightBottom/centerTop/centerBottom`;
-  - добавлены алиасы `text`, `at`, `size` для более чистого вызова.
-- HUD/Info/Message переписаны на компактный декларативный стиль `text.draw(...)`.
-- Улучшена база для моддинга блоков:
-  - встроенный default block DSL;
-  - удобные API: `resetToDefaults`, `registerScript`, `registerScripts`.
-- Восстановлен grass над cobble в генерации столбов.
+- Перенесена регистрация блоков на **server layer**:
+  - `SwordsGame.server.data.blocks.Registry`
+  - `SwordsGame.server.data.blocks.Type`
+  - `SwordsGame.server.data.blocks.BlockData`
+- Исправлена причина ScriptException (`Type.AIR`):
+  - теперь в Groovy prelude используются `import SwordsGame.server.data.blocks.Type` и `import Paths`.
 
-## Результат
+## Client/Server split
 
-Кодовая база стала чище, синтаксис короче, а вход для моддинга — проще и удобнее для расширения.
+- `server.data.blocks.Registry` — authoritative block DSL + logical block data.
+- `client.blocks.RenderRegistry` — только render-аспекты (текстуры/visual props), инициализируется из `Registry.getActiveDsl()`.
+- Инициализация в `Base/Debug`:
+  1) `server Registry.init()`
+  2) `RenderRegistry.initFromServerDsl()`
+
+## UI DSL cleanup
+
+- HUD/Info/Message используют упрощенный `text.draw(...)` синтаксис.
+- Исправлена ошибка в `Info` с конфликтом переменных.
+
+## Goal
+
+Структура стала логичнее для multiplayer RTS:
+- authoritative data/state на сервере,
+- rendering concerns на клиенте,
+- единый DSL формат для modding и расширения.

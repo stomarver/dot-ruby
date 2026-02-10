@@ -1,4 +1,4 @@
-package SwordsGame.client.blocks;
+package SwordsGame.server.data.blocks;
 
 public enum Type {
     AIR(0, "Air"),

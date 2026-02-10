@@ -1,7 +1,7 @@
 package SwordsGame.client.graphics;
 
 import SwordsGame.client.World;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.RenderRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,14 +45,14 @@ public class BlockRenderer {
     }
 
     public static void renderBlock(byte id, int seed, boolean[] faces) {
-        Block block = Registry.get(id);
+        Block block = RenderRegistry.get(id);
         if (block != null) {
             renderBlock(block, seed, faces, 1.0f);
         }
     }
 
     public static void renderBlock(byte id, int seed, boolean[] faces, float alpha) {
-        Block block = Registry.get(id);
+        Block block = RenderRegistry.get(id);
         if (block != null) {
             renderBlock(block, seed, faces, alpha);
         }

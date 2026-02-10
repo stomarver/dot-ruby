@@ -1,45 +1,16 @@
-# Syntax (Integrated Groovy DSL)
+# Syntax (Java 8 + Groovy JSR223)
 
-DSL встроен в код игры и исполняется через `groovy-jsr223`.
-Внешний `blocks.dsl` не нужен.
+## Архитектура регистрации блоков
 
-## Text DSL (упрощённый)
+- **Server authoritative data:** `SwordsGame.server.data.blocks.Registry`
+- **Client render mapping:** `SwordsGame.client.blocks.RenderRegistry`
 
-### Java
-```java
-text.draw(d -> d.text("Boss defeated!\n+1000 gold ^4CRITICAL^0 hit!")
-        .centerBottom()
-        .at(0, -80)
-        .size(1.8f)
-        .wave("medium")
-        .shake("fast")
-        .crit("medium"));
-```
+Server хранит data/логические свойства блоков и DSL-скрипты.
+Client строит render-блоки (текстуры/прозрачность/сглаживание) из того же DSL.
 
-Короткие якоря:
-- `leftTop()` / `leftBottom()`
-- `rightTop()` / `rightBottom()`
-- `centerTop()` / `centerBottom()` / `center()`
+---
 
-Алиасы:
-- `text(...)` = `content(...)`
-- `at(x,y)` = `pos(x,y)`
-- `size(v)` = `scale(v)`
-
-### Groovy
-```groovy
-text.draw {
-    content 'Boss defeated!\n+1000 gold ^4CRITICAL^0 hit!'
-    center
-    pos   0, -80
-    scale 1.8f
-    wave  'medium'
-    shake 'fast'
-    crit  'medium'
-}
-```
-
-## Blocks DSL
+## Blocks DSL (единый формат для data/render)
 
 ```groovy
 blocks {
@@ -76,8 +47,36 @@ blocks {
 }
 ```
 
-## Modding API
+### Modding API
 
-- `Registry.resetToDefaults()` — сброс к встроенному базовому набору блоков.
-- `Registry.registerScript(String script)` — добавить/переопределить блоки Groovy-скриптом.
-- `Registry.registerScripts(Collection<String> scripts)` — пакетная регистрация нескольких мод-скриптов.
+Server:
+- `Registry.resetToDefaults()`
+- `Registry.registerScript(String script)`
+- `Registry.registerScripts(Collection<String> scripts)`
+- `Registry.getActiveDsl()`
+
+Client:
+- `RenderRegistry.initFromServerDsl()`
+- `RenderRegistry.registerScript(String script)`
+
+---
+
+## Text DSL (compact)
+
+```java
+text.draw(d -> d.text("Boss defeated!\n+1000 gold ^4CRITICAL^0 hit!")
+        .centerBottom()
+        .at(0, -80)
+        .size(1.8f)
+        .wave("medium")
+        .shake("fast")
+        .crit("medium"));
+```
+
+Aliases:
+- `text(...)` = `content(...)`
+- `at(...)` = `pos(...)`
+- `size(...)` = `scale(...)`
+
+Anchor presets:
+- `leftTop`, `leftBottom`, `rightTop`, `rightBottom`, `centerTop`, `centerBottom`, `center`.

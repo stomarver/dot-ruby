@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.RenderRegistry;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockRenderer;
 import SwordsGame.client.graphics.ChunkMesh;
 import SwordsGame.client.graphics.MeshBuilder;
 import SwordsGame.server.Chunk;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.client.blocks.Type;
+import SwordsGame.server.data.blocks.Type;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
@@ -292,7 +292,7 @@ public class World {
                     byte type = chunk.getBlock(x, y, z);
                     if (type == 0) continue;
 
-                    Block block = Registry.get(type);
+                    Block block = RenderRegistry.get(type);
                     boolean hasSmoothing = block != null && block.getProperties().hasSmoothing();
                     boolean[] faces = new boolean[6];
                     if (hasSmoothing) {
@@ -344,7 +344,7 @@ public class World {
         if (neighborType == 0) {
             return !hasSmoothingLimiter(cm, worldX, y, worldZ);
         }
-        Block neighbor = Registry.get(neighborType);
+        Block neighbor = RenderRegistry.get(neighborType);
         return neighbor == null || !neighbor.getProperties().isSolid();
     }
 
@@ -352,7 +352,7 @@ public class World {
         int aboveY = y + 1;
         if (aboveY >= Chunk.HEIGHT) return false;
         byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
-        Block above = Registry.get(aboveType);
+        Block above = RenderRegistry.get(aboveType);
         return above != null && above.getProperties().hasSmoothing();
     }
 
@@ -385,7 +385,7 @@ public class World {
         if (type == 0 || type == currentType) {
             return false;
         }
-        Block block = Registry.get(type);
+        Block block = RenderRegistry.get(type);
         return block != null && block.getProperties().isSolid() && !block.getProperties().isTransparent();
     }
 

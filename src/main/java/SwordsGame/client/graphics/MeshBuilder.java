@@ -2,7 +2,7 @@ package SwordsGame.client.graphics;
 
 import SwordsGame.client.Smoothing;
 import SwordsGame.client.World;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.RenderRegistry;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,7 +41,7 @@ public class MeshBuilder {
     }
 
     public void addBlock(byte typeId, int seed, boolean[] faces, float[][] ao, int wx, int wy, int wz, float totalOffset, float scale) {
-        Block block = Registry.get(typeId);
+        Block block = RenderRegistry.get(typeId);
         if (block == null) return;
 
         BlockProperties props = block.getProperties();
