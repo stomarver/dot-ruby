@@ -28,3 +28,14 @@
 
 _The project urgently needs REAL Java developers who understand LWJGL, OpenGL, Groovy (for writing extensible modding syntax), and how the overall structure and logic of Multiplayer RTS should look.
 Currently, the project is being written by an incompetent vibe coder who only knows how to create textures and models, can set the basic concept of the game, and... that's about it... (pls help us)_
+
+
+***
+### Architecture (client/server/shared)
+- `SwordsGame.client.*` — rendering, input, window lifecycle, HUD/UI, local client integrations.
+- `SwordsGame.server.*` — world simulation, terrain/chunks, sun/environment, RTS gameplay templates, server-side UI composition.
+- `SwordsGame.shared.*` — protocol/data contracts used by both sides (for future multiplayer transport).
+
+Current server->client UI example in code:
+- `SwordsGame.server.ui.ServerUiComposer` builds `UiFrameState`/`UiPanelState`.
+- `SwordsGame.client.core.Base` and `Debug` consume this state and render it through HUD.
