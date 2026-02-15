@@ -28,6 +28,28 @@ public class Button {
         this.screenH = (float) screenH;
     }
 
+
+    public boolean contains(Anchor.TypeX ax,
+                            Anchor.TypeY ay,
+                            float x,
+                            float y,
+                            float width,
+                            float height,
+                            float cursorX,
+                            float cursorY) {
+        Anchor anchor = buildAnchor(ax, ay);
+        float rx = anchor.x + x;
+        float ry = anchor.y + y;
+
+        if (anchor.tx == Anchor.TypeX.CENTER) rx -= width / 2f;
+        else if (anchor.tx == Anchor.TypeX.RIGHT) rx -= width;
+
+        if (anchor.ty == Anchor.TypeY.CENTER) ry -= height / 2f;
+        else if (anchor.ty == Anchor.TypeY.BOTTOM) ry -= height;
+
+        return contains(rx, ry, width, height, cursorX, cursorY);
+    }
+
     public void draw(String label,
                      Anchor.TypeX ax,
                      Anchor.TypeY ay,

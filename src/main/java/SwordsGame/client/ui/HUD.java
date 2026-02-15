@@ -25,6 +25,7 @@ public class HUD {
     private String primaryButtonText = "Кнопка";
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
+    private boolean primaryButtonHeld = false;
 
     private final TextureLoader.Texture charFrameTex;
     private final TextureLoader.Texture separatorTex;
@@ -118,6 +119,14 @@ public class HUD {
     public void setVirtualCursor(float x, float y) {
         this.virtualCursorX = x;
         this.virtualCursorY = y;
+    }
+
+
+    public boolean consumePrimaryButtonClick(boolean mouseDown) {
+        boolean hovered = primaryButton.contains(Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, virtualCursorX, virtualCursorY);
+        boolean clicked = hovered && mouseDown && !primaryButtonHeld;
+        primaryButtonHeld = mouseDown;
+        return clicked;
     }
 
     public void cleanup() {

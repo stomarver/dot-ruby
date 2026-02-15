@@ -90,6 +90,10 @@ public class Debug {
             float mouseY = window.getMouseRelY();
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
+                boolean leftMouseDown = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+                if (hud.consumePrimaryButtonClick(leftMouseDown)) {
+                    showDebugInfo = !showDebugInfo;
+                }
                 hud.render();
             }
 
