@@ -122,13 +122,51 @@ public class MeshBuilder {
         float[][] verts = FACE_VERTS[2];
         Smoothing smoothing = new Smoothing(faces);
 
-        addSmoothedVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color, smoothing, 0);
-        addSmoothedVertex(collector, verts[1], baseX, baseY, baseZ, normal, uv[2], uv[3], color, smoothing, 1);
-        addSmoothedVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color, smoothing, 2);
+        float[] yOffsets = new float[4];
+        for (int i = 0; i < 4; i++) {
+            yOffsets[i] = smoothing.shouldLowerTopVertex(i) ? -World.BLOCK_SCALE : 0.0f;
+        }
 
-        addSmoothedVertex(collector, verts[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color, smoothing, 2);
-        addSmoothedVertex(collector, verts[3], baseX, baseY, baseZ, normal, uv[6], uv[7], color, smoothing, 3);
-        addSmoothedVertex(collector, verts[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color, smoothing, 0);
+        float centerX = (verts[0][0] + verts[1][0] + verts[2][0] + verts[3][0]) * 0.25f;
+        float centerZ = (verts[0][2] + verts[1][2] + verts[2][2] + verts[3][2]) * 0.25f;
+        float centerYOffset = (yOffsets[0] + yOffsets[1] + yOffsets[2] + yOffsets[3]) * 0.25f;
+
+        float centerU = (uv[0] + uv[2] + uv[4] + uv[6]) * 0.25f;
+        float centerV = (uv[1] + uv[3] + uv[5] + uv[7]) * 0.25f;
+
+        addSmoothedTriangleWithCenter(collector, verts[0], yOffsets[0], uv[0], uv[1],
+                verts[1], yOffsets[1], uv[2], uv[3],
+                centerX, centerYOffset, centerZ, centerU, centerV,
+                baseX, baseY, baseZ, normal, color);
+
+        addSmoothedTriangleWithCenter(collector, verts[1], yOffsets[1], uv[2], uv[3],
+                verts[2], yOffsets[2], uv[4], uv[5],
+                centerX, centerYOffset, centerZ, centerU, centerV,
+                baseX, baseY, baseZ, normal, color);
+
+        addSmoothedTriangleWithCenter(collector, verts[2], yOffsets[2], uv[4], uv[5],
+                verts[3], yOffsets[3], uv[6], uv[7],
+                centerX, centerYOffset, centerZ, centerU, centerV,
+                baseX, baseY, baseZ, normal, color);
+
+        addSmoothedTriangleWithCenter(collector, verts[3], yOffsets[3], uv[6], uv[7],
+                verts[0], yOffsets[0], uv[0], uv[1],
+                centerX, centerYOffset, centerZ, centerU, centerV,
+                baseX, baseY, baseZ, normal, color);
+    }
+
+    private void addSmoothedTriangleWithCenter(FloatCollector collector,
+                                               float[] a, float ayOffset, float au, float av,
+                                               float[] b, float byOffset, float bu, float bv,
+                                               float centerX, float centerYOffset, float centerZ, float centerU, float centerV,
+                                               float baseX, float baseY, float baseZ,
+                                               float[] normal, float color) {
+        addSmoothedVertexWithYOffset(collector, a, ayOffset, baseX, baseY, baseZ, normal, au, av, color);
+        addSmoothedVertexWithYOffset(collector, b, byOffset, baseX, baseY, baseZ, normal, bu, bv, color);
+        addSmoothedVertexWithYOffset(collector,
+                new float[] {centerX, 1.0f, centerZ},
+                centerYOffset,
+                baseX, baseY, baseZ, normal, centerU, centerV, color);
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
@@ -144,9 +182,9 @@ public class MeshBuilder {
         );
     }
 
-    private void addSmoothedVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
-                                   float[] normal, float u, float vTex, float color, Smoothing smoothing, int index) {
-        float yOffset = smoothing.shouldLowerTopVertex(index) ? -World.BLOCK_SCALE : 0.0f;
+    private void addSmoothedVertexWithYOffset(FloatCollector collector, float[] v, float yOffset,
+                                              float baseX, float baseY, float baseZ,
+                                              float[] normal, float u, float vTex, float color) {
         float x = baseX + (v[0] * World.BLOCK_SIZE);
         float y = baseY + (v[1] * World.BLOCK_SIZE) + yOffset;
         float z = baseZ + (v[2] * World.BLOCK_SIZE);
