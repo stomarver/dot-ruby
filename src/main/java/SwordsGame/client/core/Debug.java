@@ -85,10 +85,13 @@ public class Debug {
             glPopMatrix();
 
             renderer.setup2D(window);
-            if (hud != null) hud.render();
 
             float mouseX = window.getMouseRelX();
             float mouseY = window.getMouseRelY();
+            if (hud != null) {
+                hud.setVirtualCursor(mouseX, mouseY);
+                hud.render();
+            }
 
             cursor.updatePosition(mouseX, mouseY);
             cursor.render();

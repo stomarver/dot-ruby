@@ -22,6 +22,8 @@ public class HUD {
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
     private final Info info;
     private final Button primaryButton;
+    private float virtualCursorX = -1f;
+    private float virtualCursorY = -1f;
 
     private final TextureLoader.Texture charFrameTex;
     private final TextureLoader.Texture separatorTex;
@@ -91,6 +93,7 @@ public class HUD {
         text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
         info.renderDebug(1.0f);
 
+        primaryButton.setHovered(primaryButton.contains(virtualCursorX, virtualCursorY));
         primaryButton.render();
 
         messageSystem.draw(text);
@@ -110,6 +113,11 @@ public class HUD {
 
     public void setPrimaryButtonText(String text) {
         this.primaryButton.setText(text);
+    }
+
+    public void setVirtualCursor(float x, float y) {
+        this.virtualCursorX = x;
+        this.virtualCursorY = y;
     }
 
     public void cleanup() {
