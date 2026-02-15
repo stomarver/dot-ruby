@@ -52,6 +52,7 @@ public class Base {
 
         font = new Font(Paths.FONT_MAIN);
         hud = new HUD(font, 960, 540);
+        hud.setPrimaryButtonText("Играть");
 
         cursor = new Cursor();
         TextureLoader.finishLoading();

@@ -21,6 +21,7 @@ public class HUD {
     private final Message messageSystem;
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
     private final Info info;
+    private final Button primaryButton;
 
     private final TextureLoader.Texture charFrameTex;
     private final TextureLoader.Texture separatorTex;
@@ -34,6 +35,7 @@ public class HUD {
         this.sprite = new Sprite(w, h);
         this.messageSystem = new Message();
         this.info = new Info(text);
+        this.primaryButton = new Button(text, 10, 170, 100, 28, "Кнопка");
 
         this.charFrameTex = load(Paths.UI_CHAR_FRAME);
         this.separatorTex = load(Paths.UI_SEPARATOR);
@@ -89,6 +91,8 @@ public class HUD {
         text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
         info.renderDebug(1.0f);
 
+        primaryButton.render();
+
         messageSystem.draw(text);
     }
 
@@ -102,6 +106,10 @@ public class HUD {
 
     public void setServerInfo(String info) {
         this.info.setServerInfo(info);
+    }
+
+    public void setPrimaryButtonText(String text) {
+        this.primaryButton.setText(text);
     }
 
     public void cleanup() {
