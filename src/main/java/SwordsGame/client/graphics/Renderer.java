@@ -9,7 +9,7 @@ public class Renderer {
     private static final float CLEAR_G = 0.8f;
     private static final float CLEAR_B = 1.0f;
     private static final float DEFAULT_SUN_YAW = 45.0f;
-    private static final float DEFAULT_SUN_PITCH = -65.0f;
+    private static final float DEFAULT_SUN_PITCH = 30.0f;
     private static final float DAY_AMBIENT_R = 0.35f;
     private static final float DAY_AMBIENT_G = 0.35f;
     private static final float DAY_AMBIENT_B = 0.35f;
