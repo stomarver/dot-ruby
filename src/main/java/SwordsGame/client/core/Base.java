@@ -12,10 +12,6 @@ import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.environment.Sun;
-import SwordsGame.server.gameplay.FactionType;
-import SwordsGame.server.ui.ServerUiComposer;
-import SwordsGame.shared.protocol.ui.UiFrameState;
-import SwordsGame.shared.protocol.ui.UiPanelState;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -29,8 +25,6 @@ public class Base {
     private Camera camera;
     private ChunkManager chunkManager;
     private Sun sun;
-    private ServerUiComposer serverUiComposer;
-
 
     public static void main(String[] args) {
         new Base().start();
@@ -45,7 +39,6 @@ public class Base {
         world = new World();
         camera = new Camera();
         sun = new Sun();
-        serverUiComposer = new ServerUiComposer();
 
         Discord.init();
         Registry.init();
@@ -114,25 +107,8 @@ public class Base {
         if (hud == null || camera == null || chunkManager == null) {
             return;
         }
-        UiFrameState frame = serverUiComposer.compose(sun, chunkManager, FactionType.HUMANS);
         hud.setSunInfo("");
         hud.setCameraInfo("");
-        hud.setServerInfo(extractServerInfo(frame));
-    }
-
-    private String extractServerInfo(UiFrameState frame) {
-        if (frame == null) {
-            return "";
-        }
-        StringBuilder builder = new StringBuilder();
-        for (UiPanelState panel : frame.getPanels()) {
-            if ("sun".equals(panel.getPanelId()) || "world".equals(panel.getPanelId()) || "faction".equals(panel.getPanelId())) {
-                if (builder.length() > 0) {
-                    builder.append("\n\n");
-                }
-                builder.append(panel.getText());
-            }
-        }
-        return builder.toString();
+        hud.setServerInfo("");
     }
 }

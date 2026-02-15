@@ -22,6 +22,7 @@ public class HUD {
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
     private final Info info;
     private final Button primaryButton;
+    private String primaryButtonText = "Кнопка";
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
 
@@ -37,7 +38,7 @@ public class HUD {
         this.sprite = new Sprite(w, h);
         this.messageSystem = new Message();
         this.info = new Info(text);
-        this.primaryButton = new Button(text, 10, 170, 100, 28, "Кнопка");
+        this.primaryButton = new Button(text, w, h);
 
         this.charFrameTex = load(Paths.UI_CHAR_FRAME);
         this.separatorTex = load(Paths.UI_SEPARATOR);
@@ -93,8 +94,7 @@ public class HUD {
         text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
         info.renderDebug(1.0f);
 
-        primaryButton.setHovered(primaryButton.contains(virtualCursorX, virtualCursorY));
-        primaryButton.render();
+        primaryButton.draw(primaryButtonText, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
 
         messageSystem.draw(text);
     }
@@ -112,7 +112,7 @@ public class HUD {
     }
 
     public void setPrimaryButtonText(String text) {
-        this.primaryButton.setText(text);
+        this.primaryButtonText = text == null ? "" : text;
     }
 
     public void setVirtualCursor(float x, float y) {
