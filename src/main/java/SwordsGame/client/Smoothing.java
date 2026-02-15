@@ -14,12 +14,17 @@ public class Smoothing {
     }
 
     public boolean shouldLowerTopVertex(int index) {
-        return switch (index) {
-            case 0 -> back || left;
-            case 1 -> front || left;
-            case 2 -> front || right;
-            case 3 -> back || right;
-            default -> false;
-        };
+        switch (index) {
+            case 0:
+                return back || left;
+            case 1:
+                return front || left;
+            case 2:
+                return front || right;
+            case 3:
+                return back || right;
+            default:
+                return false;
+        }
     }
 }
