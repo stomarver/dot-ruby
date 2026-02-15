@@ -52,19 +52,32 @@ public class MeshBuilder {
 
         for (int face = 0; face < 6; face++) {
             if (topOnly && face != 2) continue;
-            if (props.hasSmoothing() && face != 2) continue;
             if (!faces[face]) continue;
             int textureId = block.getTextureId(face);
             if (textureId == 0) continue;
 
             Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
+            float shadedColor = colorMod * getFaceShade(face);
             if (props.hasSmoothing() && face == 2) {
-                appendSmoothedTopFace(collector, block, rot, baseX, baseY, baseZ, colorMod, faces);
+                appendSmoothedTopFace(collector, block, rot, baseX, baseY, baseZ, shadedColor, faces);
             } else {
-                appendFace(collector, face, block, rot, baseX, baseY, baseZ, colorMod);
+                appendFace(collector, face, block, rot, baseX, baseY, baseZ, shadedColor);
             }
         }
+    }
+
+
+    private float getFaceShade(int face) {
+        return switch (face) {
+            case 2 -> 1.0f;
+            case 3 -> 0.45f;
+            case 0 -> 0.78f;
+            case 1 -> 0.62f;
+            case 4 -> 0.86f;
+            case 5 -> 0.56f;
+            default -> 1.0f;
+        };
     }
 
     public ChunkMesh build() {
