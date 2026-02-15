@@ -68,7 +68,7 @@ public class Button {
 
         float centerX = rx + (width / 2f);
         float centerY = ry + (height / 2f);
-        text.draw(label == null ? "" : label, Anchor.CENTER, Anchor.CENTER_Y, centerX, centerY, textScale);
+        text.draw(label == null ? "" : label, new Anchor(Anchor.CENTER, Anchor.CENTER_Y, centerX, centerY), 0f, 0f, textScale);
     }
 
     private boolean contains(float x, float y, float width, float height, float mouseX, float mouseY) {
