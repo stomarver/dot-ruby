@@ -25,6 +25,7 @@ public class Base {
     private Camera camera;
     private ChunkManager chunkManager;
     private Sun sun;
+    private boolean toggleVirtualResHeld = false;
 
     public static void main(String[] args) {
         new Base().start();
@@ -53,6 +54,7 @@ public class Base {
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
             updateSunState();
+            updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
 
             window.beginRenderToFBO();
@@ -101,6 +103,15 @@ public class Base {
     private void updateSunState() {
         float[] sunDirection = sun.getDirection();
         renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
+    }
+
+
+    private void updateVirtualResolutionToggle(long windowHandle) {
+        boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_F7) == GLFW_PRESS;
+        if (togglePressed && !toggleVirtualResHeld) {
+            window.toggleVirtualResolution();
+        }
+        toggleVirtualResHeld = togglePressed;
     }
 
     private void updateHudInfo() {

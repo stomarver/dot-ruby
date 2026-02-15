@@ -52,6 +52,7 @@ public class MeshBuilder {
 
         for (int face = 0; face < 6; face++) {
             if (topOnly && face != 2) continue;
+            if (props.hasSmoothing() && face != 2) continue;
             if (!faces[face]) continue;
             int textureId = block.getTextureId(face);
             if (textureId == 0) continue;

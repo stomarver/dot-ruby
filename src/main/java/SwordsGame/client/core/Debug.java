@@ -34,6 +34,7 @@ public class Debug {
     private boolean resetSunHeld = false;
     private boolean showDebugInfo = true;
     private boolean toggleDebugHeld = false;
+    private boolean toggleVirtualResHeld = false;
     private ServerUiComposer serverUiComposer;
 
 
@@ -67,6 +68,7 @@ public class Debug {
             updateSunControls(window.getHandle());
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
+            updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
 
             window.beginRenderToFBO();
@@ -135,6 +137,15 @@ public class Debug {
             showDebugInfo = !showDebugInfo;
         }
         toggleDebugHeld = togglePressed;
+    }
+
+
+    private void updateVirtualResolutionToggle(long windowHandle) {
+        boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_F7) == GLFW_PRESS;
+        if (togglePressed && !toggleVirtualResHeld) {
+            window.toggleVirtualResolution();
+        }
+        toggleVirtualResHeld = togglePressed;
     }
 
     private void handleSunReset(long windowHandle) {

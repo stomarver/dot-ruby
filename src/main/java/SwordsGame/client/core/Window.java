@@ -33,6 +33,8 @@ public class Window {
 
     private int physicalX, physicalY;
     private int physicalWidth, physicalHeight;
+    private int framebufferWidth = VIRTUAL_WIDTH;
+    private int framebufferHeight = VIRTUAL_HEIGHT;
 
     private boolean fullscreen = false;
 
@@ -55,6 +57,7 @@ public class Window {
 
 
     private float mouseSensitivity = windowedSensitivity;
+    private boolean forceVirtualResolution = true;
 
     public Window(String title) {
         this.title = title == null || title.isEmpty() ? "SwordsGame" : title;
@@ -65,11 +68,11 @@ public class Window {
     }
 
     public int getVirtualWidth() {
-        return VIRTUAL_WIDTH;
+        return forceVirtualResolution ? VIRTUAL_WIDTH : Math.max(1, framebufferWidth);
     }
 
     public int getVirtualHeight() {
-        return VIRTUAL_HEIGHT;
+        return forceVirtualResolution ? VIRTUAL_HEIGHT : Math.max(1, framebufferHeight);
     }
 
     public float getMouseRelX() {
@@ -91,6 +94,15 @@ public class Window {
     public void resetScroll() {
         scrollX = 0;
         scrollY = 0;
+    }
+
+    public void toggleVirtualResolution() {
+        forceVirtualResolution = !forceVirtualResolution;
+        System.out.println("[Vid] Force virtual resolution: " + (forceVirtualResolution ? "ON" : "OFF"));
+    }
+
+    public boolean isForceVirtualResolution() {
+        return forceVirtualResolution;
     }
 
 
@@ -219,6 +231,8 @@ public class Window {
 
         int framebufferW = fbW[0];
         int framebufferH = fbH[0];
+        framebufferWidth = framebufferW;
+        framebufferHeight = framebufferH;
 
         float targetAspect = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
         float windowAspect = (float) framebufferW / (float) framebufferH;
@@ -279,8 +293,10 @@ public class Window {
         if (virtualMouseX < 0) virtualMouseX = 0;
         if (virtualMouseY < 0) virtualMouseY = 0;
 
-        if (virtualMouseX > VIRTUAL_WIDTH - 1) virtualMouseX = VIRTUAL_WIDTH - 1;
-        if (virtualMouseY > VIRTUAL_HEIGHT - 1) virtualMouseY = VIRTUAL_HEIGHT - 1;
+        float maxMouseX = getVirtualWidth() - 1f;
+        float maxMouseY = getVirtualHeight() - 1f;
+        if (virtualMouseX > maxMouseX) virtualMouseX = maxMouseX;
+        if (virtualMouseY > maxMouseY) virtualMouseY = maxMouseY;
     }
 
 
@@ -396,18 +412,28 @@ public class Window {
 
 
     public void beginRenderToFBO() {
-        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-        glViewport(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        if (forceVirtualResolution) {
+            glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+            glViewport(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        } else {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(0, 0, framebufferWidth, framebufferHeight);
+        }
 
         glClearColor(0.15f, 0.15f, 0.15f, 1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     public void endRenderToFBO() {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        if (forceVirtualResolution) {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
     }
 
     public void drawFBO() {
+        if (!forceVirtualResolution) {
+            return;
+        }
         int[] fbW = new int[1];
         int[] fbH = new int[1];
         glfwGetFramebufferSize(windowHandle, fbW, fbH);
