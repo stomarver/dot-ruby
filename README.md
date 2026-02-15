@@ -39,3 +39,8 @@ Currently, the project is being written by an incompetent vibe coder who only kn
 Current server->client UI example in code:
 - `SwordsGame.server.ui.ServerUiComposer` builds `UiFrameState`/`UiPanelState`.
 - `SwordsGame.client.core.Base` and `Debug` consume this state and render it through HUD.
+
+
+***
+### Runtime
+- Target Java version: **17**
