@@ -54,12 +54,13 @@ public class Renderer {
     public int getViewportHeight() { return viewportHeight; }
 
     public void setup3D(Window win) {
-        int virtualWidth = win.getVirtualWidth();
-        int virtualHeight = win.getVirtualHeight();
-        viewportX = VIEWPORT_MARGIN_X;
+        int renderWidth = win.getRenderWidth();
+        int renderHeight = win.getRenderHeight();
+        int marginX = win.isForceVirtualResolution() ? VIEWPORT_MARGIN_X : Math.max(1, Math.round(VIEWPORT_MARGIN_X * (renderWidth / (float) win.getVirtualWidth())));
+        viewportX = marginX;
         viewportY = 0;
-        viewportWidth = Math.max(1, virtualWidth - (VIEWPORT_MARGIN_X * 2));
-        viewportHeight = virtualHeight;
+        viewportWidth = Math.max(1, renderWidth - (marginX * 2));
+        viewportHeight = renderHeight;
 
         glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1.0f);
         glClearDepth(1.0f);
@@ -83,7 +84,9 @@ public class Renderer {
     }
 
     public void setup2D(Window win) {
-        glViewport(0, 0, win.getVirtualWidth(), win.getVirtualHeight());
+        int viewportW = win.isForceVirtualResolution() ? win.getVirtualWidth() : win.getFramebufferWidth();
+        int viewportH = win.isForceVirtualResolution() ? win.getVirtualHeight() : win.getFramebufferHeight();
+        glViewport(0, 0, viewportW, viewportH);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, win.getVirtualWidth(), win.getVirtualHeight(), 0, -1, 1);

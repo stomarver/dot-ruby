@@ -14,6 +14,19 @@ public class Smoothing {
     }
 
     public boolean shouldLowerTopVertex(int index) {
+        if (isStraightFront()) {
+            return index == 1 || index == 2;
+        }
+        if (isStraightBack()) {
+            return index == 0 || index == 3;
+        }
+        if (isStraightRight()) {
+            return index == 2 || index == 3;
+        }
+        if (isStraightLeft()) {
+            return index == 0 || index == 1;
+        }
+
         return switch (index) {
             case 0 -> back && left && !front && !right;
             case 1 -> front && left && !back && !right;
@@ -21,5 +34,21 @@ public class Smoothing {
             case 3 -> back && right && !front && !left;
             default -> false;
         };
+    }
+
+    private boolean isStraightFront() {
+        return front && !back && !left && !right;
+    }
+
+    private boolean isStraightBack() {
+        return back && !front && !left && !right;
+    }
+
+    private boolean isStraightRight() {
+        return right && !left && !front && !back;
+    }
+
+    private boolean isStraightLeft() {
+        return left && !right && !front && !back;
     }
 }

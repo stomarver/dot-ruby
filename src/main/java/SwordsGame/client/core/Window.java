@@ -68,11 +68,27 @@ public class Window {
     }
 
     public int getVirtualWidth() {
-        return forceVirtualResolution ? VIRTUAL_WIDTH : Math.max(1, framebufferWidth);
+        return VIRTUAL_WIDTH;
     }
 
     public int getVirtualHeight() {
+        return VIRTUAL_HEIGHT;
+    }
+
+    public int getRenderWidth() {
+        return forceVirtualResolution ? VIRTUAL_WIDTH : Math.max(1, framebufferWidth);
+    }
+
+    public int getRenderHeight() {
         return forceVirtualResolution ? VIRTUAL_HEIGHT : Math.max(1, framebufferHeight);
+    }
+
+    public int getFramebufferWidth() {
+        return Math.max(1, framebufferWidth);
+    }
+
+    public int getFramebufferHeight() {
+        return Math.max(1, framebufferHeight);
     }
 
     public float getMouseRelX() {
@@ -293,8 +309,8 @@ public class Window {
         if (virtualMouseX < 0) virtualMouseX = 0;
         if (virtualMouseY < 0) virtualMouseY = 0;
 
-        float maxMouseX = getVirtualWidth() - 1f;
-        float maxMouseY = getVirtualHeight() - 1f;
+        float maxMouseX = VIRTUAL_WIDTH - 1f;
+        float maxMouseY = VIRTUAL_HEIGHT - 1f;
         if (virtualMouseX > maxMouseX) virtualMouseX = maxMouseX;
         if (virtualMouseY > maxMouseY) virtualMouseY = maxMouseY;
     }
