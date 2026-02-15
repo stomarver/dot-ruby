@@ -1,5 +1,6 @@
 package SwordsGame.server.gameplay;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
@@ -21,7 +22,7 @@ public final class RtsTemplates {
     }
 
     public static Map<FactionType, FactionTechTree> getAll() {
-        return Map.copyOf(TREES);
+        return Collections.unmodifiableMap(new EnumMap<>(TREES));
     }
 
     private static FactionTechTree buildHumans() {
