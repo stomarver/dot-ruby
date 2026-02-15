@@ -9,8 +9,12 @@ plugins {
 group = 'com.rubydung'
 version = '1'
 
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+    options.release.set(17)
 }
 
 repositories {
@@ -107,7 +111,7 @@ shadowJar {
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.core.Base'
+        attributes 'Main-Class': 'SwordsGame.client.core.Base'
     }
 
     doFirst {
@@ -131,7 +135,7 @@ tasks.register('shadowJarDebug', shadowJar.getClass()) {
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.core.Debug'  // Поправьте, если путь к классу другой
+        attributes 'Main-Class': 'SwordsGame.client.core.Debug'  // Поправьте, если путь к классу другой
     }
 
     doFirst {

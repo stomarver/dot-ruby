@@ -1,9 +1,9 @@
-package SwordsGame.ui;
+package SwordsGame.client.ui;
 
 import static org.lwjgl.opengl.GL11.*;
 
 import SwordsGame.client.assets.Paths;
-import SwordsGame.ui.Text.*;
+import SwordsGame.client.ui.Text.*;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Sprite;
 import SwordsGame.client.graphics.TextureLoader;
@@ -21,6 +21,11 @@ public class HUD {
     private final Message messageSystem;
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
     private final Info info;
+    private final Button primaryButton;
+    private String primaryButtonText = "Кнопка";
+    private float virtualCursorX = -1f;
+    private float virtualCursorY = -1f;
+    private boolean primaryButtonHeld = false;
 
     private final TextureLoader.Texture charFrameTex;
     private final TextureLoader.Texture separatorTex;
@@ -34,6 +39,7 @@ public class HUD {
         this.sprite = new Sprite(w, h);
         this.messageSystem = new Message();
         this.info = new Info(text);
+        this.primaryButton = new Button(text, w, h);
 
         this.charFrameTex = load(Paths.UI_CHAR_FRAME);
         this.separatorTex = load(Paths.UI_SEPARATOR);
@@ -86,10 +92,10 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        float textYOffset = info.getTextYOffset();
-
         text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
         info.renderDebug(1.0f);
+
+        primaryButton.draw(primaryButtonText, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
 
         messageSystem.draw(text);
     }
@@ -100,6 +106,27 @@ public class HUD {
 
     public void setCameraInfo(String info) {
         this.info.setCameraInfo(info);
+    }
+
+    public void setServerInfo(String info) {
+        this.info.setServerInfo(info);
+    }
+
+    public void setPrimaryButtonText(String text) {
+        this.primaryButtonText = text == null ? "" : text;
+    }
+
+    public void setVirtualCursor(float x, float y) {
+        this.virtualCursorX = x;
+        this.virtualCursorY = y;
+    }
+
+
+    public boolean consumePrimaryButtonClick(boolean mouseDown) {
+        boolean hovered = primaryButton.contains(Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, virtualCursorX, virtualCursorY);
+        boolean clicked = hovered && mouseDown && !primaryButtonHeld;
+        primaryButtonHeld = mouseDown;
+        return clicked;
     }
 
     public void cleanup() {

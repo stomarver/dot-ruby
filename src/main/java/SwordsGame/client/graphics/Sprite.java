@@ -1,6 +1,6 @@
 package SwordsGame.client.graphics;
 
-import SwordsGame.ui.Anchor;
+import SwordsGame.client.ui.Anchor;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;

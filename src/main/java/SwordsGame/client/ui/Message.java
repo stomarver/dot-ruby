@@ -1,4 +1,4 @@
-package SwordsGame.ui;
+package SwordsGame.client.ui;
 
 import java.util.ArrayList;
 import java.util.List;

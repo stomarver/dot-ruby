@@ -1,4 +1,4 @@
-package SwordsGame.ui;
+package SwordsGame.client.ui;
 
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.client.assets.Paths;

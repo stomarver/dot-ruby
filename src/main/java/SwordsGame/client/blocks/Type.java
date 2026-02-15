@@ -1,10 +1,12 @@
 package SwordsGame.client.blocks;
 
+import SwordsGame.shared.world.BlockId;
+
 public enum Type {
-    AIR(0, "Air"),
-    COBBLE(1, "Cobblestone"),
-    GRASS(2, "Grass"),
-    STONE(3, "Stone");
+    AIR(BlockId.AIR, "Air"),
+    COBBLE(BlockId.COBBLE, "Cobblestone"),
+    GRASS(BlockId.GRASS, "Grass"),
+    STONE(BlockId.STONE, "Stone");
 
     public final byte id;
     public final String name;

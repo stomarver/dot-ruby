@@ -1,4 +1,4 @@
-package SwordsGame.utils;
+package SwordsGame.client.utils;
 
 import club.minnced.discord.rpc.DiscordEventHandlers;
 import club.minnced.discord.rpc.DiscordRPC;

@@ -1,4 +1,4 @@
-package SwordsGame.core;
+package SwordsGame.client.core;
 
 import SwordsGame.client.Camera;
 import SwordsGame.client.World;
@@ -7,9 +7,9 @@ import SwordsGame.client.blocks.Registry;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
-import SwordsGame.ui.HUD;
-import SwordsGame.ui.Cursor;
-import SwordsGame.utils.Discord;
+import SwordsGame.client.ui.HUD;
+import SwordsGame.client.ui.Cursor;
+import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.environment.Sun;
 import static org.lwjgl.glfw.GLFW.*;
@@ -25,7 +25,6 @@ public class Base {
     private Camera camera;
     private ChunkManager chunkManager;
     private Sun sun;
-
 
     public static void main(String[] args) {
         new Base().start();
@@ -46,6 +45,7 @@ public class Base {
 
         font = new Font(Paths.FONT_MAIN);
         hud = new HUD(font, 960, 540);
+        hud.setPrimaryButtonText("Играть");
 
         cursor = new Cursor();
         TextureLoader.finishLoading();
@@ -68,10 +68,13 @@ public class Base {
             glPopMatrix();
 
             renderer.setup2D(window);
-            if (hud != null) hud.render();
 
             float mouseX = window.getMouseRelX();
             float mouseY = window.getMouseRelY();
+            if (hud != null) {
+                hud.setVirtualCursor(mouseX, mouseY);
+                hud.render();
+            }
 
             cursor.updatePosition(mouseX, mouseY);
             cursor.render();
@@ -106,5 +109,6 @@ public class Base {
         }
         hud.setSunInfo("");
         hud.setCameraInfo("");
+        hud.setServerInfo("");
     }
 }

@@ -1,4 +1,4 @@
-package SwordsGame.core;
+package SwordsGame.client.core;
 
 import SwordsGame.client.Camera;
 import SwordsGame.client.World;
@@ -9,9 +9,13 @@ import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.environment.Sun;
-import SwordsGame.ui.Cursor;
-import SwordsGame.ui.HUD;
-import SwordsGame.utils.Discord;
+import SwordsGame.server.gameplay.FactionType;
+import SwordsGame.server.ui.ServerUiComposer;
+import SwordsGame.shared.protocol.ui.UiFrameState;
+import SwordsGame.shared.protocol.ui.UiPanelState;
+import SwordsGame.client.ui.Cursor;
+import SwordsGame.client.ui.HUD;
+import SwordsGame.client.utils.Discord;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -30,6 +34,7 @@ public class Debug {
     private boolean resetSunHeld = false;
     private boolean showDebugInfo = true;
     private boolean toggleDebugHeld = false;
+    private ServerUiComposer serverUiComposer;
 
 
     public static void main(String[] args) {
@@ -45,12 +50,14 @@ public class Debug {
         world = new World();
         camera = new Camera();
         sun = new Sun();
+        serverUiComposer = new ServerUiComposer();
 
         Discord.init();
         Registry.init();
 
         font = new Font(Paths.FONT_MAIN);
         hud = new HUD(font, 960, 540);
+        hud.setPrimaryButtonText("Debug");
 
         cursor = new Cursor();
         TextureLoader.finishLoading();
@@ -78,10 +85,17 @@ public class Debug {
             glPopMatrix();
 
             renderer.setup2D(window);
-            if (hud != null) hud.render();
 
             float mouseX = window.getMouseRelX();
             float mouseY = window.getMouseRelY();
+            if (hud != null) {
+                hud.setVirtualCursor(mouseX, mouseY);
+                boolean leftMouseDown = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+                if (hud.consumePrimaryButtonClick(leftMouseDown)) {
+                    showDebugInfo = !showDebugInfo;
+                }
+                hud.render();
+            }
 
             cursor.updatePosition(mouseX, mouseY);
             cursor.render();
@@ -138,13 +152,34 @@ public class Debug {
         if (!showDebugInfo) {
             hud.setSunInfo("");
             hud.setCameraInfo("");
+            hud.setServerInfo("");
             return;
         }
         hud.setSunInfo(String.format("^2Sun^0\n^3yaw^0 %.1f\n^4pitch^0 %.1f", sun.getYaw(), sun.getPitch()));
         hud.setCameraInfo(buildCameraInfo());
+
+        UiFrameState frame = serverUiComposer.compose(sun, chunkManager, FactionType.HUMANS);
+        hud.setServerInfo(extractServerInfo(frame));
+    }
+
+    private String extractServerInfo(UiFrameState frame) {
+        if (frame == null) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (UiPanelState panel : frame.getPanels()) {
+            if ("world".equals(panel.getPanelId()) || "faction".equals(panel.getPanelId())) {
+                if (builder.length() > 0) {
+                    builder.append("\n\n");
+                }
+                builder.append(panel.getText());
+            }
+        }
+        return builder.toString();
     }
 
     private String buildCameraInfo() {
+
         float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
         int worldBlockX = (int) Math.floor((-camera.getX() / World.BLOCK_SCALE) + totalOffsetBlocks);
         int worldBlockZ = (int) Math.floor((-camera.getZ() / World.BLOCK_SCALE) + totalOffsetBlocks);

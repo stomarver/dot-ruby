@@ -1,4 +1,4 @@
-package SwordsGame.utils;
+package SwordsGame.client.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

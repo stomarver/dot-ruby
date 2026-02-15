@@ -1,4 +1,4 @@
-package SwordsGame.core;
+package SwordsGame.client.core;
 
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
@@ -15,6 +15,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
 
+    private final String title;
     private long windowHandle;
 
 
@@ -56,7 +57,7 @@ public class Window {
     private float mouseSensitivity = windowedSensitivity;
 
     public Window(String title) {
-
+        this.title = title == null || title.isEmpty() ? "SwordsGame" : title;
     }
 
     public long getHandle() {
@@ -121,31 +122,9 @@ public class Window {
 
 
     public void create() {
-        if (!glfwInit()) {
-            throw new IllegalStateException("GLFW init failed");
-        }
-
-        System.out.println("[Sys] GLFW initialized");
-
-        glfwDefaultWindowHints();
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-
-        windowHandle = glfwCreateWindow(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, "SwordsGame", NULL, NULL);
-        if (windowHandle == NULL) {
-            throw new RuntimeException("Failed to create GLFW window");
-        }
-
-        glfwMakeContextCurrent(windowHandle);
-        GL.createCapabilities();
-
-        glfwSwapInterval(1);
-        System.out.println("[Vid] VSync enabled");
-
+        initGlfw();
+        createWindowHandle();
+        initOpenGlContext();
         setupCallbacks();
 
         initFBO();
@@ -155,8 +134,35 @@ public class Window {
         captureCursor();
 
         glfwShowWindow(windowHandle);
-
         System.out.println("[Vid] Window created");
+    }
+
+    private void initGlfw() {
+        if (!glfwInit()) {
+            throw new IllegalStateException("GLFW init failed");
+        }
+
+        System.out.println("[Sys] GLFW initialized");
+
+        glfwDefaultWindowHints();
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    }
+
+    private void createWindowHandle() {
+        windowHandle = glfwCreateWindow(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, title, NULL, NULL);
+        if (windowHandle == NULL) {
+            throw new IllegalStateException("Failed to create GLFW window");
+        }
+    }
+
+    private void initOpenGlContext() {
+        glfwMakeContextCurrent(windowHandle);
+        GL.createCapabilities();
+        glfwSwapInterval(1);
+        System.out.println("[Vid] VSync enabled");
     }
 
 
@@ -180,7 +186,7 @@ public class Window {
             }
 
             if (key == GLFW_KEY_F12 || ctrlP) {
-                SwordsGame.utils.Screenshot.takeScreenshot(fboId, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+                SwordsGame.client.utils.Screenshot.takeScreenshot(fboId, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
             }
         });
 
