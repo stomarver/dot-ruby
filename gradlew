@@ -150,42 +150,48 @@ java_major_version() {
     printf '%s' "$major"
 }
 
-CURRENT_JAVA_MAJOR=$(java_major_version "$JAVACMD")
-if [ "$CURRENT_JAVA_MAJOR" -lt 17 ]; then
-    for candidate in \
-        "$HOME/.sdkman/candidates/java/current" \
-        "/usr/lib/jvm/java-17-openjdk" \
-        "/usr/lib/jvm/java-17-openjdk-amd64" \
-        "/usr/lib/jvm/temurin-17-jdk" \
-        "/usr/lib/jvm/temurin-17" \
-        "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"; do
-        if [ -x "$candidate/bin/java" ] && [ -x "$candidate/bin/javac" ]; then
-            CANDIDATE_MAJOR=$(java_major_version "$candidate/bin/java")
-            if [ "$CANDIDATE_MAJOR" -ge 17 ]; then
-                JAVA_HOME=$candidate
-                JAVACMD=$JAVA_HOME/bin/java
-                CURRENT_JAVA_MAJOR=$CANDIDATE_MAJOR
-                break
-            fi
+is_valid_jdk_home() {
+    jhome=$1
+    [ -n "$jhome" ] || return 1
+    [ -x "$jhome/bin/java" ] || return 1
+    [ -x "$jhome/bin/javac" ] || return 1
+    "$jhome/bin/javac" -version >/dev/null 2>&1 || return 1
+    jmajor=$(java_major_version "$jhome/bin/java")
+    [ "$jmajor" -ge 17 ] || return 1
+    return 0
+}
+
+choose_jdk_home() {
+    for candidate in         "$JAVA_HOME"         "$HOME/.sdkman/candidates/java/current"         "/usr/lib/jvm/java-17-openjdk-amd64"         "/usr/lib/jvm/java-17-openjdk"         "/usr/lib/jvm/temurin-17-jdk"         "/usr/lib/jvm/temurin-17"         "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"; do
+        if is_valid_jdk_home "$candidate"; then
+            printf '%s' "$candidate"
+            return 0
         fi
     done
+
+    for candidate in /usr/lib/jvm/*17* /usr/lib/jvm/*21*; do
+        if is_valid_jdk_home "$candidate"; then
+            printf '%s' "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+SELECTED_JAVA_HOME=$(choose_jdk_home)
+if [ -n "$SELECTED_JAVA_HOME" ]; then
+    JAVA_HOME=$SELECTED_JAVA_HOME
+    JAVACMD=$JAVA_HOME/bin/java
+    CURRENT_JAVA_MAJOR=$(java_major_version "$JAVACMD")
+else
+    CURRENT_JAVA_MAJOR=$(java_major_version "$JAVACMD")
+    die "ERROR: Java 17+ full JDK (with javac) is required to build this project (detected Java major version: $CURRENT_JAVA_MAJOR).
+
+Please install JDK 17+ and set JAVA_HOME to that JDK."
 fi
 
-if [ "$CURRENT_JAVA_MAJOR" -lt 17 ]; then
-    die "ERROR: Java 17+ is required to build this project (current Java major version: $CURRENT_JAVA_MAJOR).
-
-Please set JAVA_HOME to a Java 17+ installation and try again."
-fi
-
-if [ -n "$JAVA_HOME" ] && [ ! -x "$JAVA_HOME/bin/javac" ]; then
-    die "ERROR: JAVA_HOME points to a runtime-only JRE without javac: $JAVA_HOME
-
-Please set JAVA_HOME to a full JDK 17+ installation."
-fi
-
-if [ -n "$JAVA_HOME" ]; then
-    JAVA_OPTS="$JAVA_OPTS -Dorg.gradle.java.installations.auto-detect=false -Dorg.gradle.java.installations.paths=$JAVA_HOME"
-fi
+JAVA_OPTS="$JAVA_OPTS -Dorg.gradle.java.installations.auto-detect=false -Dorg.gradle.java.installations.paths=$JAVA_HOME"
 
 # Increase the maximum file descriptors if we can.
 if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
