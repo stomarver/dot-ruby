@@ -139,6 +139,44 @@ Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation."
 fi
 
+# Prefer Java 17+ for builds that use '--release 17'.
+java_major_version() {
+    ver_line=$($1 -version 2>&1 | sed -n '1p')
+    ver_value=$(printf '%s' "$ver_line" | sed -n 's/.*version "\([^"]*\)".*/\1/p')
+    major=$(printf '%s' "$ver_value" | awk -F. '{ if ($1 == "1") print $2; else print $1 }')
+    if [ -z "$major" ]; then
+        major=0
+    fi
+    printf '%s' "$major"
+}
+
+CURRENT_JAVA_MAJOR=$(java_major_version "$JAVACMD")
+if [ "$CURRENT_JAVA_MAJOR" -lt 17 ]; then
+    for candidate in \
+        "$HOME/.sdkman/candidates/java/current" \
+        "/usr/lib/jvm/java-17-openjdk" \
+        "/usr/lib/jvm/java-17-openjdk-amd64" \
+        "/usr/lib/jvm/temurin-17-jdk" \
+        "/usr/lib/jvm/temurin-17" \
+        "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"; do
+        if [ -x "$candidate/bin/java" ]; then
+            CANDIDATE_MAJOR=$(java_major_version "$candidate/bin/java")
+            if [ "$CANDIDATE_MAJOR" -ge 17 ]; then
+                JAVA_HOME=$candidate
+                JAVACMD=$JAVA_HOME/bin/java
+                CURRENT_JAVA_MAJOR=$CANDIDATE_MAJOR
+                break
+            fi
+        fi
+    done
+fi
+
+if [ "$CURRENT_JAVA_MAJOR" -lt 17 ]; then
+    die "ERROR: Java 17+ is required to build this project (current Java major version: $CURRENT_JAVA_MAJOR).
+
+Please set JAVA_HOME to a Java 17+ installation and try again."
+fi
+
 # Increase the maximum file descriptors if we can.
 if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
     case $MAX_FD in #(
