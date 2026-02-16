@@ -30,5 +30,5 @@
   ### Known Issues
 - All...
 
-_The project urgently needs REAL Java developers who understand LWJGL, OpenGL, Groovy (for writing extensible modding syntax), and how the overall structure and logic of Multiplayer RTS should look.
+_...project urgently needs REAL Java developers who understand LWJGL, OpenGL, Groovy (for writing extensible modding syntax), and how the overall structure and logic of Multiplayer RTS should look.
 Currently, the project is being written by an incompetent vibe coder who only knows how to create textures and models, can set the basic concept of the game, and... that's about it... (pls help us)_
