@@ -159,7 +159,7 @@ if [ "$CURRENT_JAVA_MAJOR" -lt 17 ]; then
         "/usr/lib/jvm/temurin-17-jdk" \
         "/usr/lib/jvm/temurin-17" \
         "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"; do
-        if [ -x "$candidate/bin/java" ]; then
+        if [ -x "$candidate/bin/java" ] && [ -x "$candidate/bin/javac" ]; then
             CANDIDATE_MAJOR=$(java_major_version "$candidate/bin/java")
             if [ "$CANDIDATE_MAJOR" -ge 17 ]; then
                 JAVA_HOME=$candidate
@@ -175,6 +175,16 @@ if [ "$CURRENT_JAVA_MAJOR" -lt 17 ]; then
     die "ERROR: Java 17+ is required to build this project (current Java major version: $CURRENT_JAVA_MAJOR).
 
 Please set JAVA_HOME to a Java 17+ installation and try again."
+fi
+
+if [ -n "$JAVA_HOME" ] && [ ! -x "$JAVA_HOME/bin/javac" ]; then
+    die "ERROR: JAVA_HOME points to a runtime-only JRE without javac: $JAVA_HOME
+
+Please set JAVA_HOME to a full JDK 17+ installation."
+fi
+
+if [ -n "$JAVA_HOME" ]; then
+    JAVA_OPTS="$JAVA_OPTS -Dorg.gradle.java.installations.auto-detect=false -Dorg.gradle.java.installations.paths=$JAVA_HOME"
 fi
 
 # Increase the maximum file descriptors if we can.
