@@ -14,12 +14,35 @@ public class Smoothing {
     }
 
     public boolean shouldLowerTopVertex(int index) {
-        return switch (index) {
-            case 0 -> !front && !right && (back || left);
-            case 1 -> !back && !right && (front || left);
-            case 2 -> !back && !left && (front || right);
-            case 3 -> !front && !left && (back || right);
-            default -> false;
-        };
+        boolean[] lowered = new boolean[4];
+        lowered[0] = !front && !right && (back || left);
+        lowered[1] = !back && !right && (front || left);
+        lowered[2] = !back && !left && (front || right);
+        lowered[3] = !front && !left && (back || right);
+
+        int loweredCount = 0;
+        int loweredIndex = -1;
+        for (int i = 0; i < lowered.length; i++) {
+            if (lowered[i]) {
+                loweredCount++;
+                loweredIndex = i;
+            }
+        }
+
+        if (loweredCount == 1) {
+            return index == loweredIndex
+                    || index == nextIndex(loweredIndex)
+                    || index == prevIndex(loweredIndex);
+        }
+
+        return lowered[index];
+    }
+
+    private int nextIndex(int index) {
+        return (index + 1) & 3;
+    }
+
+    private int prevIndex(int index) {
+        return (index + 3) & 3;
     }
 }
