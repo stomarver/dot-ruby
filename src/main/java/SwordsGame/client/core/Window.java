@@ -6,10 +6,12 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryStack;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Files;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -19,6 +21,8 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.stb.STBImage.*;
 
 public class Window {
+
+    private static final int GLFW_WAYLAND_APP_ID_HINT = 0x00026001;
 
     private final String title;
     private long windowHandle;
@@ -255,6 +259,7 @@ public class Window {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID_HINT, "SwordsGame");
     }
 
     private void createWindowHandle() {
@@ -263,7 +268,7 @@ public class Window {
             throw new IllegalStateException("Failed to create GLFW window");
         }
 
-        setWindowIcon("ui/icon.png");
+        setWindowIcon("resources/ui/icon.png");
     }
 
     private void initOpenGlContext() {
@@ -640,19 +645,33 @@ public class Window {
     }
 
     private byte[] readResourceBytes(String path) throws Exception {
-        String normalizedPath = path.startsWith("/") ? path : "/" + path;
-        try (InputStream input = Window.class.getResourceAsStream(normalizedPath)) {
-            if (input == null) {
-                throw new RuntimeException("Resource not found: " + normalizedPath);
-            }
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            byte[] data = new byte[8192];
-            int read;
-            while ((read = input.read(data)) != -1) {
-                output.write(data, 0, read);
-            }
-            return output.toByteArray();
+        File file = new File(path);
+        if (file.exists() && file.isFile()) {
+            return Files.readAllBytes(file.toPath());
         }
+
+        String[] classpathCandidates = {
+                path.startsWith("/") ? path : "/" + path,
+                "/" + path.replaceFirst("^resources/", ""),
+                "/resources/" + path.replaceFirst("^resources/", "")
+        };
+
+        for (String candidate : classpathCandidates) {
+            try (InputStream input = Window.class.getResourceAsStream(candidate)) {
+                if (input == null) {
+                    continue;
+                }
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] data = new byte[8192];
+                int read;
+                while ((read = input.read(data)) != -1) {
+                    output.write(data, 0, read);
+                }
+                return output.toByteArray();
+            }
+        }
+
+        throw new RuntimeException("Resource not found in filesystem/classpath: " + path);
     }
 
 
