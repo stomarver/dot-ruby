@@ -140,6 +140,20 @@ public class Window {
         return pixels / scale;
     }
 
+    public float getUiScaleToPhysicalPixelsExact() {
+        return forceVirtualResolution
+                ? (physicalWidth / (float) VIRTUAL_WIDTH)
+                : (framebufferWidth / (float) VIRTUAL_WIDTH);
+    }
+
+    public float getVirtualUnitsForPhysicalPixelsExact(float pixels) {
+        float scale = getUiScaleToPhysicalPixelsExact();
+        if (scale <= 0f) {
+            return pixels;
+        }
+        return pixels / scale;
+    }
+
 
 
 
