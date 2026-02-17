@@ -4,6 +4,7 @@ import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.client.assets.Paths;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
 
 public class Cursor {
     private final TextureLoader.Texture texture;
@@ -12,6 +13,14 @@ public class Cursor {
 
     public Cursor() {
         this.texture = TextureLoader.loadTexture(Paths.UI_CURSOR, true);
+        if (this.texture != null) {
+            glBindTexture(GL_TEXTURE_2D, this.texture.id);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
     }
 
     public void updatePosition(float mouseX, float mouseY) {
@@ -33,13 +42,15 @@ public class Cursor {
         glBindTexture(GL_TEXTURE_2D, texture.id);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-        float size = Math.max(1f, sizeVirtualUnits);
+        float size = Math.max(1f, Math.round(sizeVirtualUnits));
+        float rx = (float) Math.floor(x);
+        float ry = (float) Math.floor(y);
 
         glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2f(x, y);
-        glTexCoord2f(1, 0); glVertex2f(x + size, y);
-        glTexCoord2f(1, 1); glVertex2f(x + size, y + size);
-        glTexCoord2f(0, 1); glVertex2f(x, y + size);
+        glTexCoord2f(0, 0); glVertex2f(rx, ry);
+        glTexCoord2f(1, 0); glVertex2f(rx + size, ry);
+        glTexCoord2f(1, 1); glVertex2f(rx + size, ry + size);
+        glTexCoord2f(0, 1); glVertex2f(rx, ry + size);
         glEnd();
 
         glBindTexture(GL_TEXTURE_2D, 0);
