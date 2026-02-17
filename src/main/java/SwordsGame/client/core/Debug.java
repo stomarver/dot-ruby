@@ -15,6 +15,7 @@ import SwordsGame.shared.protocol.ui.UiFrameState;
 import SwordsGame.shared.protocol.ui.UiPanelState;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.HUD;
+import SwordsGame.client.ui.Selection;
 import SwordsGame.client.utils.Discord;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -27,6 +28,7 @@ public class Debug {
     private Cursor cursor;
     private World world;
     private Camera camera;
+    private Selection selection;
     private ChunkManager chunkManager;
     private Sun sun;
     private boolean showChunkBounds = false;
@@ -61,6 +63,7 @@ public class Debug {
         hud.setPrimaryButtonText("Debug");
 
         cursor = new Cursor();
+        selection = new Selection();
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
@@ -90,14 +93,17 @@ public class Debug {
 
             float mouseX = window.getMouseRelX();
             float mouseY = window.getMouseRelY();
+            boolean leftMouseDown = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+            selection.update(mouseX, mouseY, leftMouseDown);
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
-                boolean leftMouseDown = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
                 if (hud.consumePrimaryButtonClick(leftMouseDown)) {
                     showDebugInfo = !showDebugInfo;
                 }
                 hud.render();
             }
+
+            selection.render(2f);
 
             cursor.updatePosition(mouseX, mouseY);
             cursor.render();

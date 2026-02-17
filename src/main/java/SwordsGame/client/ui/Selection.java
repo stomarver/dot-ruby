@@ -23,21 +23,25 @@ public class Selection {
         }
     }
 
+    private float snapToVirtualPixel(float value) {
+        return (float) Math.floor(value);
+    }
+
     public void render(float borderThickness) {
         if (!active) {
             return;
         }
 
-        float minX = Math.min(startX, endX);
-        float minY = Math.min(startY, endY);
-        float maxX = Math.max(startX, endX);
-        float maxY = Math.max(startY, endY);
+        float minX = snapToVirtualPixel(Math.min(startX, endX));
+        float minY = snapToVirtualPixel(Math.min(startY, endY));
+        float maxX = snapToVirtualPixel(Math.max(startX, endX));
+        float maxY = snapToVirtualPixel(Math.max(startY, endY));
 
         if (maxX - minX < 1f || maxY - minY < 1f) {
             return;
         }
 
-        float thickness = Math.max(0.1f, borderThickness);
+        float thickness = Math.max(1f, Math.round(borderThickness));
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LINE_SMOOTH);

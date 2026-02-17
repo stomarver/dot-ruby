@@ -84,8 +84,7 @@ public class Base {
                 hud.render();
             }
 
-            float selectionBorderThickness = window.getVirtualUnitsForPhysicalPixels(2f);
-            selectionRectangle.render(selectionBorderThickness);
+            selectionRectangle.render(2f);
 
             cursor.updatePosition(mouseX, mouseY);
             cursor.render();
