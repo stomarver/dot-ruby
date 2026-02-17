@@ -106,9 +106,8 @@ public class Debug {
             float selectionThickness = window.getVirtualUnitsForPhysicalPixels(2f);
             selection.render(selectionThickness);
 
-            float cursorSize = window.getVirtualUnitsForPhysicalPixels(cursor.getBaseSizePixels());
             cursor.updatePosition(mouseX, mouseY);
-            cursor.render(cursorSize);
+            cursor.render(cursor.getBaseSizePixels());
 
             window.endRenderToFBO();
 
