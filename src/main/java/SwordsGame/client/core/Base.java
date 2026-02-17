@@ -79,7 +79,7 @@ public class Base {
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
             float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
-            float selectionMaxX = window.getVirtualWidth() - selectionMinX - 1f;
+            float selectionMaxX = window.getVirtualWidth() - selectionMinX;
             float selectionMinY = 0f;
             float selectionMaxY = window.getVirtualHeight() - 1f;
 
