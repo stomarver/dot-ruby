@@ -14,6 +14,8 @@ public class Discord {
 
     private static long startTime;
     private static String gameVersion = ".ruby-unknown";
+    private static Thread callbackThread;
+    private static boolean initialized = false;
 
     public static void init() {
         try {
@@ -40,6 +42,8 @@ public class Discord {
 
             t.setDaemon(true);
             t.start();
+            callbackThread = t;
+            initialized = true;
 
             System.out.println("[RPC] Initialized with version: " + gameVersion);
 
@@ -78,6 +82,17 @@ public class Discord {
     }
 
     public static void shutdown() {
+        if (!initialized) {
+            return;
+        }
+
+        if (callbackThread != null) {
+            callbackThread.interrupt();
+            callbackThread = null;
+        }
+
+        lib.Discord_ClearPresence();
         lib.Discord_Shutdown();
+        initialized = false;
     }
 }

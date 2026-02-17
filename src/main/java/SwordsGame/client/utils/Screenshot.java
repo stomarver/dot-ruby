@@ -57,4 +57,31 @@ public class Screenshot {
             System.err.println("[Scr]" + e.getMessage());
         }
     }
+
+    public static void takeScreenshotFromBackBuffer(int width, int height) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+        ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int i = (x + (width * y)) * 4;
+                int r = buffer.get(i) & 0xFF;
+                int g = buffer.get(i + 1) & 0xFF;
+                int b = buffer.get(i + 2) & 0xFF;
+                img.setRGB(x, height - (y + 1), (r << 16) | (g << 8) | b);
+            }
+        }
+
+        try {
+            File targetFile = getUniqueFile();
+            ImageIO.write(img, "png", targetFile);
+            System.out.println("[Scr]" + targetFile.getAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("[Scr]" + e.getMessage());
+        }
+    }
 }

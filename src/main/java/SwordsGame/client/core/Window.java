@@ -3,15 +3,20 @@ package SwordsGame.client.core;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.system.MemoryStack;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
+import static org.lwjgl.stb.STBImage.*;
 
 public class Window {
 
@@ -64,6 +69,7 @@ public class Window {
     private float clampMinY = 0f;
     private float clampMaxX = VIRTUAL_WIDTH - 1f;
     private float clampMaxY = VIRTUAL_HEIGHT - 1f;
+    private boolean screenshotRequested = false;
 
     public Window(String title) {
         this.title = title == null || title.isEmpty() ? "." : title;
@@ -256,6 +262,8 @@ public class Window {
         if (windowHandle == NULL) {
             throw new IllegalStateException("Failed to create GLFW window");
         }
+
+        setWindowIcon("ui/icon.png");
     }
 
     private void initOpenGlContext() {
@@ -286,7 +294,7 @@ public class Window {
             }
 
             if (key == GLFW_KEY_F12 || ctrlP) {
-                SwordsGame.client.utils.Screenshot.takeScreenshot(fboId, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+                screenshotRequested = true;
             }
         });
 
@@ -586,6 +594,10 @@ public class Window {
 
 
     public void update() {
+        if (screenshotRequested) {
+            SwordsGame.client.utils.Screenshot.takeScreenshotFromBackBuffer(framebufferWidth, framebufferHeight);
+            screenshotRequested = false;
+        }
         updateMouse();
         glfwSwapBuffers(windowHandle);
         glfwPollEvents();
@@ -593,6 +605,54 @@ public class Window {
 
     public boolean shouldClose() {
         return glfwWindowShouldClose(windowHandle);
+    }
+
+    private void setWindowIcon(String resourcePath) {
+        ByteBuffer iconBuffer = null;
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer w = stack.mallocInt(1);
+            IntBuffer h = stack.mallocInt(1);
+            IntBuffer comp = stack.mallocInt(1);
+
+            byte[] iconData = readResourceBytes(resourcePath);
+            ByteBuffer encodedBuffer = stack.malloc(iconData.length);
+            encodedBuffer.put(iconData).flip();
+
+            iconBuffer = stbi_load_from_memory(encodedBuffer, w, h, comp, 4);
+            if (iconBuffer == null) {
+                System.err.println("[Vid] Window icon decode failed: " + stbi_failure_reason());
+                return;
+            }
+
+            GLFWImage icon = GLFWImage.malloc(stack)
+                    .set(w.get(0), h.get(0), iconBuffer);
+            GLFWImage.Buffer icons = GLFWImage.malloc(1, stack);
+            icons.put(0, icon);
+            glfwSetWindowIcon(windowHandle, icons);
+            System.out.println("[Vid] Window icon set: /" + resourcePath);
+        } catch (Exception e) {
+            System.err.println("[Vid] Window icon skipped: " + e.getMessage());
+        } finally {
+            if (iconBuffer != null) {
+                stbi_image_free(iconBuffer);
+            }
+        }
+    }
+
+    private byte[] readResourceBytes(String path) throws Exception {
+        String normalizedPath = path.startsWith("/") ? path : "/" + path;
+        try (InputStream input = Window.class.getResourceAsStream(normalizedPath)) {
+            if (input == null) {
+                throw new RuntimeException("Resource not found: " + normalizedPath);
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            byte[] data = new byte[8192];
+            int read;
+            while ((read = input.read(data)) != -1) {
+                output.write(data, 0, read);
+            }
+            return output.toByteArray();
+        }
     }
 
 
