@@ -2,6 +2,7 @@ package SwordsGame.client.graphics;
 
 import SwordsGame.client.core.Window;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
 
 public class Renderer {
     private static final int VIEWPORT_MARGIN_X = 120;
@@ -96,9 +97,15 @@ public class Renderer {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
+        glDisable(GL_COLOR_MATERIAL);
+        glDisable(GL_NORMALIZE);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
     }
 
     public void setSunDirection(float x, float y, float z) {

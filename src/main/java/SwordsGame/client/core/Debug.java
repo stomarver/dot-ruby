@@ -103,10 +103,12 @@ public class Debug {
                 hud.render();
             }
 
-            selection.render(2f);
+            float selectionThickness = window.getVirtualUnitsForPhysicalPixels(2f);
+            selection.render(selectionThickness);
 
+            float cursorSize = window.getVirtualUnitsForPhysicalPixels(cursor.getBaseSizePixels());
             cursor.updatePosition(mouseX, mouseY);
-            cursor.render();
+            cursor.render(cursorSize);
 
             window.endRenderToFBO();
 

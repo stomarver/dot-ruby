@@ -84,10 +84,12 @@ public class Base {
                 hud.render();
             }
 
-            selectionRectangle.render(2f);
+            float selectionThickness = window.getVirtualUnitsForPhysicalPixels(2f);
+            selectionRectangle.render(selectionThickness);
 
+            float cursorSize = window.getVirtualUnitsForPhysicalPixels(cursor.getBaseSizePixels());
             cursor.updatePosition(mouseX, mouseY);
-            cursor.render();
+            cursor.render(cursorSize);
 
             window.endRenderToFBO();
 

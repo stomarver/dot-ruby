@@ -41,7 +41,7 @@ public class Selection {
             return;
         }
 
-        float thickness = Math.max(1f, Math.round(borderThickness));
+        float thickness = Math.max(0.1f, borderThickness);
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LINE_SMOOTH);

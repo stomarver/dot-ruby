@@ -121,6 +121,21 @@ public class Window {
         return forceVirtualResolution;
     }
 
+    public float getUiScaleToPhysicalPixels() {
+        if (forceVirtualResolution) {
+            return physicalWidth / (float) VIRTUAL_WIDTH;
+        }
+        return framebufferWidth / (float) VIRTUAL_WIDTH;
+    }
+
+    public float getVirtualUnitsForPhysicalPixels(float pixels) {
+        float scale = getUiScaleToPhysicalPixels();
+        if (scale <= 0f) {
+            return pixels;
+        }
+        return pixels / scale;
+    }
+
 
 
 
