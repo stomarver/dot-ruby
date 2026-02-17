@@ -66,7 +66,7 @@ public class Window {
     private float clampMaxY = VIRTUAL_HEIGHT - 1f;
 
     public Window(String title) {
-        this.title = title == null || title.isEmpty() ? "SwordsGame" : title;
+        this.title = title == null || title.isEmpty() ? "." : title;
     }
 
     public long getHandle() {

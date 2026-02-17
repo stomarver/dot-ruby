@@ -22,7 +22,7 @@ public class HUD {
     private final List<TextureLoader.Texture> textures = new ArrayList<>();
     private final Info info;
     private final Button primaryButton;
-    private String primaryButtonText = "Кнопка";
+    private String primaryButtonText = "Butt...on";
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
     private boolean primaryButtonHeld = false;
@@ -92,7 +92,7 @@ public class HUD {
         sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
         sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        text.draw("Грунт", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
+        text.draw("unit.name", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
         info.renderDebug(1.0f);
 
         primaryButton.draw(primaryButtonText, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
