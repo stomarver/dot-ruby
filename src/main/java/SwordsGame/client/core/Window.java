@@ -99,6 +99,22 @@ public class Window {
         return virtualMouseY;
     }
 
+    public float getMouseScreenX() {
+        float scale = forceVirtualResolution
+                ? (physicalWidth / (float) VIRTUAL_WIDTH)
+                : (framebufferWidth / (float) VIRTUAL_WIDTH);
+        float offsetX = forceVirtualResolution ? physicalX : 0f;
+        return offsetX + (virtualMouseX * scale);
+    }
+
+    public float getMouseScreenY() {
+        float scale = forceVirtualResolution
+                ? (physicalHeight / (float) VIRTUAL_HEIGHT)
+                : (framebufferHeight / (float) VIRTUAL_HEIGHT);
+        float offsetY = forceVirtualResolution ? physicalY : 0f;
+        return offsetY + (virtualMouseY * scale);
+    }
+
     public double getScrollX() {
         return scrollX;
     }
@@ -522,6 +538,23 @@ public class Window {
     }
 
 
+    public void setupOverlay2D() {
+        glViewport(0, 0, framebufferWidth, framebufferHeight);
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, framebufferWidth, framebufferHeight, 0, -1, 1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
 
 
