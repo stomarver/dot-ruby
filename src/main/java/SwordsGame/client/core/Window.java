@@ -7,11 +7,16 @@ import org.lwjgl.system.MemoryStack;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -23,6 +28,7 @@ import static org.lwjgl.stb.STBImage.*;
 public class Window {
 
     private static final int GLFW_WAYLAND_APP_ID_HINT = 0x00026001;
+    private static final String WAYLAND_APP_ID = "swordsgame";
 
     private final String title;
     private long windowHandle;
@@ -259,7 +265,7 @@ public class Window {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        glfwWindowHintString(GLFW_WAYLAND_APP_ID_HINT, "SwordsGame");
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID_HINT, WAYLAND_APP_ID);
     }
 
     private void createWindowHandle() {
@@ -269,6 +275,7 @@ public class Window {
         }
 
         setWindowIcon("resources/ui/icon.png");
+        ensureWaylandIconRegistration("resources/ui/icon.png");
     }
 
     private void initOpenGlContext() {
@@ -672,6 +679,56 @@ public class Window {
         }
 
         throw new RuntimeException("Resource not found in filesystem/classpath: " + path);
+    }
+
+    private void ensureWaylandIconRegistration(String iconPath) {
+        if (!isWaylandSession()) {
+            return;
+        }
+
+        try {
+            File sourceIcon = new File(iconPath);
+            if (!sourceIcon.exists() || !sourceIcon.isFile()) {
+                System.err.println("[Vid] Wayland icon registration skipped: file not found " + iconPath);
+                return;
+            }
+
+            String home = System.getProperty("user.home", "");
+            if (home.isEmpty()) {
+                return;
+            }
+
+            Path iconTarget = Paths.get(home, ".local", "share", "icons", "hicolor", "256x256", "apps", WAYLAND_APP_ID + ".png");
+            Files.createDirectories(iconTarget.getParent());
+            Files.copy(sourceIcon.toPath(), iconTarget, StandardCopyOption.REPLACE_EXISTING);
+
+            Path desktopTarget = Paths.get(home, ".local", "share", "applications", WAYLAND_APP_ID + ".desktop");
+            Files.createDirectories(desktopTarget.getParent());
+
+            try (FileWriter writer = new FileWriter(desktopTarget.toFile(), false)) {
+                writer.write("[Desktop Entry]\n");
+                writer.write("Type=Application\n");
+                writer.write("Name=SwordsGame\n");
+                writer.write("Exec=SwordsGame\n");
+                writer.write("StartupWMClass=" + WAYLAND_APP_ID + "\n");
+                writer.write("Icon=" + WAYLAND_APP_ID + "\n");
+                writer.write("Terminal=false\n");
+                writer.write("Categories=Game;\n");
+            }
+
+            System.out.println("[Vid] Wayland icon registration prepared: " + iconTarget);
+        } catch (IOException e) {
+            System.err.println("[Vid] Wayland icon registration failed: " + e.getMessage());
+        }
+    }
+
+    private boolean isWaylandSession() {
+        String sessionType = System.getenv("XDG_SESSION_TYPE");
+        if (sessionType != null && sessionType.equalsIgnoreCase("wayland")) {
+            return true;
+        }
+        String waylandDisplay = System.getenv("WAYLAND_DISPLAY");
+        return waylandDisplay != null && !waylandDisplay.isEmpty();
     }
 
 
