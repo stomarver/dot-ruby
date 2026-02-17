@@ -1,57 +1,86 @@
-# Синтаксис текста и регистрация блоков
+# Синтаксис текста, спрайтов и регистрации блоков
 
-## Система текста
+## 1) Текст (client.ui.Text)
 
-### Базовый вывод
-Текст рисуется через класс `SwordsGame.ui.Text`. Основные методы:
+Текст рисуется через `SwordsGame.client.ui.Text`.
+Основные сигнатуры:
 
 - `draw(String text, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale)`
-- `draw(String text, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale, Wave wave)`
+- `draw(String text, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale, Text.Wave wave)`
 - `draw(String text, Anchor anchor, float x, float y, float scale)`
 
-Параметры задают:
-- **Anchor** — точку привязки (лево/центр/право по X и верх/центр/низ по Y).
-- **x, y** — смещения от привязки в пикселях.
-- **scale** — масштаб символов.
+Где:
+- `Anchor` задаёт привязку по осям X/Y.
+- `x`, `y` — смещение от опорной точки.
+- `scale` — базовый масштаб текста.
 
-### Разделение строк
-Используйте `\n` для переноса строк. Шаг между строками рассчитывается через `Text.getLineStep(scale)`.
+### Перенос строк
+Используйте `\n`. Шаг строки можно брать из `Text.getLineStep(scale)`.
 
 ### Цветовые коды
-Внутри строки поддерживаются цветовые коды формата `^<цифра>`:
+Встроенные коды: `^<цифра>`.
 
 - `^1` — красный
 - `^2` — зелёный
 - `^3` — синий
 - `^4` — жёлтый
 - `^5` — фиолетовый
-- любые другие цифры (например `^0`) сбрасывают цвет в белый
+- любое другое значение (например `^0`) — белый/сброс
 
-Пример:
-```
-"^2Зелёный ^1красный ^0обычный"
-```
+Пример: `"^2Зелёный ^1красный ^0обычный"`
 
 ### Анимации текста
-Анимации задаются параметрами метода, а не внутри строки:
+Анимация задаётся параметрами API, а не внутри строки:
+- `Text.Shake`
+- `Text.Wave`
+- `Text.Crit`
 
-- `Text.Shake` — дрожание (`SLOW`, `MEDIUM`, `FAST`)
-- `Text.Wave` — волна (`SLOW`, `MEDIUM`, `FAST`)
-- `Text.Crit` — критический «толчок» (`SLOW`, `MEDIUM`, `FAST`)
+---
 
-Например, `draw(text, ax, ay, x, y, scale, Text.Wave.MEDIUM)` включает волну.
+## 2) Спрайты (client.graphics.Sprite)
 
-## Регистрация блоков
+2D-спрайты рисуются через `SwordsGame.client.graphics.Sprite`:
 
-### 1) Добавьте тип блока
-В `SwordsGame.client.blocks.Type` добавьте новый элемент перечисления с уникальным `id` и именем:
+- `draw(TextureLoader.Texture tex, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float scale)`
+- `draw(TextureLoader.Texture tex, Anchor anchor, float x, float y, float scale)`
+
+Рекомендуемый стиль:
+- использовать `Anchor`/`Anchor.TypeX/TypeY` для всех HUD-элементов;
+- не хардкодить пути к файлам в местах рендера (см. раздел Paths).
+
+---
+
+## 3) Пути ассетов и загрузка текстур
+
+### Единая точка путей
+Пути к ресурсам держите в `SwordsGame.client.assets.Paths`.
+
+Примеры:
+- `Paths.BLOCK_GRASS`
+- `Paths.FONT_MAIN`
+- `Paths.UI_CURSOR`
+
+### Единая точка загрузки
+Используйте `TextureLoader.loadTexture(path, removeBlack)`.
+
+Рекомендуемая договорённость:
+- `removeBlack = true` для UI/шрифтов, где чёрный фон должен стать прозрачным;
+- `removeBlack = false` для блоков мира и обычных текстур.
+
+---
+
+## 4) Регистрация блоков
+
+### Шаг 1. Добавить тип
+В `SwordsGame.client.blocks.Type`:
+
 ```java
-NEW_BLOCK(4, "New Block")
+NEW_BLOCK(BlockId.NEW_BLOCK, "New Block")
 ```
-`id` используется как сетевой идентификатор и хранится в чанках.
 
-### 2) Создайте класс блока
-В `SwordsGame.client.blocks` создайте класс, который наследуется от `Block`:
+### Шаг 2. Создать класс блока
+В `SwordsGame.client.blocks`:
+
 ```java
 public class NewBlock extends Block {
     public NewBlock() {
@@ -62,27 +91,31 @@ public class NewBlock extends Block {
     }
 }
 ```
-Свойства задаются через `BlockProperties`:
-- `randomRotation()` — случайный поворот текстуры
-- `randomColor()` — случайный оттенок
-- `emission()` — свечение (отключает освещение)
-- `transparent()` — прозрачность
-- `nonSolid()` — делает блок не-твёрдым
-- `smoothing()` — включает сглаживание верхней грани
-- `hardness(float)` — прочность
 
-### 3) Пропишите путь к текстуре
-В `SwordsGame.client.assets.Paths` добавьте путь к текстуре:
+Свойства `BlockProperties`:
+- `randomRotation()`
+- `randomColor()`
+- `emission()`
+- `transparent()`
+- `nonSolid()`
+- `smoothing()`
+- `hardness(float)`
+
+### Шаг 3. Добавить путь
+В `SwordsGame.client.assets.Paths`:
+
 ```java
 public static final String BLOCK_NEW = "blocks/new.png";
 ```
-Файл должен находиться в `src/main/resources/blocks/`.
 
-### 4) Зарегистрируйте блок
-В `SwordsGame.client.blocks.Registry.init()` зарегистрируйте новый блок:
+Файл текстуры: `src/main/resources/blocks/new.png`.
+
+### Шаг 4. Зарегистрировать блок
+В `SwordsGame.client.blocks.Registry.init()`:
+
 ```java
 register(Type.NEW_BLOCK, new NewBlock());
 ```
 
-### 5) Серверная генерация (при необходимости)
-Если блок участвует в генерации мира или логике сервера, используйте `Type.NEW_BLOCK.id` в нужных местах (например, в `Terrain.generate`).
+### Шаг 5. Использовать в генерации/логике
+Если блок участвует в мире/сервере — применяйте `BlockId.NEW_BLOCK` в генерации и протоколах.
