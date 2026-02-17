@@ -59,6 +59,12 @@ public class Window {
     private float mouseSensitivity = windowedSensitivity;
     private boolean forceVirtualResolution = true;
 
+    private boolean virtualMouseClampEnabled = false;
+    private float clampMinX = 0f;
+    private float clampMinY = 0f;
+    private float clampMaxX = VIRTUAL_WIDTH - 1f;
+    private float clampMaxY = VIRTUAL_HEIGHT - 1f;
+
     public Window(String title) {
         this.title = title == null || title.isEmpty() ? "SwordsGame" : title;
     }
@@ -174,6 +180,22 @@ public class Window {
 
 
 
+
+
+    public void setVirtualMouseClamp(boolean enabled, float minX, float minY, float maxX, float maxY) {
+        virtualMouseClampEnabled = enabled;
+        if (!enabled) {
+            return;
+        }
+
+        clampMinX = Math.max(0f, Math.min(minX, VIRTUAL_WIDTH - 1f));
+        clampMinY = Math.max(0f, Math.min(minY, VIRTUAL_HEIGHT - 1f));
+        clampMaxX = Math.max(clampMinX, Math.min(maxX, VIRTUAL_WIDTH - 1f));
+        clampMaxY = Math.max(clampMinY, Math.min(maxY, VIRTUAL_HEIGHT - 1f));
+
+        virtualMouseX = Math.max(clampMinX, Math.min(virtualMouseX, clampMaxX));
+        virtualMouseY = Math.max(clampMinY, Math.min(virtualMouseY, clampMaxY));
+    }
 
     public void setWindowedSensitivity(float value) {
         windowedSensitivity = value;
@@ -363,6 +385,11 @@ public class Window {
         float maxMouseY = VIRTUAL_HEIGHT - 1f;
         if (virtualMouseX > maxMouseX) virtualMouseX = maxMouseX;
         if (virtualMouseY > maxMouseY) virtualMouseY = maxMouseY;
+
+        if (virtualMouseClampEnabled) {
+            virtualMouseX = Math.max(clampMinX, Math.min(virtualMouseX, clampMaxX));
+            virtualMouseY = Math.max(clampMinY, Math.min(virtualMouseY, clampMaxY));
+        }
     }
 
 

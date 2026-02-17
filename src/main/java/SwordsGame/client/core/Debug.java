@@ -94,7 +94,14 @@ public class Debug {
             float mouseX = window.getMouseRelX();
             float mouseY = window.getMouseRelY();
             boolean leftMouseDown = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-            selection.update(mouseX, mouseY, leftMouseDown);
+
+            float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
+            float selectionMaxX = window.getVirtualWidth() - selectionMinX - 1f;
+            float selectionMinY = 0f;
+            float selectionMaxY = window.getVirtualHeight() - 1f;
+
+            selection.update(mouseX, mouseY, leftMouseDown, selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
+            window.setVirtualMouseClamp(leftMouseDown && selection.isActive(), selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseDown)) {

@@ -9,18 +9,37 @@ public class Selection {
     private float endX;
     private float endY;
 
-    public void update(float mouseX, float mouseY, boolean mouseHeld) {
+    public void update(float mouseX, float mouseY, boolean mouseHeld,
+                       float minX, float minY, float maxX, float maxY) {
+        float clampedX = clamp(mouseX, minX, maxX);
+        float clampedY = clamp(mouseY, minY, maxY);
+
         if (mouseHeld) {
             if (!active) {
+                if (!isInside(mouseX, mouseY, minX, minY, maxX, maxY)) {
+                    return;
+                }
                 active = true;
-                startX = mouseX;
-                startY = mouseY;
+                startX = clampedX;
+                startY = clampedY;
             }
-            endX = mouseX;
-            endY = mouseY;
+            endX = clampedX;
+            endY = clampedY;
         } else {
             active = false;
         }
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    private boolean isInside(float x, float y, float minX, float minY, float maxX, float maxY) {
+        return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private float snapToVirtualPixel(float value) {

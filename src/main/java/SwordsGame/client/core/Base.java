@@ -77,7 +77,14 @@ public class Base {
             float mouseX = window.getMouseRelX();
             float mouseY = window.getMouseRelY();
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-            selectionRectangle.update(mouseX, mouseY, leftMouseHeld);
+
+            float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
+            float selectionMaxX = window.getVirtualWidth() - selectionMinX - 1f;
+            float selectionMinY = 0f;
+            float selectionMaxY = window.getVirtualHeight() - 1f;
+
+            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
+            window.setVirtualMouseClamp(leftMouseHeld && selectionRectangle.isActive(), selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
 
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
