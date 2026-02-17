@@ -15,11 +15,11 @@ public class Screenshot {
     private static File getUniqueFile() {
         String home = System.getProperty("user.home");
         String sep = File.separator;
-        String timestamp = new SimpleDateFormat("MMddHHmm").format(new Date());
+        String timestamp = new SimpleDateFormat("MMdd-HHmm").format(new Date());
         File dir = new File(home + sep + "Pictures" + sep + "SwordsGame");
         if (!dir.exists()) dir.mkdirs();
 
-        String baseName = "screenshot-" + timestamp;
+        String baseName = timestamp;
         File file = new File(dir, baseName + ".png");
         int count = 1;
         while (file.exists()) {
