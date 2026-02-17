@@ -12,7 +12,7 @@ public class Cursor {
     private static final float BASE_SIZE_PIXELS = 16f;
 
     public Cursor() {
-        this.texture = TextureLoader.loadTexture(Paths.UI_CURSOR, true);
+        this.texture = TextureLoader.loadTexture(Paths.UI_CURSOR, false);
         if (this.texture != null) {
             glBindTexture(GL_TEXTURE_2D, this.texture.id);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

@@ -122,10 +122,14 @@ public class Window {
     }
 
     public float getUiScaleToPhysicalPixels() {
-        if (forceVirtualResolution) {
-            return physicalWidth / (float) VIRTUAL_WIDTH;
+        float rawScale = forceVirtualResolution
+                ? (physicalWidth / (float) VIRTUAL_WIDTH)
+                : (framebufferWidth / (float) VIRTUAL_WIDTH);
+
+        if (forceVirtualResolution && fullscreen) {
+            return Math.max(1f, Math.round(rawScale));
         }
-        return framebufferWidth / (float) VIRTUAL_WIDTH;
+        return rawScale;
     }
 
     public float getVirtualUnitsForPhysicalPixels(float pixels) {
