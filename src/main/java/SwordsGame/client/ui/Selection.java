@@ -23,7 +23,7 @@ public class Selection {
         }
     }
 
-    public void render() {
+    public void render(float borderThickness) {
         if (!active) {
             return;
         }
@@ -37,15 +37,36 @@ public class Selection {
             return;
         }
 
-        glDisable(GL_TEXTURE_2D);
-        glColor3f(1f, 1f, 1f);
-        glLineWidth(1f);
+        float thickness = Math.max(0.1f, borderThickness);
 
-        glBegin(GL_LINE_LOOP);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_LINE_SMOOTH);
+        glColor3f(1f, 1f, 1f);
+
+        glBegin(GL_QUADS);
+        // Top edge
         glVertex2f(minX, minY);
         glVertex2f(maxX, minY);
+        glVertex2f(maxX, minY + thickness);
+        glVertex2f(minX, minY + thickness);
+
+        // Bottom edge
+        glVertex2f(minX, maxY - thickness);
+        glVertex2f(maxX, maxY - thickness);
         glVertex2f(maxX, maxY);
         glVertex2f(minX, maxY);
+
+        // Left edge
+        glVertex2f(minX, minY + thickness);
+        glVertex2f(minX + thickness, minY + thickness);
+        glVertex2f(minX + thickness, maxY - thickness);
+        glVertex2f(minX, maxY - thickness);
+
+        // Right edge
+        glVertex2f(maxX - thickness, minY + thickness);
+        glVertex2f(maxX, minY + thickness);
+        glVertex2f(maxX, maxY - thickness);
+        glVertex2f(maxX - thickness, maxY - thickness);
         glEnd();
 
         glColor4f(1f, 1f, 1f, 1f);
