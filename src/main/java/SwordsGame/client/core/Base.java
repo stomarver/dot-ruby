@@ -9,6 +9,7 @@ import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.client.ui.HUD;
 import SwordsGame.client.ui.Cursor;
+import SwordsGame.client.ui.Selection;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.environment.Sun;
@@ -23,6 +24,7 @@ public class Base {
     private Cursor cursor;
     private World world;
     private Camera camera;
+    private Selection selectionRectangle;
     private ChunkManager chunkManager;
     private Sun sun;
     private boolean toggleVirtualResHeld = false;
@@ -49,6 +51,7 @@ public class Base {
         hud.setPrimaryButtonText("Играть");
 
         cursor = new Cursor();
+        selectionRectangle = new Selection();
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
@@ -73,10 +76,15 @@ public class Base {
 
             float mouseX = window.getMouseRelX();
             float mouseY = window.getMouseRelY();
+            boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+            selectionRectangle.update(mouseX, mouseY, leftMouseHeld);
+
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
                 hud.render();
             }
+
+            selectionRectangle.render();
 
             cursor.updatePosition(mouseX, mouseY);
             cursor.render();
