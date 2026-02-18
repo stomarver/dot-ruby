@@ -8,7 +8,8 @@
 </A>
 
 ***
-| Controls | Debug |
+ ### Controls
+| Base | Debug |
 |----------|-------|
 | <table><tr><th>Function</th><th>Keys</th></tr><tr><td>Fullscreen</td><td>F4 or Ctrl + Enter</td></tr><tr><td>Screenshot</td><td>F12 or Ctrl + P</td></tr><tr><td>Movement</td><td>Arrows or Edge-Scroll</td></tr><tr><td>Rotating</td><td>Q/E or Scroll</td></tr><tr><td>Reset</td><td>R</td></tr></table> | <table><tr><th>Function</th><th>Keys</th></tr><tr><td>Chunk Borders</td><td>B</td></tr><tr><td>Info</td><td>F8</td></tr><tr><td>Virtual/Real 3D</td><td>F7</td></tr></td></tr><tr><td>Sun Yaw</td><td>Y/U</td></tr></table></table> |
 
