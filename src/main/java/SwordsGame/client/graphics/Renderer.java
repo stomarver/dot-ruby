@@ -23,8 +23,8 @@ public class Renderer {
     private static final float FOG_R = 0.0f;
     private static final float FOG_G = 0.0f;
     private static final float FOG_B = 0.0f;
-    private static final float BASE_FOG_START = -980.0f;
-    private static final float BASE_FOG_END = -420.0f;
+    private static final float BASE_FOG_START = -735.0f;
+    private static final float BASE_FOG_END = -315.0f;
     private static final float SCREEN_FOG_START_OFFSET = 0.05f;
     private static final float SCREEN_FOG_SOFTNESS_SCALE = 2.0f;
 
@@ -123,7 +123,7 @@ public class Renderer {
     }
 
     public void applyScreenSpaceFog(Window window) {
-        if (window == null || !window.isForceVirtualResolution()) {
+        if (window == null) {
             return;
         }
 
@@ -147,10 +147,10 @@ public class Renderer {
         float nearDepth = clamp01(nearDepthBase + SCREEN_FOG_START_OFFSET);
         float farDepth = clamp01(nearDepth + ((farDepthBase - nearDepthBase) * SCREEN_FOG_SOFTNESS_SCALE));
 
-        float texU0 = viewportX / (float) window.getVirtualWidth();
-        float texV0 = viewportY / (float) window.getVirtualHeight();
-        float texU1 = (viewportX + viewportWidth) / (float) window.getVirtualWidth();
-        float texV1 = (viewportY + viewportHeight) / (float) window.getVirtualHeight();
+        float texU0 = viewportX / (float) window.getRenderWidth();
+        float texV0 = viewportY / (float) window.getRenderHeight();
+        float texU1 = (viewportX + viewportWidth) / (float) window.getRenderWidth();
+        float texV1 = (viewportY + viewportHeight) / (float) window.getRenderHeight();
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);

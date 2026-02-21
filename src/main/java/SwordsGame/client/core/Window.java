@@ -40,6 +40,8 @@ public class Window {
     private int screenVaoId;
     private int screenVboId;
     private boolean useVao;
+    private int fboWidth = VIRTUAL_WIDTH;
+    private int fboHeight = VIRTUAL_HEIGHT;
 
 
     private static final int VIRTUAL_WIDTH = 960;
@@ -462,29 +464,21 @@ public class Window {
         glBindFramebuffer(GL_FRAMEBUFFER, fboId);
 
         textureId = glGenTextures();
+        depthTextureId = glGenTextures();
+
         glBindTexture(GL_TEXTURE_2D, textureId);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                VIRTUAL_WIDTH, VIRTUAL_HEIGHT,
-                0, GL_RGB, GL_UNSIGNED_BYTE,
-                (ByteBuffer) null);
-
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
 
-        depthTextureId = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, depthTextureId);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
-                VIRTUAL_WIDTH, VIRTUAL_HEIGHT,
-                0, GL_DEPTH_COMPONENT, GL_FLOAT,
-                (ByteBuffer) null);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureId, 0);
+
+        resizeFboAttachments(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
 
         int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -496,6 +490,32 @@ public class Window {
         initScreenQuad();
 
         System.out.println("[Vid] FBO created OK");
+    }
+
+    private void resizeFboAttachments(int width, int height) {
+        fboWidth = Math.max(1, width);
+        fboHeight = Math.max(1, height);
+
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                fboWidth, fboHeight,
+                0, GL_RGB, GL_UNSIGNED_BYTE,
+                (ByteBuffer) null);
+
+        glBindTexture(GL_TEXTURE_2D, depthTextureId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+                fboWidth, fboHeight,
+                0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                (ByteBuffer) null);
+    }
+
+    private void ensureFboSizeForMode() {
+        int targetWidth = forceVirtualResolution ? VIRTUAL_WIDTH : Math.max(1, framebufferWidth);
+        int targetHeight = forceVirtualResolution ? VIRTUAL_HEIGHT : Math.max(1, framebufferHeight);
+        if (targetWidth == fboWidth && targetHeight == fboHeight) {
+            return;
+        }
+        resizeFboAttachments(targetWidth, targetHeight);
     }
 
     private void initScreenQuad() {
@@ -536,28 +556,19 @@ public class Window {
 
 
     public void beginRenderToFBO() {
-        if (forceVirtualResolution) {
-            glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-            glViewport(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-        } else {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(0, 0, framebufferWidth, framebufferHeight);
-        }
+        ensureFboSizeForMode();
+        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        glViewport(0, 0, fboWidth, fboHeight);
 
         glClearColor(0.15f, 0.15f, 0.15f, 1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     public void endRenderToFBO() {
-        if (forceVirtualResolution) {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     public void drawFBO() {
-        if (!forceVirtualResolution) {
-            return;
-        }
         int[] fbW = new int[1];
         int[] fbH = new int[1];
         glfwGetFramebufferSize(windowHandle, fbW, fbH);
@@ -567,7 +578,11 @@ public class Window {
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glViewport(physicalX, physicalY, physicalWidth, physicalHeight);
+        if (forceVirtualResolution) {
+            glViewport(physicalX, physicalY, physicalWidth, physicalHeight);
+        } else {
+            glViewport(0, 0, fbW[0], fbH[0]);
+        }
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
