@@ -23,8 +23,8 @@ public class Renderer {
     private static final float FOG_R = 0.0f;
     private static final float FOG_G = 0.0f;
     private static final float FOG_B = 0.0f;
-    private static final float BASE_FOG_START = -735.0f;
-    private static final float BASE_FOG_END = -315.0f;
+    private static final float BASE_FOG_START = -490.0f;
+    private static final float BASE_FOG_END = -210.0f;
     private static final float SCREEN_FOG_START_OFFSET = 0.05f;
     private static final float SCREEN_FOG_SOFTNESS_SCALE = 2.0f;
 
