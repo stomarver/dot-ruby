@@ -12,7 +12,6 @@ import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.Selection;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.server.environment.Sun;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -26,7 +25,6 @@ public class Base {
     private Camera camera;
     private Selection selectionRectangle;
     private ChunkManager chunkManager;
-    private Sun sun;
     private boolean toggleVirtualResHeld = false;
 
     public static void main(String[] args) {
@@ -41,7 +39,6 @@ public class Base {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
-        sun = new Sun();
 
         Discord.init();
         Registry.init();
@@ -56,7 +53,7 @@ public class Base {
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
-            updateSunState();
+            renderer.setSunDirectionFromAngles(50.0f, 0.0f);
             updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
 
@@ -118,11 +115,6 @@ public class Base {
         System.exit(0);
     }
 
-    private void updateSunState() {
-        float[] sunDirection = sun.getDirection();
-        renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
-    }
-
 
     private void updateVirtualResolutionToggle(long windowHandle) {
         boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_F7) == GLFW_PRESS;
@@ -136,7 +128,6 @@ public class Base {
         if (hud == null || camera == null || chunkManager == null) {
             return;
         }
-        hud.setSunInfo("");
         hud.setCameraInfo("");
         hud.setServerInfo("");
     }

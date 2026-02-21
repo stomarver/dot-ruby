@@ -8,7 +8,6 @@ public class Info {
     private static final float DEBUG_Y = 1.0f;
 
     private final Text text;
-    private String sunInfo = "";
     private String cameraInfo = "";
     private String serverInfo = "";
 
@@ -16,9 +15,6 @@ public class Info {
         this.text = text;
     }
 
-    public void setSunInfo(String info) {
-        this.sunInfo = info == null ? "" : info;
-    }
 
     public void setCameraInfo(String info) {
         this.cameraInfo = info == null ? "" : info;
@@ -52,10 +48,6 @@ public class Info {
 
     public void renderDebug(float scale) {
         float currentY = DEBUG_Y + TEXT_Y_OFFSET;
-        if (!sunInfo.isEmpty()) {
-            currentY = drawDebugLines(sunInfo, DEBUG_X, currentY, scale);
-            currentY += DEBUG_MODULE_GAP;
-        }
         if (!cameraInfo.isEmpty()) {
             currentY = drawDebugLines(cameraInfo, DEBUG_X, currentY, scale);
             currentY += DEBUG_MODULE_GAP;

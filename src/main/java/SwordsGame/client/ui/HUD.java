@@ -100,9 +100,6 @@ public class HUD {
         messageSystem.draw(text);
     }
 
-    public void setSunInfo(String info) {
-        this.info.setSunInfo(info);
-    }
 
     public void setCameraInfo(String info) {
         this.info.setCameraInfo(info);

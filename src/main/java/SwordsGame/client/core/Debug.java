@@ -8,7 +8,6 @@ import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.server.ChunkManager;
-import SwordsGame.server.environment.Sun;
 import SwordsGame.server.gameplay.FactionType;
 import SwordsGame.server.ui.ServerUiComposer;
 import SwordsGame.shared.protocol.ui.UiFrameState;
@@ -30,10 +29,8 @@ public class Debug {
     private Camera camera;
     private Selection selection;
     private ChunkManager chunkManager;
-    private Sun sun;
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
-    private boolean resetSunHeld = false;
     private boolean showDebugInfo = true;
     private boolean toggleDebugHeld = false;
     private boolean toggleVirtualResHeld = false;
@@ -52,7 +49,6 @@ public class Debug {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
-        sun = new Sun();
         serverUiComposer = new ServerUiComposer();
 
         Discord.init();
@@ -68,7 +64,7 @@ public class Debug {
 
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
-            updateSunControls(window.getHandle());
+            renderer.setSunDirectionFromAngles(50.0f, 0.0f);
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
             updateVirtualResolutionToggle(window.getHandle());
@@ -126,19 +122,6 @@ public class Debug {
         cleanup();
     }
 
-    private void updateSunControls(long windowHandle) {
-        float step = 1.5f;
-        if (glfwGetKey(windowHandle, GLFW_KEY_Y) == GLFW_PRESS) {
-            sun.rotateYaw(-step);
-        }
-        if (glfwGetKey(windowHandle, GLFW_KEY_U) == GLFW_PRESS) {
-            sun.rotateYaw(step);
-        }
-        handleSunReset(windowHandle);
-        float[] sunDirection = sun.getDirection();
-        renderer.setSunDirection(sunDirection[0], sunDirection[1], sunDirection[2]);
-    }
-
     private void updateBoundsToggle(long windowHandle) {
         boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_B) == GLFW_PRESS;
         if (togglePressed && !toggleBoundsHeld) {
@@ -164,28 +147,19 @@ public class Debug {
         toggleVirtualResHeld = togglePressed;
     }
 
-    private void handleSunReset(long windowHandle) {
-        boolean resetPressed = glfwGetKey(windowHandle, GLFW_KEY_R) == GLFW_PRESS;
-        if (resetPressed && !resetSunHeld) {
-            sun.reset();
-        }
-        resetSunHeld = resetPressed;
-    }
 
     private void updateHudInfo() {
         if (hud == null || camera == null || chunkManager == null) {
             return;
         }
         if (!showDebugInfo) {
-            hud.setSunInfo("");
             hud.setCameraInfo("");
             hud.setServerInfo("");
             return;
         }
-        hud.setSunInfo(String.format("^2Sun^0\n^3yaw^0 %.1f\n^4pitch^0 %.1f", sun.getYaw(), sun.getPitch()));
         hud.setCameraInfo(buildCameraInfo());
 
-        UiFrameState frame = serverUiComposer.compose(sun, chunkManager, FactionType.HUMANS);
+        UiFrameState frame = serverUiComposer.compose(chunkManager, FactionType.HUMANS);
         hud.setServerInfo(extractServerInfo(frame));
     }
 
