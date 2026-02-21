@@ -39,8 +39,8 @@ public class Camera {
     public void update(Window window, ChunkManager chunkManager, Renderer renderer) {
         long windowHandle = window.getHandle();
 
-        Vector2f forward = directionFromAngle(currentRotationY);
-        Vector2f right = new Vector2f(forward.y, -forward.x);
+        Vector2f forward = forwardFromAngle(currentRotationY);
+        Vector2f right = rightFromAngle(currentRotationY);
 
         boolean isShiftPressed = glfwGetKey(windowHandle, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
                 glfwGetKey(windowHandle, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
@@ -54,10 +54,10 @@ public class Camera {
         }
 
         if (glfwGetKey(windowHandle, GLFW_KEY_UP) == GLFW_PRESS) {
-            position.fma(-currentMoveSpeed, forward);
+            position.fma(currentMoveSpeed, forward);
         }
         if (glfwGetKey(windowHandle, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            position.fma(currentMoveSpeed, forward);
+            position.fma(-currentMoveSpeed, forward);
         }
         if (glfwGetKey(windowHandle, GLFW_KEY_LEFT) == GLFW_PRESS) {
             position.fma(currentMoveSpeed, right);
@@ -73,15 +73,15 @@ public class Camera {
         int virtualHeight = window.getVirtualHeight();
 
         if (mouseX < EDGE_SCROLL_ZONE) {
-            position.fma(EDGE_SCROLL_SPEED, right);
-        } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
             position.fma(-EDGE_SCROLL_SPEED, right);
+        } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
+            position.fma(EDGE_SCROLL_SPEED, right);
         }
 
         if (mouseY < EDGE_SCROLL_ZONE) {
-            position.fma(-EDGE_SCROLL_SPEED, forward);
-        } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
             position.fma(EDGE_SCROLL_SPEED, forward);
+        } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
+            position.fma(-EDGE_SCROLL_SPEED, forward);
         }
 
         if (glfwGetKey(windowHandle, GLFW_KEY_EQUAL) == GLFW_PRESS) zoom += zoomSpeed;
@@ -132,9 +132,14 @@ public class Camera {
         position.y = clamp(position.y, -halfWorld + margin, halfWorld - margin);
     }
 
-    private Vector2f directionFromAngle(float angleDegrees) {
+    private Vector2f forwardFromAngle(float angleDegrees) {
         float angleRad = (float) Math.toRadians(angleDegrees);
-        return new Vector2f((float) Math.sin(angleRad), (float) Math.cos(angleRad));
+        return new Vector2f(-(float) Math.sin(angleRad), (float) Math.cos(angleRad));
+    }
+
+    private Vector2f rightFromAngle(float angleDegrees) {
+        float angleRad = (float) Math.toRadians(angleDegrees);
+        return new Vector2f((float) Math.cos(angleRad), (float) Math.sin(angleRad));
     }
 
     private float clamp(float value, float min, float max) {

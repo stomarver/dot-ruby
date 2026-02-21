@@ -18,6 +18,11 @@ public class Renderer {
     private static final float DAY_DIFFUSE_R = 0.95f;
     private static final float DAY_DIFFUSE_G = 0.95f;
     private static final float DAY_DIFFUSE_B = 0.95f;
+    private static final float FOG_R = 0.0f;
+    private static final float FOG_G = 0.0f;
+    private static final float FOG_B = 0.0f;
+    private static final float FOG_START = 550.0f;
+    private static final float FOG_END = 1700.0f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -68,6 +73,7 @@ public class Renderer {
         glDisable(GL_BLEND);
 
         setupLighting();
+        setupFog();
     }
 
     public void setup2D(Window win) {
@@ -81,6 +87,7 @@ public class Renderer {
         glLoadIdentity();
 
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_FOG);
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
         glDisable(GL_COLOR_MATERIAL);
@@ -130,6 +137,17 @@ public class Renderer {
 
         glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+    }
+
+    private void setupFog() {
+        glEnable(GL_FOG);
+        glFogi(GL_FOG_MODE, GL_LINEAR);
+        glFogf(GL_FOG_START, FOG_START);
+        glFogf(GL_FOG_END, FOG_END);
+        glFogf(GL_FOG_DENSITY, 1.0f);
+        glHint(GL_FOG_HINT, GL_NICEST);
+        float[] fogColor = { FOG_R, FOG_G, FOG_B, 1.0f };
+        glFogfv(GL_FOG_COLOR, fogColor);
     }
 
     private void updateEnvironmentFromSun() {
