@@ -25,6 +25,8 @@ public class Renderer {
     private static final float FOG_B = 0.0f;
     private static final float BASE_FOG_START = -980.0f;
     private static final float BASE_FOG_END = -420.0f;
+    private static final float SCREEN_FOG_START_OFFSET = 0.05f;
+    private static final float SCREEN_FOG_SOFTNESS_SCALE = 3.0f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -121,7 +123,7 @@ public class Renderer {
     }
 
     public void applyScreenSpaceFog(Window window) {
-        if (window == null || !window.isForceVirtualResolution()) {
+        if (window == null) {
             return;
         }
 
@@ -139,13 +141,16 @@ public class Renderer {
         float farDistance = Math.max(-fogStartDistance, -fogEndDistance);
         float nearDepthRaw = 0.5f - (nearDistance / 10000.0f);
         float farDepthRaw = 0.5f - (farDistance / 10000.0f);
-        float nearDepth = Math.min(nearDepthRaw, farDepthRaw);
-        float farDepth = Math.max(nearDepthRaw, farDepthRaw);
+        float nearDepthBase = Math.min(nearDepthRaw, farDepthRaw);
+        float farDepthBase = Math.max(nearDepthRaw, farDepthRaw);
 
-        float texU0 = viewportX / (float) window.getRenderWidth();
-        float texV0 = viewportY / (float) window.getRenderHeight();
-        float texU1 = (viewportX + viewportWidth) / (float) window.getRenderWidth();
-        float texV1 = (viewportY + viewportHeight) / (float) window.getRenderHeight();
+        float nearDepth = clamp01(nearDepthBase + SCREEN_FOG_START_OFFSET);
+        float farDepth = clamp01(nearDepth + ((farDepthBase - nearDepthBase) * SCREEN_FOG_SOFTNESS_SCALE));
+
+        float texU0 = viewportX / (float) window.getVirtualWidth();
+        float texV0 = viewportY / (float) window.getVirtualHeight();
+        float texU1 = (viewportX + viewportWidth) / (float) window.getVirtualWidth();
+        float texV1 = (viewportY + viewportHeight) / (float) window.getVirtualHeight();
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
@@ -293,6 +298,10 @@ public class Renderer {
 
     private void setupFog() {
         glDisable(GL_FOG);
+    }
+
+    private float clamp01(float value) {
+        return Math.max(0.0f, Math.min(1.0f, value));
     }
 
     private void updateEnvironmentFromSun() {
