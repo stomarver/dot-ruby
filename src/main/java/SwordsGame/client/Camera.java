@@ -73,9 +73,9 @@ public class Camera {
         int virtualHeight = window.getVirtualHeight();
 
         if (mouseX < EDGE_SCROLL_ZONE) {
-            position.fma(-EDGE_SCROLL_SPEED, right);
-        } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
             position.fma(EDGE_SCROLL_SPEED, right);
+        } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
+            position.fma(-EDGE_SCROLL_SPEED, right);
         }
 
         if (mouseY < EDGE_SCROLL_ZONE) {

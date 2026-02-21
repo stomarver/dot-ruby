@@ -21,8 +21,8 @@ public class Renderer {
     private static final float FOG_R = 0.0f;
     private static final float FOG_G = 0.0f;
     private static final float FOG_B = 0.0f;
-    private static final float FOG_START = 550.0f;
-    private static final float FOG_END = 1700.0f;
+    private static final float FOG_START = 180.0f;
+    private static final float FOG_END = 850.0f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
