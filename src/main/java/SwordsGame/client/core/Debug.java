@@ -34,6 +34,12 @@ public class Debug {
     private boolean showDebugInfo = true;
     private boolean toggleDebugHeld = false;
     private boolean toggleVirtualResHeld = false;
+    private boolean fogNumpadPlusHeld = false;
+    private boolean fogNumpadMinusHeld = false;
+    private static final float FOG_DISTANCE_STEP = 0.1f;
+    private static final float FOG_DISTANCE_MIN = 0.4f;
+    private static final float FOG_DISTANCE_MAX = 2.5f;
+    private float fogDistanceMultiplier = 1.0f;
     private ServerUiComposer serverUiComposer;
 
 
@@ -65,7 +71,8 @@ public class Debug {
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
-            renderer.setFogZoom(camera.getZoom());
+            updateFogDistanceControls(window.getHandle());
+            renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier);
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
             updateVirtualResolutionToggle(window.getHandle());
@@ -121,6 +128,20 @@ public class Debug {
             window.update();
         }
         cleanup();
+    }
+
+    private void updateFogDistanceControls(long windowHandle) {
+        boolean plusPressed = glfwGetKey(windowHandle, GLFW_KEY_KP_ADD) == GLFW_PRESS;
+        if (plusPressed && !fogNumpadPlusHeld) {
+            fogDistanceMultiplier = clamp(fogDistanceMultiplier + FOG_DISTANCE_STEP, FOG_DISTANCE_MIN, FOG_DISTANCE_MAX);
+        }
+        fogNumpadPlusHeld = plusPressed;
+
+        boolean minusPressed = glfwGetKey(windowHandle, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS;
+        if (minusPressed && !fogNumpadMinusHeld) {
+            fogDistanceMultiplier = clamp(fogDistanceMultiplier - FOG_DISTANCE_STEP, FOG_DISTANCE_MIN, FOG_DISTANCE_MAX);
+        }
+        fogNumpadMinusHeld = minusPressed;
     }
 
     private void updateBoundsToggle(long windowHandle) {
@@ -193,8 +214,13 @@ public class Debug {
         int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
         int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
         return String.format(
-                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)",
-                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
+                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)\n^5fog^0 x%.2f [%.0f..%.0f]",
+                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ,
+                fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance());
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private int clamp(int value, int min, int max) {

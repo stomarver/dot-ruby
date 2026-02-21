@@ -47,6 +47,9 @@ public class Renderer {
     public int getViewportWidth() { return viewportWidth; }
     public int getViewportHeight() { return viewportHeight; }
 
+    public float getFogStartDistance() { return fogStartDistance; }
+    public float getFogEndDistance() { return fogEndDistance; }
+
     public void setup3D(Window win) {
         int renderWidth = win.getRenderWidth();
         int renderHeight = win.getRenderHeight();
