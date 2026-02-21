@@ -36,11 +36,6 @@ public class Camera {
     public float getOrthoWidth() { return ORTHO_WIDTH; }
     public float getOrthoHeight() { return ORTHO_HEIGHT; }
 
-    public float getViewDepthUnits() {
-        float halfHeightUnits = (ORTHO_HEIGHT / 2.0f) / zoom;
-        float pitchCos = (float) Math.cos(Math.toRadians(PITCH));
-        return pitchCos == 0.0f ? halfHeightUnits : (halfHeightUnits / pitchCos);
-    }
 
     public void update(Window window, ChunkManager chunkManager, Renderer renderer) {
         long windowHandle = window.getHandle();

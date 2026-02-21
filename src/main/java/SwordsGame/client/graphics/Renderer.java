@@ -21,8 +21,8 @@ public class Renderer {
     private static final float FOG_R = 0.0f;
     private static final float FOG_G = 0.0f;
     private static final float FOG_B = 0.0f;
-    private static final float DEFAULT_FOG_START = 1100.0f;
-    private static final float DEFAULT_FOG_END = 2800.0f;
+    private static final float FIXED_FOG_START = 420.0f;
+    private static final float FIXED_FOG_END = 980.0f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -35,8 +35,6 @@ public class Renderer {
     private float diffuseR = DAY_DIFFUSE_R;
     private float diffuseG = DAY_DIFFUSE_G;
     private float diffuseB = DAY_DIFFUSE_B;
-    private float fogStartDistance = DEFAULT_FOG_START;
-    private float fogEndDistance = DEFAULT_FOG_END;
 
     public Renderer() {
         setSunDirectionFromAngles(DEFAULT_SUN_YAW, DEFAULT_SUN_PITCH);
@@ -123,11 +121,6 @@ public class Renderer {
         setSunDirection(x, y, z);
     }
 
-    public void setFogRangeFromCameraDepth(float cameraDepthUnits) {
-        float depth = Math.max(1.0f, cameraDepthUnits);
-        fogStartDistance = depth * 2.3f;
-        fogEndDistance = depth * 0.95f;
-    }
 
     public void applySunLight() {
         float[] lightPosition = { sunDirection.x, sunDirection.y, sunDirection.z, 0.0f };
@@ -150,8 +143,8 @@ public class Renderer {
     private void setupFog() {
         glEnable(GL_FOG);
         glFogi(GL_FOG_MODE, GL_LINEAR);
-        glFogf(GL_FOG_START, fogStartDistance);
-        glFogf(GL_FOG_END, fogEndDistance);
+        glFogf(GL_FOG_START, FIXED_FOG_START);
+        glFogf(GL_FOG_END, FIXED_FOG_END);
         glFogf(GL_FOG_DENSITY, 1.0f);
         glHint(GL_FOG_HINT, GL_NICEST);
         float[] fogColor = { FOG_R, FOG_G, FOG_B, 1.0f };

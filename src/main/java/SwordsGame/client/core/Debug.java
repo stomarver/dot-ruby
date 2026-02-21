@@ -65,7 +65,6 @@ public class Debug {
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
-            renderer.setFogRangeFromCameraDepth(camera.getViewDepthUnits());
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
             updateVirtualResolutionToggle(window.getHandle());

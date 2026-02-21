@@ -54,7 +54,6 @@ public class Base {
         while (!window.shouldClose()) {
             camera.update(window, chunkManager, renderer);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
-            renderer.setFogRangeFromCameraDepth(camera.getViewDepthUnits());
             updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
 
