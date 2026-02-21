@@ -1,6 +1,7 @@
 package SwordsGame.client.graphics;
 
 import SwordsGame.client.core.Window;
+import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 
@@ -22,9 +23,7 @@ public class Renderer {
     private int viewportY = 0;
     private int viewportWidth = 720;
     private int viewportHeight = 540;
-    private float sunDirX = 0.0f;
-    private float sunDirY = 1.0f;
-    private float sunDirZ = 0.0f;
+    private final Vector3f sunDirection = new Vector3f(0.0f, 1.0f, 0.0f);
     private float ambientR = DAY_AMBIENT_R;
     private float ambientG = DAY_AMBIENT_G;
     private float ambientB = DAY_AMBIENT_B;
@@ -96,17 +95,12 @@ public class Renderer {
     }
 
     public void setSunDirection(float x, float y, float z) {
-        float length = (float) Math.sqrt(x * x + y * y + z * z);
-        if (length == 0.0f) {
-            sunDirX = 0.0f;
-            sunDirY = 1.0f;
-            sunDirZ = 0.0f;
+        if (x == 0.0f && y == 0.0f && z == 0.0f) {
+            sunDirection.set(0.0f, 1.0f, 0.0f);
             updateEnvironmentFromSun();
             return;
         }
-        sunDirX = x / length;
-        sunDirY = y / length;
-        sunDirZ = z / length;
+        sunDirection.set(x, y, z).normalize();
         updateEnvironmentFromSun();
     }
 
@@ -121,7 +115,7 @@ public class Renderer {
     }
 
     public void applySunLight() {
-        float[] lightPosition = { sunDirX, sunDirY, sunDirZ, 0.0f };
+        float[] lightPosition = { sunDirection.x, sunDirection.y, sunDirection.z, 0.0f };
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
     }
 

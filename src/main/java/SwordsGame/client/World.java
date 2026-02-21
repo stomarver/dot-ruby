@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import org.joml.Vector2f;
 import SwordsGame.client.blocks.Registry;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockRenderer;
@@ -56,10 +57,12 @@ public class World {
         float chunkSizeInUnits = Chunk.SIZE * BLOCK_SCALE;
 
         float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
-        int focusBlockX = (int) Math.floor((-camera.getX() / BLOCK_SCALE) + totalOffsetBlocks);
-        int focusBlockZ = (int) Math.floor((-camera.getZ() / BLOCK_SCALE) + totalOffsetBlocks);
-        int focusChunkX = clamp(focusBlockX / Chunk.SIZE, 0, worldSize - 1);
-        int focusChunkZ = clamp(focusBlockZ / Chunk.SIZE, 0, worldSize - 1);
+        Vector2f cameraBlocks = new Vector2f(
+                (-camera.getX() / BLOCK_SCALE) + totalOffsetBlocks,
+                (-camera.getZ() / BLOCK_SCALE) + totalOffsetBlocks);
+
+        int focusChunkX = clamp((int) Math.floor(cameraBlocks.x / Chunk.SIZE), 0, worldSize - 1);
+        int focusChunkZ = clamp((int) Math.floor(cameraBlocks.y / Chunk.SIZE), 0, worldSize - 1);
 
         float halfWidthUnits = (camera.getOrthoWidth() / 2.0f) / camera.getZoom();
         float halfHeightUnits = (camera.getOrthoHeight() / 2.0f) / camera.getZoom();
@@ -221,7 +224,7 @@ public class World {
     }
 
     private int selectLod(int dx, int dz, float radius) {
-        float distance = (float) Math.sqrt((dx * dx) + (dz * dz));
+        float distance = new Vector2f(dx, dz).length();
         float nearThreshold = Math.max(2.0f, radius * 0.35f) + LOD_DISTANCE_PADDING;
         float midThreshold = Math.max(4.0f, radius * 0.7f) + LOD_DISTANCE_PADDING;
         if (distance <= nearThreshold) return 0;

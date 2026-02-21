@@ -3,13 +3,16 @@ package SwordsGame.client;
 import SwordsGame.client.core.Window;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.client.graphics.Renderer;
+import org.joml.Vector2f;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Camera {
     private static final float ORTHO_WIDTH = 720.0f;
     private static final float ORTHO_HEIGHT = 540.0f;
-    private float x = 0, z = 0;
+
+    private final Vector2f position = new Vector2f(0.0f, 0.0f);
     private float zoom = 0.5f;
     private float targetRotationY = 45.0f;
     private float currentRotationY = 45.0f;
@@ -25,8 +28,8 @@ public class Camera {
     private static final float MAX_ZOOM = 2.5f;
     private static final float PITCH = 35.264f;
 
-    public float getX() { return x; }
-    public float getZ() { return z; }
+    public float getX() { return position.x; }
+    public float getZ() { return position.y; }
     public float getZoom() { return zoom; }
     public float getRotation() { return currentRotationY; }
     public float getPitch() { return PITCH; }
@@ -36,21 +39,32 @@ public class Camera {
     public void update(Window window, ChunkManager chunkManager, Renderer renderer) {
         long windowHandle = window.getHandle();
 
-        float angleRad = (float) Math.toRadians(currentRotationY);
-        float sin = (float) Math.sin(angleRad);
-        float cos = (float) Math.cos(angleRad);
+        Vector2f forward = directionFromAngle(currentRotationY);
+        Vector2f right = new Vector2f(forward.y, -forward.x);
+
         boolean isShiftPressed = glfwGetKey(windowHandle, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
                 glfwGetKey(windowHandle, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
         float currentMoveSpeed = isShiftPressed ? speed * 3.0f : speed;
 
         if (glfwGetKey(windowHandle, GLFW_KEY_R) == GLFW_PRESS) {
-            x = 0; z = 0; targetRotationY = 45.0f; currentRotationY = 45.0f; zoom = 0.5f;
+            position.zero();
+            targetRotationY = 45.0f;
+            currentRotationY = 45.0f;
+            zoom = 0.5f;
         }
 
-        if (glfwGetKey(windowHandle, GLFW_KEY_UP) == GLFW_PRESS)    { x -= currentMoveSpeed * sin; z += currentMoveSpeed * cos; }
-        if (glfwGetKey(windowHandle, GLFW_KEY_DOWN) == GLFW_PRESS)  { x += currentMoveSpeed * sin; z -= currentMoveSpeed * cos; }
-        if (glfwGetKey(windowHandle, GLFW_KEY_LEFT) == GLFW_PRESS)  { x += currentMoveSpeed * cos; z += currentMoveSpeed * sin; }
-        if (glfwGetKey(windowHandle, GLFW_KEY_RIGHT) == GLFW_PRESS) { x -= currentMoveSpeed * cos; z -= currentMoveSpeed * sin; }
+        if (glfwGetKey(windowHandle, GLFW_KEY_UP) == GLFW_PRESS) {
+            position.fma(-currentMoveSpeed, forward);
+        }
+        if (glfwGetKey(windowHandle, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            position.fma(currentMoveSpeed, forward);
+        }
+        if (glfwGetKey(windowHandle, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            position.fma(currentMoveSpeed, right);
+        }
+        if (glfwGetKey(windowHandle, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            position.fma(-currentMoveSpeed, right);
+        }
 
         float mouseX = window.getMouseRelX();
         float mouseY = window.getMouseRelY();
@@ -59,19 +73,15 @@ public class Camera {
         int virtualHeight = window.getVirtualHeight();
 
         if (mouseX < EDGE_SCROLL_ZONE) {
-            x += EDGE_SCROLL_SPEED * cos;
-            z += EDGE_SCROLL_SPEED * sin;
+            position.fma(EDGE_SCROLL_SPEED, right);
         } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
-            x -= EDGE_SCROLL_SPEED * cos;
-            z -= EDGE_SCROLL_SPEED * sin;
+            position.fma(-EDGE_SCROLL_SPEED, right);
         }
 
         if (mouseY < EDGE_SCROLL_ZONE) {
-            x -= EDGE_SCROLL_SPEED * sin;
-            z += EDGE_SCROLL_SPEED * cos;
+            position.fma(-EDGE_SCROLL_SPEED, forward);
         } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
-            x += EDGE_SCROLL_SPEED * sin;
-            z -= EDGE_SCROLL_SPEED * cos;
+            position.fma(EDGE_SCROLL_SPEED, forward);
         }
 
         if (glfwGetKey(windowHandle, GLFW_KEY_EQUAL) == GLFW_PRESS) zoom += zoomSpeed;
@@ -83,8 +93,14 @@ public class Camera {
         double currentDelay = isShiftPressed ? (baseRotationDelay * 2) : baseRotationDelay;
 
         if (currentTime - lastRotationTime >= currentDelay) {
-            if (glfwGetKey(windowHandle, GLFW_KEY_E) == GLFW_PRESS) { targetRotationY -= currentStep; lastRotationTime = currentTime; }
-            if (glfwGetKey(windowHandle, GLFW_KEY_Q) == GLFW_PRESS) { targetRotationY += currentStep; lastRotationTime = currentTime; }
+            if (glfwGetKey(windowHandle, GLFW_KEY_E) == GLFW_PRESS) {
+                targetRotationY -= currentStep;
+                lastRotationTime = currentTime;
+            }
+            if (glfwGetKey(windowHandle, GLFW_KEY_Q) == GLFW_PRESS) {
+                targetRotationY += currentStep;
+                lastRotationTime = currentTime;
+            }
         }
 
         double scrollY = window.getScrollY();
@@ -101,7 +117,7 @@ public class Camera {
         glScalef(zoom, zoom, zoom);
         glRotatef(PITCH, 1, 0, 0);
         glRotatef(currentRotationY, 0, 1, 0);
-        glTranslatef(x, 0, z);
+        glTranslatef(position.x, 0, position.y);
     }
 
     private void clampPosition(ChunkManager chunkManager, Renderer renderer) {
@@ -112,8 +128,13 @@ public class Camera {
         float zoomFactor = Math.max(MIN_ZOOM, zoom);
         float margin = Math.max(viewportHalfWidth, viewportHalfHeight) / zoomFactor;
 
-        x = clamp(x, -halfWorld + margin, halfWorld - margin);
-        z = clamp(z, -halfWorld + margin, halfWorld - margin);
+        position.x = clamp(position.x, -halfWorld + margin, halfWorld - margin);
+        position.y = clamp(position.y, -halfWorld + margin, halfWorld - margin);
+    }
+
+    private Vector2f directionFromAngle(float angleDegrees) {
+        float angleRad = (float) Math.toRadians(angleDegrees);
+        return new Vector2f((float) Math.sin(angleRad), (float) Math.cos(angleRad));
     }
 
     private float clamp(float value, float min, float max) {
