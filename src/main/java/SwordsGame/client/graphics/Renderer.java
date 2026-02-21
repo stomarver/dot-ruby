@@ -125,8 +125,8 @@ public class Renderer {
 
     public void setFogRangeFromCameraDepth(float cameraDepthUnits) {
         float depth = Math.max(1.0f, cameraDepthUnits);
-        fogStartDistance = depth * 0.95f;
-        fogEndDistance = depth * 2.3f;
+        fogStartDistance = depth * 2.3f;
+        fogEndDistance = depth * 0.95f;
     }
 
     public void applySunLight() {
