@@ -41,12 +41,15 @@ public class World {
 
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
-        glColor4f(0.2f, 0.9f, 0.9f, 0.7f);
-        glLineWidth(2.0f);
+        glDisable(GL_FOG);
+        glDisable(GL_DEPTH_TEST);
+        glLineWidth(1.5f);
 
-        renderVisibleChunkBounds(visibleChunks, totalOffset, offset);
+        renderVisibleChunkBounds(visibleChunks, culling, totalOffset, offset);
 
         glLineWidth(1.0f);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_FOG);
         glEnable(GL_LIGHTING);
         glEnable(GL_TEXTURE_2D);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -105,8 +108,20 @@ public class World {
         }
     }
 
-    private void renderVisibleChunkBounds(ArrayList<ChunkRenderEntry> entries, float totalOffset, float offset) {
+    private void renderVisibleChunkBounds(ArrayList<ChunkRenderEntry> entries, ViewCulling culling, float totalOffset, float offset) {
         for (ChunkRenderEntry entry : entries) {
+            if (entry.chunk.x == culling.centerChunkX && entry.chunk.z == culling.centerChunkZ) {
+                glColor4f(1.0f, 0.85f, 0.25f, 0.95f);
+                glLineWidth(2.8f);
+            } else {
+                float t = clamp((float) entry.distanceSq / Math.max(1.0f, culling.radius * culling.radius), 0.0f, 1.0f);
+                float r = 0.2f + (0.25f * (1.0f - t));
+                float g = 0.45f + (0.5f * (1.0f - t));
+                float b = 0.85f + (0.15f * (1.0f - t));
+                float a = 0.35f + (0.45f * (1.0f - t));
+                glColor4f(r, g, b, a);
+                glLineWidth(1.2f + (0.9f * (1.0f - t)));
+            }
             drawChunkBounds(entry.chunk, totalOffset, offset);
         }
     }
@@ -261,6 +276,10 @@ public class World {
     }
 
     private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private float clamp(float value, float min, float max) {
         return Math.max(min, Math.min(max, value));
     }
 
