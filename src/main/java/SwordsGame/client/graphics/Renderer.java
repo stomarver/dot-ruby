@@ -137,8 +137,15 @@ public class Renderer {
 
         float nearDistance = Math.min(-fogStartDistance, -fogEndDistance);
         float farDistance = Math.max(-fogStartDistance, -fogEndDistance);
-        float nearDepth = 0.5f - (nearDistance / 10000.0f);
-        float farDepth = 0.5f - (farDistance / 10000.0f);
+        float nearDepthRaw = 0.5f - (nearDistance / 10000.0f);
+        float farDepthRaw = 0.5f - (farDistance / 10000.0f);
+        float nearDepth = Math.min(nearDepthRaw, farDepthRaw);
+        float farDepth = Math.max(nearDepthRaw, farDepthRaw);
+
+        float texU0 = viewportX / (float) window.getRenderWidth();
+        float texV0 = viewportY / (float) window.getRenderHeight();
+        float texU1 = (viewportX + viewportWidth) / (float) window.getRenderWidth();
+        float texV1 = (viewportY + viewportHeight) / (float) window.getRenderHeight();
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
@@ -156,6 +163,8 @@ public class Renderer {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, depthTextureId);
 
+        glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
@@ -166,10 +175,10 @@ public class Renderer {
         glLoadIdentity();
 
         glBegin(GL_QUADS);
-        glTexCoord2f(0f, 0f); glVertex2f(0f, 0f);
-        glTexCoord2f(1f, 0f); glVertex2f(1f, 0f);
-        glTexCoord2f(1f, 1f); glVertex2f(1f, 1f);
-        glTexCoord2f(0f, 1f); glVertex2f(0f, 1f);
+        glTexCoord2f(texU0, texV0); glVertex2f(0f, 0f);
+        glTexCoord2f(texU1, texV0); glVertex2f(1f, 0f);
+        glTexCoord2f(texU1, texV1); glVertex2f(1f, 1f);
+        glTexCoord2f(texU0, texV1); glVertex2f(0f, 1f);
         glEnd();
 
         glPopMatrix();
@@ -201,7 +210,7 @@ public class Renderer {
                 "varying vec2 vUv;\n" +
                 "void main() {\n" +
                 "  float depth = texture2D(depthTex, vUv).r;\n" +
-                "  float fogFactor = clamp((fogNearDepth - depth) / max(0.0001, fogNearDepth - fogFarDepth), 0.0, 1.0);\n" +
+                "  float fogFactor = clamp((depth - fogNearDepth) / max(0.0001, fogFarDepth - fogNearDepth), 0.0, 1.0);\n" +
                 "  gl_FragColor = vec4(0.0, 0.0, 0.0, fogFactor);\n" +
                 "}";
 
