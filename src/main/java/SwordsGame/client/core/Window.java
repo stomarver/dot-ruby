@@ -36,7 +36,7 @@ public class Window {
 
     private int fboId;
     private int textureId;
-    private int depthId;
+    private int depthTextureId;
     private int screenVaoId;
     private int screenVboId;
     private boolean useVao;
@@ -111,6 +111,10 @@ public class Window {
 
     public int getFramebufferHeight() {
         return Math.max(1, framebufferHeight);
+    }
+
+    public int getDepthTextureId() {
+        return depthTextureId;
     }
 
     public float getMouseRelX() {
@@ -470,10 +474,17 @@ public class Window {
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
 
-        depthId = glGenRenderbuffers();
-        glBindRenderbuffer(GL_RENDERBUFFER, depthId);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthId);
+        depthTextureId = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, depthTextureId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+                VIRTUAL_WIDTH, VIRTUAL_HEIGHT,
+                0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                (ByteBuffer) null);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureId, 0);
 
         int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -737,7 +748,7 @@ public class Window {
 
     public void destroy() {
 
-        if (depthId != 0) glDeleteRenderbuffers(depthId);
+        if (depthTextureId != 0) glDeleteTextures(depthTextureId);
         if (textureId != 0) glDeleteTextures(textureId);
         if (fboId != 0) glDeleteFramebuffers(fboId);
         if (screenVboId != 0) glDeleteBuffers(screenVboId);

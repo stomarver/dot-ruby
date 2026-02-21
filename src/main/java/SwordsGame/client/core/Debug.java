@@ -34,8 +34,6 @@ public class Debug {
     private boolean showDebugInfo = true;
     private boolean toggleDebugHeld = false;
     private boolean toggleVirtualResHeld = false;
-    private boolean fogNumpadPlusHeld = false;
-    private boolean fogNumpadMinusHeld = false;
     private static final float FOG_DISTANCE_STEP = 0.1f;
     private static final float FOG_DISTANCE_MIN = 0.4f;
     private static final float FOG_DISTANCE_MAX = 2.5f;
@@ -93,6 +91,7 @@ public class Debug {
 
             glPopMatrix();
 
+            renderer.applyScreenSpaceFog(window);
             renderer.setup2D(window);
 
             float mouseX = window.getMouseRelX();
@@ -131,17 +130,12 @@ public class Debug {
     }
 
     private void updateFogDistanceControls(long windowHandle) {
-        boolean plusPressed = glfwGetKey(windowHandle, GLFW_KEY_KP_ADD) == GLFW_PRESS;
-        if (plusPressed && !fogNumpadPlusHeld) {
+        if (glfwGetKey(windowHandle, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
             fogDistanceMultiplier = clamp(fogDistanceMultiplier + FOG_DISTANCE_STEP, FOG_DISTANCE_MIN, FOG_DISTANCE_MAX);
         }
-        fogNumpadPlusHeld = plusPressed;
-
-        boolean minusPressed = glfwGetKey(windowHandle, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS;
-        if (minusPressed && !fogNumpadMinusHeld) {
+        if (glfwGetKey(windowHandle, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
             fogDistanceMultiplier = clamp(fogDistanceMultiplier - FOG_DISTANCE_STEP, FOG_DISTANCE_MIN, FOG_DISTANCE_MAX);
         }
-        fogNumpadMinusHeld = minusPressed;
     }
 
     private void updateBoundsToggle(long windowHandle) {

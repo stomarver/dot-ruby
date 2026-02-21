@@ -3,7 +3,9 @@ package SwordsGame.client.graphics;
 import SwordsGame.client.core.Window;
 import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
 
 public class Renderer {
     private static final int VIEWPORT_MARGIN_X = 120;
@@ -37,6 +39,12 @@ public class Renderer {
     private float diffuseB = DAY_DIFFUSE_B;
     private float fogStartDistance = BASE_FOG_START;
     private float fogEndDistance = BASE_FOG_END;
+
+    private int fogShaderProgram = 0;
+    private int fogDepthUniformLocation = -1;
+    private int fogNearDepthUniformLocation = -1;
+    private int fogFarDepthUniformLocation = -1;
+
 
     public Renderer() {
         setSunDirectionFromAngles(DEFAULT_SUN_YAW, DEFAULT_SUN_PITCH);
@@ -112,6 +120,129 @@ public class Renderer {
         fogEndDistance = BASE_FOG_END * safeZoom;
     }
 
+    public void applyScreenSpaceFog(Window window) {
+        if (window == null || !window.isForceVirtualResolution()) {
+            return;
+        }
+
+        int depthTextureId = window.getDepthTextureId();
+        if (depthTextureId == 0) {
+            return;
+        }
+
+        ensureFogShader();
+        if (fogShaderProgram == 0) {
+            return;
+        }
+
+        float nearDistance = Math.min(-fogStartDistance, -fogEndDistance);
+        float farDistance = Math.max(-fogStartDistance, -fogEndDistance);
+        float nearDepth = 0.5f - (nearDistance / 10000.0f);
+        float farDepth = 0.5f - (farDistance / 10000.0f);
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_FOG);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glUseProgram(fogShaderProgram);
+        glUniform1i(fogDepthUniformLocation, 0);
+        glUniform1f(fogNearDepthUniformLocation, nearDepth);
+        glUniform1f(fogFarDepthUniformLocation, farDepth);
+
+        glActiveTexture(GL_TEXTURE0);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, depthTextureId);
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, 1, 0, 1, -1, 1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(0f, 0f); glVertex2f(0f, 0f);
+        glTexCoord2f(1f, 0f); glVertex2f(1f, 0f);
+        glTexCoord2f(1f, 1f); glVertex2f(1f, 1f);
+        glTexCoord2f(0f, 1f); glVertex2f(0f, 1f);
+        glEnd();
+
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glUseProgram(0);
+        glDisable(GL_BLEND);
+    }
+
+    private void ensureFogShader() {
+        if (fogShaderProgram != 0) {
+            return;
+        }
+
+        String vertexSource = "#version 120\n" +
+                "varying vec2 vUv;\n" +
+                "void main() {\n" +
+                "  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n" +
+                "  vUv = gl_MultiTexCoord0.xy;\n" +
+                "}";
+
+        String fragmentSource = "#version 120\n" +
+                "uniform sampler2D depthTex;\n" +
+                "uniform float fogNearDepth;\n" +
+                "uniform float fogFarDepth;\n" +
+                "varying vec2 vUv;\n" +
+                "void main() {\n" +
+                "  float depth = texture2D(depthTex, vUv).r;\n" +
+                "  float fogFactor = clamp((fogNearDepth - depth) / max(0.0001, fogNearDepth - fogFarDepth), 0.0, 1.0);\n" +
+                "  gl_FragColor = vec4(0.0, 0.0, 0.0, fogFactor);\n" +
+                "}";
+
+        int vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
+        int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
+        if (vertexShader == 0 || fragmentShader == 0) {
+            return;
+        }
+
+        int program = glCreateProgram();
+        glAttachShader(program, vertexShader);
+        glAttachShader(program, fragmentShader);
+        glLinkProgram(program);
+
+        if (glGetProgrami(program, GL_LINK_STATUS) == GL_FALSE) {
+            glDeleteProgram(program);
+            glDeleteShader(vertexShader);
+            glDeleteShader(fragmentShader);
+            return;
+        }
+
+        fogShaderProgram = program;
+        fogDepthUniformLocation = glGetUniformLocation(fogShaderProgram, "depthTex");
+        fogNearDepthUniformLocation = glGetUniformLocation(fogShaderProgram, "fogNearDepth");
+        fogFarDepthUniformLocation = glGetUniformLocation(fogShaderProgram, "fogFarDepth");
+
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+    }
+
+    private int compileShader(int shaderType, String source) {
+        int shader = glCreateShader(shaderType);
+        glShaderSource(shader, source);
+        glCompileShader(shader);
+        if (glGetShaderi(shader, GL_COMPILE_STATUS) == GL_FALSE) {
+            glDeleteShader(shader);
+            return 0;
+        }
+        return shader;
+    }
+
     public void setSunDirection(float x, float y, float z) {
         if (x == 0.0f && y == 0.0f && z == 0.0f) {
             sunDirection.set(0.0f, 1.0f, 0.0f);
@@ -152,14 +283,7 @@ public class Renderer {
     }
 
     private void setupFog() {
-        glEnable(GL_FOG);
-        glFogi(GL_FOG_MODE, GL_LINEAR);
-        glFogf(GL_FOG_START, fogStartDistance);
-        glFogf(GL_FOG_END, fogEndDistance);
-        glFogf(GL_FOG_DENSITY, 1.0f);
-        glHint(GL_FOG_HINT, GL_NICEST);
-        float[] fogColor = { FOG_R, FOG_G, FOG_B, 1.0f };
-        glFogfv(GL_FOG_COLOR, fogColor);
+        glDisable(GL_FOG);
     }
 
     private void updateEnvironmentFromSun() {

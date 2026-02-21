@@ -70,6 +70,7 @@ public class Base {
 
             glPopMatrix();
 
+            renderer.applyScreenSpaceFog(window);
             renderer.setup2D(window);
 
             float mouseX = window.getMouseRelX();
