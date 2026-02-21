@@ -536,18 +536,28 @@ public class Window {
 
 
     public void beginRenderToFBO() {
-        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-        glViewport(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        if (forceVirtualResolution) {
+            glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+            glViewport(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        } else {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(0, 0, framebufferWidth, framebufferHeight);
+        }
 
         glClearColor(0.15f, 0.15f, 0.15f, 1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     public void endRenderToFBO() {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        if (forceVirtualResolution) {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
     }
 
     public void drawFBO() {
+        if (!forceVirtualResolution) {
+            return;
+        }
         int[] fbW = new int[1];
         int[] fbH = new int[1];
         glfwGetFramebufferSize(windowHandle, fbW, fbH);
@@ -557,11 +567,7 @@ public class Window {
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (forceVirtualResolution) {
-            glViewport(physicalX, physicalY, physicalWidth, physicalHeight);
-        } else {
-            glViewport(0, 0, fbW[0], fbH[0]);
-        }
+        glViewport(physicalX, physicalY, physicalWidth, physicalHeight);
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();

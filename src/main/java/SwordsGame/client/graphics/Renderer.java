@@ -26,7 +26,7 @@ public class Renderer {
     private static final float BASE_FOG_START = -980.0f;
     private static final float BASE_FOG_END = -420.0f;
     private static final float SCREEN_FOG_START_OFFSET = 0.05f;
-    private static final float SCREEN_FOG_SOFTNESS_SCALE = 3.0f;
+    private static final float SCREEN_FOG_SOFTNESS_SCALE = 2.0f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -123,7 +123,7 @@ public class Renderer {
     }
 
     public void applyScreenSpaceFog(Window window) {
-        if (window == null) {
+        if (window == null || !window.isForceVirtualResolution()) {
             return;
         }
 
