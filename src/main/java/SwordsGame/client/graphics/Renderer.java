@@ -18,7 +18,7 @@ public class Renderer {
     private static final float DAY_DIFFUSE_R = 0.95f;
     private static final float DAY_DIFFUSE_G = 0.95f;
     private static final float DAY_DIFFUSE_B = 0.95f;
-    private static final float NIGHT_TINT_STRENGTH = 0.18f;
+    private static final float NIGHT_TINT_STRENGTH = 0.28f;
     private static final float NIGHT_TINT_R = 0.75f;
     private static final float NIGHT_TINT_G = 0.82f;
     private static final float NIGHT_TINT_B = 1.00f;
