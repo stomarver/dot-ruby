@@ -26,13 +26,16 @@ public class Camera {
     private static final float EDGE_SCROLL_SPEED = 15.0f;
     private static final float MIN_ZOOM = 0.25f;
     private static final float MAX_ZOOM = 2.5f;
-    private static final float PITCH = 35.264f;
+    private static final float PITCH_BASE = 35.264f;
+    private static final float PITCH_NEAR = 28.0f;
+    private static final float PITCH_FAR = 60.0f;
+    private static final float DEFAULT_ZOOM = 0.5f;
 
     public float getX() { return position.x; }
     public float getZ() { return position.y; }
     public float getZoom() { return zoom; }
     public float getRotation() { return currentRotationY; }
-    public float getPitch() { return PITCH; }
+    public float getPitch() { return currentPitch(); }
     public float getOrthoWidth() { return ORTHO_WIDTH; }
     public float getOrthoHeight() { return ORTHO_HEIGHT; }
 
@@ -123,9 +126,21 @@ public class Camera {
 
     public void applyTransformations() {
         glScalef(zoom, zoom, zoom);
-        glRotatef(PITCH, 1, 0, 0);
+        glRotatef(currentPitch(), 1, 0, 0);
         glRotatef(currentRotationY, 0, 1, 0);
         glTranslatef(position.x, 0, position.y);
+    }
+
+
+    private float currentPitch() {
+        if (zoom <= DEFAULT_ZOOM) {
+            float t = (zoom - MIN_ZOOM) / (DEFAULT_ZOOM - MIN_ZOOM);
+            t = clamp(t, 0.0f, 1.0f);
+            return PITCH_FAR + (PITCH_BASE - PITCH_FAR) * t;
+        }
+        float t = (zoom - DEFAULT_ZOOM) / (MAX_ZOOM - DEFAULT_ZOOM);
+        t = clamp(t, 0.0f, 1.0f);
+        return PITCH_BASE + (PITCH_NEAR - PITCH_BASE) * t;
     }
 
     private void clampPosition(ChunkManager chunkManager, Renderer renderer) {
