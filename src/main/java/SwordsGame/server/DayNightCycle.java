@@ -12,8 +12,8 @@ public class DayNightCycle {
     private static final float BLUE_FOG_G = 0.60f;
     private static final float BLUE_FOG_B = 0.85f;
 
-    private static final float DAY_FOG_DISTANCE_MULTIPLIER = 1.50f;
-    private static final float NIGHT_FOG_DISTANCE_MULTIPLIER = 1.08f;
+    private static final float DAY_FOG_DISTANCE_MULTIPLIER = 2.50f;
+    private static final float NIGHT_FOG_DISTANCE_MULTIPLIER = 1.50f;
     private static final float FOG_TRANSITION_MINUTES = 1.0f;
 
     private float timeSeconds = 0f;
