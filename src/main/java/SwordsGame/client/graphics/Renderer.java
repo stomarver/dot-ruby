@@ -18,6 +18,10 @@ public class Renderer {
     private static final float DAY_DIFFUSE_R = 0.95f;
     private static final float DAY_DIFFUSE_G = 0.95f;
     private static final float DAY_DIFFUSE_B = 0.95f;
+    private static final float NIGHT_TINT_STRENGTH = 0.18f;
+    private static final float NIGHT_TINT_R = 0.75f;
+    private static final float NIGHT_TINT_G = 0.82f;
+    private static final float NIGHT_TINT_B = 1.00f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -30,6 +34,7 @@ public class Renderer {
     private float diffuseR = DAY_DIFFUSE_R;
     private float diffuseG = DAY_DIFFUSE_G;
     private float diffuseB = DAY_DIFFUSE_B;
+    private float nightBlend = 0.0f;
     private final FogFx fogFx = new FogFx();
 
     public Renderer() {
@@ -53,7 +58,7 @@ public class Renderer {
         viewportWidth = Math.max(1, renderWidth - (marginX * 2));
         viewportHeight = renderHeight;
 
-        glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1.0f);
+        glClearColor(CLEAR_R * tintR(), CLEAR_G * tintG(), CLEAR_B * tintB(), 1.0f);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
@@ -112,6 +117,11 @@ public class Renderer {
         fogFx.setColor(r, g, b);
     }
 
+    public void setNightTint(float blend) {
+        nightBlend = Math.max(0.0f, Math.min(1.0f, blend));
+        updateEnvironmentFromSun();
+    }
+
     public void setSunDirection(float x, float y, float z) {
         if (x == 0.0f && y == 0.0f && z == 0.0f) {
             sunDirection.set(0.0f, 1.0f, 0.0f);
@@ -156,11 +166,23 @@ public class Renderer {
     }
 
     private void updateEnvironmentFromSun() {
-        ambientR = DAY_AMBIENT_R;
-        ambientG = DAY_AMBIENT_G;
-        ambientB = DAY_AMBIENT_B;
-        diffuseR = DAY_DIFFUSE_R;
-        diffuseG = DAY_DIFFUSE_G;
-        diffuseB = DAY_DIFFUSE_B;
+        ambientR = DAY_AMBIENT_R * tintR();
+        ambientG = DAY_AMBIENT_G * tintG();
+        ambientB = DAY_AMBIENT_B * tintB();
+        diffuseR = DAY_DIFFUSE_R * tintR();
+        diffuseG = DAY_DIFFUSE_G * tintG();
+        diffuseB = DAY_DIFFUSE_B * tintB();
+    }
+
+    private float tintR() {
+        return 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_R));
+    }
+
+    private float tintG() {
+        return 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_G));
+    }
+
+    private float tintB() {
+        return 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_B));
     }
 }

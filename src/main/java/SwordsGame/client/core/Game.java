@@ -75,6 +75,7 @@ public class Game {
 
             camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
+            renderer.setNightTint(dayNightCycle.getNightBlend());
             renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
             renderer.setFogZoom(camera.getZoom() * dayNightCycle.getFogDistanceMultiplier());
             updateVirtualResolutionToggle(window.getHandle());

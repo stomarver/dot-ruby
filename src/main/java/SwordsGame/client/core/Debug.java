@@ -90,6 +90,7 @@ public class Debug {
 
             camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
+            renderer.setNightTint(dayNightCycle.getNightBlend());
             renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
             updateFogDistanceControls(window.getHandle());
             renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier * dayNightCycle.getFogDistanceMultiplier());
