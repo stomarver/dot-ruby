@@ -28,22 +28,8 @@ public class BlockRenderer {
 
         if (props.hasEmission()) glDisable(GL_LIGHTING);
 
-        if (props.hasRandomColor()) {
-            float shift = props.getRandomColorShift();
-            float low = 1.0f - shift;
-            int dominantChannel = Math.abs(seed) % 3;
-
-            float r = low;
-            float g = low;
-            float b = low;
-            if (dominantChannel == 0) r = 1.0f;
-            else if (dominantChannel == 1) g = 1.0f;
-            else b = 1.0f;
-
-            glColor4f(r, g, b, alpha);
-        } else {
-            glColor4f(1.0f, 1.0f, 1.0f, alpha);
-        }
+        float[] tint = BlockColorPipeline.resolveTint(props, seed);
+        glColor4f(tint[0], tint[1], tint[2], alpha);
 
         mesh.render(false);
 

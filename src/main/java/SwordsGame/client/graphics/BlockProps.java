@@ -8,6 +8,8 @@ public class BlockProps {
     private boolean transparent = false;
     private boolean solid = true;
     private boolean smoothing = false;
+    private boolean destructible = false;
+    private boolean surfaceOnly = false;
     private float hardness = 1.0f;
 
     public BlockProps() {}
@@ -24,6 +26,8 @@ public class BlockProps {
     public BlockProps nonSolid() { this.solid = false; return this; }
     public BlockProps smoothing() { this.smoothing = true; return this; }
     public BlockProps hardness(float value) { this.hardness = value; return this; }
+    public BlockProps destructible() { this.destructible = true; return this; }
+    public BlockProps surfaceOnly() { this.surfaceOnly = true; return this; }
 
     public boolean hasRandomRotation() { return randomRotation; }
     public boolean hasRandomColor() { return randomColor; }
@@ -32,5 +36,7 @@ public class BlockProps {
     public boolean isTransparent() { return transparent; }
     public boolean isSolid() { return solid; }
     public boolean hasSmoothing() { return smoothing; }
+    public boolean isDestructible() { return destructible; }
+    public boolean isSurfaceOnly() { return surfaceOnly; }
     public float getHardness() { return hardness; }
 }
