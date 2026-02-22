@@ -24,6 +24,7 @@ public class Hud {
     private final List<TexLoad.Texture> textures = new ArrayList<>();
     private final Info info;
     private final Button primaryButton;
+    private final Dialog dialog;
     private String primaryButtonText = "Butt...on";
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
@@ -42,6 +43,7 @@ public class Hud {
         this.messageSystem = new Message();
         this.info = new Info(text);
         this.primaryButton = new Button(text, w, h);
+        this.dialog = new Dialog(w, h);
 
         this.charFrameTex = load(Paths.UI_CHAR_FRAME);
         this.separatorTex = load(Paths.UI_SEPARATOR);
@@ -99,6 +101,7 @@ public class Hud {
 
         primaryButton.draw(primaryButtonText, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
 
+        dialog.render();
         messageSystem.draw(text);
     }
 
@@ -130,6 +133,11 @@ public class Hud {
         boolean clicked = hovered && mouseDown && !primaryButtonHeld;
         primaryButtonHeld = mouseDown;
         return clicked;
+    }
+
+
+    public void toggleDialog(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float width, float height) {
+        dialog.toggle(ax, ay, x, y, width, height);
     }
 
     public void cleanup() {

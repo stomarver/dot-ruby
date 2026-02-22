@@ -11,6 +11,7 @@ import SwordsGame.client.ui.Hud;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.SelectionBox;
 import SwordsGame.client.ui.SelectionArea;
+import SwordsGame.client.ui.Anchor;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.DayNightCycle;
@@ -104,6 +105,9 @@ public class Game {
 
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
+                if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
+                    hud.toggleDialog(Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 420, 220);
+                }
                 hud.render();
             }
 
