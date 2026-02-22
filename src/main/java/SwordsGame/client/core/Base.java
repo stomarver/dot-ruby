@@ -9,7 +9,8 @@ import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TextureLoader;
 import SwordsGame.client.ui.HUD;
 import SwordsGame.client.ui.Cursor;
-import SwordsGame.client.ui.Selection;
+import SwordsGame.client.ui.BoxSel;
+import SwordsGame.client.ui.BoxSelArea;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import static org.lwjgl.glfw.GLFW.*;
@@ -23,7 +24,8 @@ public class Base {
     private Cursor cursor;
     private World world;
     private Camera camera;
-    private Selection selectionRectangle;
+    private BoxSel selectionRectangle;
+    private final BoxSelArea selArea = new BoxSelArea();
     private ChunkManager chunkManager;
     private boolean toggleVirtualResHeld = false;
 
@@ -48,7 +50,7 @@ public class Base {
         hud.setPrimaryButtonText("butt...on");
 
         cursor = new Cursor();
-        selectionRectangle = new Selection();
+        selectionRectangle = new BoxSel();
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
@@ -77,13 +79,10 @@ public class Base {
             float mouseY = window.getMouseRelY();
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
-            float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
-            float selectionMaxX = window.getVirtualWidth() - selectionMinX;
-            float selectionMinY = 0f;
-            float selectionMaxY = window.getVirtualHeight() - 1f;
+            selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
 
-            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
-            window.setVirtualMouseClamp(leftMouseHeld && selectionRectangle.isActive(), selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
+            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selArea);
+            window.setVirtualMouseClamp(leftMouseHeld && selectionRectangle.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
 
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);

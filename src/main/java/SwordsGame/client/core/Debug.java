@@ -14,7 +14,8 @@ import SwordsGame.shared.protocol.ui.UiFrameState;
 import SwordsGame.shared.protocol.ui.UiPanelState;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.HUD;
-import SwordsGame.client.ui.Selection;
+import SwordsGame.client.ui.BoxSel;
+import SwordsGame.client.ui.BoxSelArea;
 import SwordsGame.client.utils.Discord;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -27,7 +28,8 @@ public class Debug {
     private Cursor cursor;
     private World world;
     private Camera camera;
-    private Selection selection;
+    private BoxSel selection;
+    private final BoxSelArea selArea = new BoxSelArea();
     private ChunkManager chunkManager;
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
@@ -63,7 +65,7 @@ public class Debug {
         hud.setPrimaryButtonText("deb...ug");
 
         cursor = new Cursor();
-        selection = new Selection();
+        selection = new BoxSel();
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
@@ -98,13 +100,10 @@ public class Debug {
             float mouseY = window.getMouseRelY();
             boolean leftMouseDown = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
-            float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
-            float selectionMaxX = window.getVirtualWidth() - selectionMinX;
-            float selectionMinY = 0f;
-            float selectionMaxY = window.getVirtualHeight() - 1f;
+            selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
 
-            selection.update(mouseX, mouseY, leftMouseDown, selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
-            window.setVirtualMouseClamp(leftMouseDown && selection.isActive(), selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
+            selection.update(mouseX, mouseY, leftMouseDown, selArea);
+            window.setVirtualMouseClamp(leftMouseDown && selection.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseDown)) {
