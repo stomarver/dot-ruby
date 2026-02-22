@@ -11,7 +11,6 @@ import SwordsGame.server.ChunkManager;
 import SwordsGame.server.DayNightCycle;
 import SwordsGame.server.gameplay.MythicCorePack;
 import SwordsGame.server.gameplay.MythicFactionPack;
-import SwordsGame.server.gameplay.FactionType;
 import SwordsGame.server.ui.ServerUiComposer;
 import SwordsGame.shared.protocol.ui.UiFrameState;
 import SwordsGame.shared.protocol.ui.UiPanelState;
@@ -46,6 +45,9 @@ public class Debug {
     private static final float FOG_DISTANCE_MAX = 2.5f;
     private float fogDistanceMultiplier = 1.0f;
     private ServerUiComposer serverUiComposer;
+    private int fps = 0;
+    private int fpsCounter = 0;
+    private double fpsLastSampleSec = 0.0;
 
 
     public static void main(String[] args) {
@@ -63,6 +65,7 @@ public class Debug {
         dayNightCycle = new DayNightCycle();
         lastCycleTickSeconds = (float) glfwGetTime();
         serverUiComposer = new ServerUiComposer();
+        fpsLastSampleSec = glfwGetTime();
 
         Discord.init();
         BlockRegistry.init();
@@ -101,6 +104,7 @@ public class Debug {
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
             updateVirtualResolutionToggle(window.getHandle());
+            updateFpsCounter(glfwGetTime());
             updateHudInfo();
 
             window.beginRenderToFBO();
@@ -194,7 +198,7 @@ public class Debug {
         hud.setCameraInfo(buildCameraInfo());
         hud.setTimeInfo(buildTimeInfo());
 
-        UiFrameState frame = serverUiComposer.compose(chunkManager, FactionType.HUMANS);
+        UiFrameState frame = serverUiComposer.compose(chunkManager, null);
         hud.setServerInfo(extractServerInfo(frame));
     }
 
@@ -232,10 +236,26 @@ public class Debug {
         int chunkZ = worldBlockZ / SwordsGame.server.Chunk.SIZE;
         int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
         int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
+
+        Runtime rt = Runtime.getRuntime();
+        long usedMb = (rt.totalMemory() - rt.freeMemory()) / (1024L * 1024L);
+        long totalMb = rt.totalMemory() / (1024L * 1024L);
+        long maxMb = rt.maxMemory() / (1024L * 1024L);
+
         return String.format(
-                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)\n^5fog^0 x%.2f [%.0f..%.0f]",
+                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)\n^5fog^0 x%.2f [%.0f..%.0f]\n^6fps^0 %d\n^7mem^0 %d/%d MB (max %d)",
                 camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ,
-                fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance());
+                fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance(),
+                fps, usedMb, totalMb, maxMb);
+    }
+
+    private void updateFpsCounter(double nowSeconds) {
+        fpsCounter++;
+        if (nowSeconds - fpsLastSampleSec >= 1.0) {
+            fps = fpsCounter;
+            fpsCounter = 0;
+            fpsLastSampleSec = nowSeconds;
+        }
     }
 
     private float clamp(float value, float min, float max) {
