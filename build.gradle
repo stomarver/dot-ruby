@@ -105,14 +105,14 @@ def commonShadowConfig = {
     exclude "META-INF/*.RSA"
 }
 
-// ===== RELEASE JAR (Main-Class: Base) =====
+// ===== RELEASE JAR (Main-Class: Game) =====
 
 shadowJar {
     commonShadowConfig.delegate = delegate
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.client.core.Base'
+        attributes 'Main-Class': 'SwordsGame.client.core.Game'
     }
 
     doFirst {

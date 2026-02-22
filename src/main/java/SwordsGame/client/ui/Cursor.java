@@ -1,18 +1,18 @@
 package SwordsGame.client.ui;
 
-import SwordsGame.client.graphics.TextureLoader;
+import SwordsGame.client.graphics.TexLoad;
 import SwordsGame.client.assets.Paths;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 
 public class Cursor {
-    private final TextureLoader.Texture texture;
+    private final TexLoad.Texture texture;
     private float x, y;
     private static final float BASE_SIZE_PIXELS = 16f;
 
     public Cursor() {
-        this.texture = TextureLoader.loadTexture(Paths.UI_CURSOR, false);
+        this.texture = TexLoad.loadTexture(Paths.UI_CURSOR, false);
         if (this.texture != null) {
             glBindTexture(GL_TEXTURE_2D, this.texture.id);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -64,7 +64,7 @@ public class Cursor {
 
     public void destroy() {
         if (texture != null) {
-            TextureLoader.deleteTexture(texture.id);
+            TexLoad.deleteTexture(texture.id);
         }
     }
 }

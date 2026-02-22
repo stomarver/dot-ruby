@@ -9,6 +9,7 @@ public class Info {
 
     private final Text text;
     private String cameraInfo = "";
+    private String timeInfo = "";
     private String serverInfo = "";
 
     public Info(Text text) {
@@ -20,36 +21,22 @@ public class Info {
         this.cameraInfo = info == null ? "" : info;
     }
 
+    public void setTimeInfo(String info) {
+        this.timeInfo = info == null ? "" : info;
+    }
+
     public void setServerInfo(String info) {
-        if (info == null || info.isEmpty()) {
-            this.serverInfo = "";
-            return;
-        }
-
-        String[] blocks = info.split("\n\n");
-        StringBuilder filtered = new StringBuilder();
-
-        for (String block : blocks) {
-            if (block.contains("World") || block.contains("Faction")) {
-                continue;
-            }
-            String trimmed = block.trim();
-            if (trimmed.isEmpty()) {
-                continue;
-            }
-            if (filtered.length() > 0) {
-                filtered.append("\n\n");
-            }
-            filtered.append(trimmed);
-        }
-
-        this.serverInfo = filtered.toString();
+        this.serverInfo = info == null ? "" : info;
     }
 
     public void renderDebug(float scale) {
         float currentY = DEBUG_Y + TEXT_Y_OFFSET;
         if (!cameraInfo.isEmpty()) {
             currentY = drawDebugLines(cameraInfo, DEBUG_X, currentY, scale);
+            currentY += DEBUG_MODULE_GAP;
+        }
+        if (!timeInfo.isEmpty()) {
+            currentY = drawDebugLines(timeInfo, DEBUG_X, currentY, scale);
             currentY += DEBUG_MODULE_GAP;
         }
         if (!serverInfo.isEmpty()) {

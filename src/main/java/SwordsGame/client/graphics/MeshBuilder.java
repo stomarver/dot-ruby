@@ -1,8 +1,8 @@
 package SwordsGame.client.graphics;
 
-import SwordsGame.client.Smoothing;
+import SwordsGame.client.Smth;
 import SwordsGame.client.World;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.BlockRegistry;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,10 +37,10 @@ public class MeshBuilder {
     }
 
     public void addBlock(byte typeId, int seed, boolean[] faces, int wx, int wy, int wz, float totalOffset, float scale) {
-        Block block = Registry.get(typeId);
+        Block block = BlockRegistry.get(typeId);
         if (block == null) return;
 
-        BlockProperties props = block.getProperties();
+        BlockProps props = block.getProperties();
         if (!props.isSolid()) return;
 
         float colorMod = useVertexColor && props.hasRandomColor() ? 0.9f + (Math.abs(seed % 10) / 100f) : 1.0f;
@@ -120,7 +120,7 @@ public class MeshBuilder {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[2];
         float[][] verts = FACE_VERTS[2];
-        Smoothing smoothing = new Smoothing(faces);
+        Smth smoothing = new Smth(faces);
 
         float[] yOffsets = new float[4];
         for (int i = 0; i < 4; i++) {

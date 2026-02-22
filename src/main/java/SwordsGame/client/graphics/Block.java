@@ -13,24 +13,24 @@ public class Block {
             {MAX, MIN, MAX, MAX, MIN, MAX, MIN, MIN}
     };
 
-    private final TextureLoader.Texture[] textures;
-    private final BlockProperties properties;
+    private final TexLoad.Texture[] textures;
+    private final BlockProps properties;
     private final Type type;
 
     public Block(Type type, String texturePath) {
-        this(type, new BlockProperties(), texturePath);
+        this(type, new BlockProps(), texturePath);
     }
 
-    public Block(Type type, String texturePath, BlockProperties props) {
+    public Block(Type type, String texturePath, BlockProps props) {
         this(type, props, texturePath);
     }
 
-    public Block(Type type, String topPath, String bottomPath, String sidePath, BlockProperties props) {
+    public Block(Type type, String topPath, String bottomPath, String sidePath, BlockProps props) {
         this(type, props, topPath, bottomPath, sidePath);
     }
 
     public Type getType() { return type; }
-    public BlockProperties getProperties() { return properties; }
+    public BlockProps getProperties() { return properties; }
 
     public int getTextureId(int face) {
         if (textures[0] == null) return 0;
@@ -49,9 +49,9 @@ public class Block {
     }
 
     public void destroy() {
-        for (TextureLoader.Texture texture : textures) {
+        for (TexLoad.Texture texture : textures) {
             if (texture != null) {
-                TextureLoader.deleteTexture(texture.id);
+                TexLoad.deleteTexture(texture.id);
             }
         }
     }
@@ -60,20 +60,20 @@ public class Block {
         return textures[0] != null;
     }
 
-    private Block(Type type, BlockProperties props, String... texturePaths) {
+    private Block(Type type, BlockProps props, String... texturePaths) {
         this.type = Objects.requireNonNull(type, "type");
         this.properties = Objects.requireNonNull(props, "props");
         this.textures = loadTextures(texturePaths);
     }
 
-    private TextureLoader.Texture[] loadTextures(String[] texturePaths) {
+    private TexLoad.Texture[] loadTextures(String[] texturePaths) {
         int count = texturePaths.length;
         if (count != 1 && count != 3) {
             throw new IllegalArgumentException("Block textures must have 1 or 3 paths");
         }
-        TextureLoader.Texture[] loaded = new TextureLoader.Texture[count];
+        TexLoad.Texture[] loaded = new TexLoad.Texture[count];
         for (int i = 0; i < count; i++) {
-            loaded[i] = TextureLoader.loadTexture(texturePaths[i], false);
+            loaded[i] = TexLoad.loadTexture(texturePaths[i], false);
         }
         return loaded;
     }

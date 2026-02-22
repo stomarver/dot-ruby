@@ -1,7 +1,7 @@
 package SwordsGame.client.graphics;
 
 import SwordsGame.client.World;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.BlockRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ public class BlockRenderer {
     public static void renderBlock(Block block, int seed, boolean[] faces, float alpha) {
         if (block == null || !block.hasTexture()) return;
 
-        BlockProperties props = block.getProperties();
+        BlockProps props = block.getProperties();
         int rot = props.hasRandomRotation() ? (Math.abs(seed) % 4) : 0;
 
         boolean fullFaces = isAllFaces(faces);
@@ -29,8 +29,18 @@ public class BlockRenderer {
         if (props.hasEmission()) glDisable(GL_LIGHTING);
 
         if (props.hasRandomColor()) {
-            float colorMod = 0.9f + (Math.abs(seed % 10) / 100f);
-            glColor4f(colorMod, colorMod, colorMod, alpha);
+            float shift = props.getRandomColorShift();
+            float low = 1.0f - shift;
+            int dominantChannel = Math.abs(seed) % 3;
+
+            float r = low;
+            float g = low;
+            float b = low;
+            if (dominantChannel == 0) r = 1.0f;
+            else if (dominantChannel == 1) g = 1.0f;
+            else b = 1.0f;
+
+            glColor4f(r, g, b, alpha);
         } else {
             glColor4f(1.0f, 1.0f, 1.0f, alpha);
         }
@@ -45,14 +55,14 @@ public class BlockRenderer {
     }
 
     public static void renderBlock(byte id, int seed, boolean[] faces) {
-        Block block = Registry.get(id);
+        Block block = BlockRegistry.get(id);
         if (block != null) {
             renderBlock(block, seed, faces, 1.0f);
         }
     }
 
     public static void renderBlock(byte id, int seed, boolean[] faces, float alpha) {
-        Block block = Registry.get(id);
+        Block block = BlockRegistry.get(id);
         if (block != null) {
             renderBlock(block, seed, faces, alpha);
         }

@@ -19,7 +19,21 @@ public class UnitTemplate extends TemplateBase {
                         CombatType combatType,
                         UnitStats stats,
                         String note) {
-        super(id, name, faction, minAge, cost);
+        this(id, name, faction, minAge, cost, roles, combatType, stats, note, "", Collections.emptySet());
+    }
+
+    public UnitTemplate(String id,
+                        String name,
+                        FactionType faction,
+                        Age minAge,
+                        ResourceBundle cost,
+                        Set<UnitRole> roles,
+                        CombatType combatType,
+                        UnitStats stats,
+                        String note,
+                        String modelId,
+                        Set<String> tags) {
+        super(id, name, faction, minAge, cost, modelId, tags);
         this.roles = roles == null || roles.isEmpty() ? EnumSet.noneOf(UnitRole.class) : EnumSet.copyOf(roles);
         this.combatType = combatType == null ? CombatType.NONE : combatType;
         this.stats = stats;

@@ -24,25 +24,25 @@ public class Sprite {
      * @param y Смещение по Y
      * @param s Масштаб (1.0 = исходный размер)
      */
-    public void draw(TextureLoader.Texture tex, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float s) {
+    public void draw(TexLoad.Texture tex, Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float s) {
         drawInternal(tex, buildAnchor(ax, ay), x, y, s);
     }
 
     /**
      * Перегрузка для случая, когда случайно передали два TypeX (например, CENTER, CENTER)
      */
-    public void draw(TextureLoader.Texture tex, Anchor.TypeX ax, Anchor.TypeX ay, float x, float y, float s) {
+    public void draw(TexLoad.Texture tex, Anchor.TypeX ax, Anchor.TypeX ay, float x, float y, float s) {
         draw(tex, ax, toTypeY(ay), x, y, s);
     }
 
     /**
      * Отрисовка с использованием готового объекта Anchor (для оптимизации)
      */
-    public void draw(TextureLoader.Texture tex, Anchor a, float x, float y, float s) {
+    public void draw(TexLoad.Texture tex, Anchor a, float x, float y, float s) {
         drawInternal(tex, a, x, y, s);
     }
 
-    private void drawInternal(TextureLoader.Texture tex, Anchor a, float ox, float oy, float scale) {
+    private void drawInternal(TexLoad.Texture tex, Anchor a, float ox, float oy, float scale) {
         if (tex == null) return;
 
         float w = tex.width * scale;

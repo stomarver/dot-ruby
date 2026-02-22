@@ -1,12 +1,12 @@
 package SwordsGame.client;
 
-public class Smoothing {
+public class Smth {
     private final boolean front;
     private final boolean back;
     private final boolean right;
     private final boolean left;
 
-    public Smoothing(boolean[] faces) {
+    public Smth(boolean[] faces) {
         this.front = faces[0];
         this.back = faces[1];
         this.right = faces[4];

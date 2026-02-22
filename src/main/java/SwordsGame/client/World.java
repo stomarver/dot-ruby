@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.joml.Vector2f;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.BlockRegistry;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockRenderer;
 import SwordsGame.client.graphics.ChunkMesh;
@@ -21,7 +21,7 @@ public class World {
     private static final float RENDER_RADIUS_PADDING = 6.0f;
     private static final float LOD_DISTANCE_PADDING = 5.0f;
     private final Map<Chunk, ChunkRenderData> chunkCache = new HashMap<>();
-    private final ArrayList<FallingBlock> fallingBlocks = new ArrayList<>();
+    private final ArrayList<FallBlk> fallingBlocks = new ArrayList<>();
 
     public void render(ChunkManager chunkManager, Camera camera) {
         ViewCulling culling = buildCulling(chunkManager, camera);
@@ -132,9 +132,9 @@ public class World {
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;
         float offset = BLOCK_SCALE;
 
-        Iterator<FallingBlock> iterator = fallingBlocks.iterator();
+        Iterator<FallBlk> iterator = fallingBlocks.iterator();
         while (iterator.hasNext()) {
-            FallingBlock block = iterator.next();
+            FallBlk block = iterator.next();
 
             if (currentTime - block.creationTime > 1.0) {
                 iterator.remove();
@@ -166,7 +166,7 @@ public class World {
 
     public void addFallingBlock(int wx, int wy, int wz, byte type) {
         int seed = (wx * 73856093) ^ (wy * 19349663) ^ (wz * 83492791);
-        fallingBlocks.add(new FallingBlock(wx, wy, wz, type, seed, glfwGetTime()));
+        fallingBlocks.add(new FallBlk(wx, wy, wz, type, seed, glfwGetTime()));
     }
 
 
@@ -311,7 +311,7 @@ public class World {
                     byte type = chunk.getBlock(x, y, z);
                     if (type == 0) continue;
 
-                    Block block = Registry.get(type);
+                    Block block = BlockRegistry.get(type);
                     boolean hasSmoothing = block != null && block.getProperties().hasSmoothing();
                     boolean[] faces = new boolean[6];
                     if (hasSmoothing) {
@@ -362,7 +362,7 @@ public class World {
         if (neighborType == 0) {
             return !hasSmoothingLimiter(cm, worldX, y, worldZ);
         }
-        Block neighbor = Registry.get(neighborType);
+        Block neighbor = BlockRegistry.get(neighborType);
         return neighbor == null || !neighbor.getProperties().isSolid();
     }
 
@@ -370,7 +370,7 @@ public class World {
         int aboveY = y + 1;
         if (aboveY >= Chunk.HEIGHT) return false;
         byte aboveType = cm.getBlockAtWorld(worldX, aboveY, worldZ);
-        Block above = Registry.get(aboveType);
+        Block above = BlockRegistry.get(aboveType);
         return above != null && above.getProperties().hasSmoothing();
     }
 }

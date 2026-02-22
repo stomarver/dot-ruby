@@ -15,7 +15,7 @@ import static org.lwjgl.stb.STBImage.*;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT;
 
-public class TextureLoader {
+public class TexLoad {
 
     private static int loadCount = 0;
     private static boolean isReleasing = false;
@@ -134,7 +134,7 @@ public class TextureLoader {
 
     private static byte[] readResource(String path) {
         String resPath = path.startsWith("/") ? path : "/" + path;
-        try (InputStream is = TextureLoader.class.getResourceAsStream(resPath)) {
+        try (InputStream is = TexLoad.class.getResourceAsStream(resPath)) {
             if (is == null) throw new RuntimeException("Resource not found: " + resPath);
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             byte[] buffer = new byte[8192];

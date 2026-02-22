@@ -3,32 +3,39 @@ package SwordsGame.client.core;
 import SwordsGame.client.Camera;
 import SwordsGame.client.World;
 import SwordsGame.client.assets.Paths;
-import SwordsGame.client.blocks.Registry;
+import SwordsGame.client.blocks.BlockRegistry;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
-import SwordsGame.client.graphics.TextureLoader;
-import SwordsGame.client.ui.HUD;
+import SwordsGame.client.graphics.TexLoad;
+import SwordsGame.client.ui.Hud;
 import SwordsGame.client.ui.Cursor;
-import SwordsGame.client.ui.Selection;
+import SwordsGame.client.ui.SelectionBox;
+import SwordsGame.client.ui.SelectionArea;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.DayNightCycle;
+import SwordsGame.server.gameplay.MythicCorePack;
+import SwordsGame.server.gameplay.MythicFactionPack;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
-public class Base {
+public class Game {
     private Window window;
     private Renderer renderer;
     private Font font;
-    private HUD hud;
+    private Hud hud;
     private Cursor cursor;
     private World world;
     private Camera camera;
-    private Selection selectionRectangle;
+    private SelectionBox selectionRectangle;
+    private final SelectionArea selArea = new SelectionArea();
     private ChunkManager chunkManager;
     private boolean toggleVirtualResHeld = false;
+    private DayNightCycle dayNightCycle;
+    private float lastCycleTickSeconds = 0f;
 
     public static void main(String[] args) {
-        new Base().start();
+        new Game().start();
     }
 
     public void start() {
@@ -39,21 +46,41 @@ public class Base {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
+        dayNightCycle = new DayNightCycle();
+        lastCycleTickSeconds = (float) glfwGetTime();
 
         Discord.init();
-        Registry.init();
+        BlockRegistry.init();
+        MythicCorePack.init();
+        MythicFactionPack.init();
 
         font = new Font(Paths.FONT_MAIN);
-        hud = new HUD(font, 960, 540);
+        hud = new Hud(font, 960, 540);
         hud.setPrimaryButtonText("butt...on");
 
         cursor = new Cursor();
-        selectionRectangle = new Selection();
-        TextureLoader.finishLoading();
+        selectionRectangle = new SelectionBox();
+        TexLoad.finishLoading();
 
         while (!window.shouldClose()) {
-            camera.update(window, chunkManager, renderer);
+            float mouseX = window.getMouseRelX();
+            float mouseY = window.getMouseRelY();
+            boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+
+            selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
+            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selArea);
+
+            boolean blockVerticalEdgeScroll = leftMouseHeld && selectionRectangle.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
+
+            float nowCycleTickSeconds = (float) glfwGetTime();
+            float deltaCycleSeconds = nowCycleTickSeconds - lastCycleTickSeconds;
+            lastCycleTickSeconds = nowCycleTickSeconds;
+            dayNightCycle.update(window.getHandle(), deltaCycleSeconds);
+
+            camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
+            renderer.setCycleTint(dayNightCycle.getNightBlend(), dayNightCycle.getOrangeBlend());
+            renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
             renderer.setFogZoom(camera.getZoom());
             updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
@@ -73,17 +100,7 @@ public class Base {
             renderer.applyScreenSpaceFog(window);
             renderer.setup2D(window);
 
-            float mouseX = window.getMouseRelX();
-            float mouseY = window.getMouseRelY();
-            boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-
-            float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
-            float selectionMaxX = window.getVirtualWidth() - selectionMinX;
-            float selectionMinY = 0f;
-            float selectionMaxY = window.getVirtualHeight() - 1f;
-
-            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
-            window.setVirtualMouseClamp(leftMouseHeld && selectionRectangle.isActive(), selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
+            window.setVirtualMouseClamp(leftMouseHeld && selectionRectangle.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
 
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
@@ -111,8 +128,8 @@ public class Base {
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
-        Registry.destroy();
-        TextureLoader.finishCleanup();
+        BlockRegistry.destroy();
+        TexLoad.finishCleanup();
         window.destroy();
         System.exit(0);
     }
@@ -131,6 +148,7 @@ public class Base {
             return;
         }
         hud.setCameraInfo("");
+        hud.setTimeInfo("");
         hud.setServerInfo("");
     }
 }

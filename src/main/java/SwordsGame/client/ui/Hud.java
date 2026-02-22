@@ -6,7 +6,9 @@ import SwordsGame.client.assets.Paths;
 import SwordsGame.client.ui.Text.*;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Sprite;
-import SwordsGame.client.graphics.TextureLoader;
+import SwordsGame.client.assets.Syn;
+import SwordsGame.client.graphics.ImgReg;
+import SwordsGame.client.graphics.TexLoad;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +16,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-public class HUD {
+public class Hud {
     private final int virtualWidth, virtualHeight, frameWidth;
     private final Text text;
     private final Sprite sprite;
     private final Message messageSystem;
-    private final List<TextureLoader.Texture> textures = new ArrayList<>();
+    private final List<TexLoad.Texture> textures = new ArrayList<>();
     private final Info info;
     private final Button primaryButton;
     private String primaryButtonText = "Butt...on";
@@ -27,10 +29,10 @@ public class HUD {
     private float virtualCursorY = -1f;
     private boolean primaryButtonHeld = false;
 
-    private final TextureLoader.Texture charFrameTex;
-    private final TextureLoader.Texture separatorTex;
+    private final TexLoad.Texture charFrameTex;
+    private final TexLoad.Texture separatorTex;
 
-    public HUD(Font font, int w, int h) {
+    public Hud(Font font, int w, int h) {
         this.virtualWidth = w;
         this.virtualHeight = h;
         this.frameWidth = (w - 720) / 2;
@@ -65,8 +67,8 @@ public class HUD {
         term.start();
     }
 
-    private TextureLoader.Texture load(String path) {
-        TextureLoader.Texture t = TextureLoader.loadTexture(path, true);
+    private TexLoad.Texture load(String path) {
+        TexLoad.Texture t = ImgReg.reg(Syn.img(path).alphaKey());
         textures.add(t);
         return t;
     }
@@ -105,6 +107,10 @@ public class HUD {
         this.info.setCameraInfo(info);
     }
 
+    public void setTimeInfo(String info) {
+        this.info.setTimeInfo(info);
+    }
+
     public void setServerInfo(String info) {
         this.info.setServerInfo(info);
     }
@@ -127,8 +133,8 @@ public class HUD {
     }
 
     public void cleanup() {
-        for (TextureLoader.Texture t : textures) {
-            TextureLoader.deleteTexture(t.id);
+        for (TexLoad.Texture t : textures) {
+            TexLoad.deleteTexture(t.id);
         }
         textures.clear();
     }
