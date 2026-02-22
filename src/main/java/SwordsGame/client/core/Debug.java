@@ -226,6 +226,7 @@ public class Debug {
 
     private String buildCameraInfo() {
 
+
         float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
         int worldBlockX = (int) Math.floor((-camera.getX() / World.BLOCK_SCALE) + totalOffsetBlocks);
         int worldBlockZ = (int) Math.floor((-camera.getZ() / World.BLOCK_SCALE) + totalOffsetBlocks);
@@ -243,7 +244,7 @@ public class Debug {
         long maxMb = rt.maxMemory() / (1024L * 1024L);
 
         return String.format(
-                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)\n^5fog^0 x%.2f [%.0f..%.0f]\n^6fps^0 %d\n^7mem^0 %d/%d MB (max %d)",
+                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)\n----\n^5fog^0 x%.2f [%.0f..%.0f]\n^6fps^0 %d\n----\n^2mem^0 used %d MB | alloc %d MB | max %d MB",
                 camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ,
                 fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance(),
                 fps, usedMb, totalMb, maxMb);
