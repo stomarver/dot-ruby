@@ -80,7 +80,7 @@ public class Window {
     private float clampMinX = 0f;
     private float clampMinY = 0f;
     private float clampMaxX = VIRTUAL_WIDTH - 1f;
-    private float clampMaxY = VIRTUAL_HEIGHT - 1f;
+    private float clampMaxY = VIRTUAL_HEIGHT;
     private boolean screenshotRequested = false;
 
     public Window(String title) {
@@ -211,9 +211,9 @@ public class Window {
         }
 
         clampMinX = Math.max(0f, Math.min(minX, VIRTUAL_WIDTH - 1f));
-        clampMinY = Math.max(0f, Math.min(minY, VIRTUAL_HEIGHT - 1f));
+        clampMinY = Math.max(0f, Math.min(minY, VIRTUAL_HEIGHT));
         clampMaxX = Math.max(clampMinX, Math.min(maxX, VIRTUAL_WIDTH - 1f));
-        clampMaxY = Math.max(clampMinY, Math.min(maxY, VIRTUAL_HEIGHT - 1f));
+        clampMaxY = Math.max(clampMinY, Math.min(maxY, VIRTUAL_HEIGHT));
 
         virtualMouseX = Math.max(clampMinX, Math.min(virtualMouseX, clampMaxX));
         virtualMouseY = Math.max(clampMinY, Math.min(virtualMouseY, clampMaxY));
@@ -408,7 +408,7 @@ public class Window {
         if (virtualMouseY < 0) virtualMouseY = 0;
 
         float maxMouseX = VIRTUAL_WIDTH - 1f;
-        float maxMouseY = VIRTUAL_HEIGHT - 1f;
+        float maxMouseY = VIRTUAL_HEIGHT;
         if (virtualMouseX > maxMouseX) virtualMouseX = maxMouseX;
         if (virtualMouseY > maxMouseY) virtualMouseY = maxMouseY;
 
