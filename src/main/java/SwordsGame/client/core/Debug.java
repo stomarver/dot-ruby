@@ -210,7 +210,11 @@ public class Debug {
     }
 
     private String buildTimeInfo() {
-        return String.format("^4Time^0\n^3day^0 %d\n^2clock^0 %s", dayNightCycle.getDay(), dayNightCycle.getTimeLabel());
+        return String.format(
+                "^4Time^0\n^3day^0 %d\n^2clock^0 %s / 38:00\n^5phase^0 %s",
+                dayNightCycle.getUiDay(),
+                dayNightCycle.getTimeLabel(),
+                dayNightCycle.getPhaseLabel());
     }
 
     private String buildCameraInfo() {
