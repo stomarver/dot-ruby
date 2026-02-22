@@ -8,6 +8,7 @@ import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TexLoad;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.DayNightCycle;
 import SwordsGame.server.gameplay.FactionType;
 import SwordsGame.server.ui.ServerUiComposer;
 import SwordsGame.shared.protocol.ui.UiFrameState;
@@ -36,6 +37,8 @@ public class Debug {
     private boolean showDebugInfo = true;
     private boolean toggleDebugHeld = false;
     private boolean toggleVirtualResHeld = false;
+    private DayNightCycle dayNightCycle;
+    private float lastCycleTickSeconds = 0f;
     private static final float FOG_DISTANCE_STEP = 0.1f;
     private static final float FOG_DISTANCE_MIN = 0.4f;
     private static final float FOG_DISTANCE_MAX = 2.5f;
@@ -55,6 +58,8 @@ public class Debug {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
+        dayNightCycle = new DayNightCycle();
+        lastCycleTickSeconds = (float) glfwGetTime();
         serverUiComposer = new ServerUiComposer();
 
         Discord.init();
@@ -78,8 +83,14 @@ public class Debug {
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selection.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
 
+            float nowCycleTickSeconds = (float) glfwGetTime();
+            float deltaCycleSeconds = nowCycleTickSeconds - lastCycleTickSeconds;
+            lastCycleTickSeconds = nowCycleTickSeconds;
+            dayNightCycle.update(window.getHandle(), deltaCycleSeconds);
+
             camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
+            renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
             updateFogDistanceControls(window.getHandle());
             renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier);
             updateBoundsToggle(window.getHandle());

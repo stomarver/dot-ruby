@@ -108,6 +108,10 @@ public class Renderer {
         fogFx.apply(window, viewportX, viewportY, viewportWidth, viewportHeight);
     }
 
+    public void setFogColor(float r, float g, float b) {
+        fogFx.setColor(r, g, b);
+    }
+
     public void setSunDirection(float x, float y, float z) {
         if (x == 0.0f && y == 0.0f && z == 0.0f) {
             sunDirection.set(0.0f, 1.0f, 0.0f);

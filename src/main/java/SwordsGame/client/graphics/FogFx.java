@@ -26,6 +26,11 @@ public class FogFx {
     private int depthUniform = -1;
     private int nearUniform = -1;
     private int farUniform = -1;
+    private int colorUniform = -1;
+
+    private float fogR = 0.0f;
+    private float fogG = 0.0f;
+    private float fogB = 0.0f;
 
     public float startDist() { return startDist; }
     public float endDist() { return endDist; }
@@ -36,6 +41,12 @@ public class FogFx {
         float fogScale = Math.lerp(FOG_SCALE_ZOOM_OUT, FOG_SCALE_ZOOM_IN, t);
         startDist = BASE_START * fogScale;
         endDist = BASE_END * fogScale;
+    }
+
+    public void setColor(float r, float g, float b) {
+        fogR = clamp01(r);
+        fogG = clamp01(g);
+        fogB = clamp01(b);
     }
 
     public void apply(Window window, int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
@@ -65,6 +76,7 @@ public class FogFx {
         glUniform1i(depthUniform, 0);
         glUniform1f(nearUniform, depthRange.x);
         glUniform1f(farUniform, depthRange.y);
+        glUniform3f(colorUniform, fogR, fogG, fogB);
 
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_2D);
@@ -125,11 +137,12 @@ public class FogFx {
                 "uniform sampler2D depthTex;\n" +
                 "uniform float fogNearDepth;\n" +
                 "uniform float fogFarDepth;\n" +
+                "uniform vec3 fogColor;\n" +
                 "varying vec2 vUv;\n" +
                 "void main() {\n" +
                 "  float depth = texture2D(depthTex, vUv).r;\n" +
                 "  float fogFactor = clamp((depth - fogNearDepth) / max(0.0001, fogFarDepth - fogNearDepth), 0.0, 1.0);\n" +
-                "  gl_FragColor = vec4(0.0, 0.0, 0.0, fogFactor);\n" +
+                "  gl_FragColor = vec4(fogColor, fogFactor);\n" +
                 "}";
 
         int vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
@@ -152,6 +165,7 @@ public class FogFx {
         depthUniform = glGetUniformLocation(shaderProgram, "depthTex");
         nearUniform = glGetUniformLocation(shaderProgram, "fogNearDepth");
         farUniform = glGetUniformLocation(shaderProgram, "fogFarDepth");
+        colorUniform = glGetUniformLocation(shaderProgram, "fogColor");
 
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);

@@ -13,6 +13,7 @@ import SwordsGame.client.ui.SelectionBox;
 import SwordsGame.client.ui.SelectionArea;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
+import SwordsGame.server.DayNightCycle;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -28,6 +29,8 @@ public class Game {
     private final SelectionArea selArea = new SelectionArea();
     private ChunkManager chunkManager;
     private boolean toggleVirtualResHeld = false;
+    private DayNightCycle dayNightCycle;
+    private float lastCycleTickSeconds = 0f;
 
     public static void main(String[] args) {
         new Game().start();
@@ -41,6 +44,8 @@ public class Game {
         chunkManager = new ChunkManager();
         world = new World();
         camera = new Camera();
+        dayNightCycle = new DayNightCycle();
+        lastCycleTickSeconds = (float) glfwGetTime();
 
         Discord.init();
         BlockRegistry.init();
@@ -63,8 +68,14 @@ public class Game {
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selectionRectangle.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
 
+            float nowCycleTickSeconds = (float) glfwGetTime();
+            float deltaCycleSeconds = nowCycleTickSeconds - lastCycleTickSeconds;
+            lastCycleTickSeconds = nowCycleTickSeconds;
+            dayNightCycle.update(window.getHandle(), deltaCycleSeconds);
+
             camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
+            renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
             renderer.setFogZoom(camera.getZoom());
             updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
