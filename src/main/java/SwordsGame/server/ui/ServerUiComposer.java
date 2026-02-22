@@ -1,12 +1,8 @@
 package SwordsGame.server.ui;
 
-import SwordsGame.server.ChunkManager;
-import SwordsGame.server.gameplay.FactionTechTree;
-import SwordsGame.server.gameplay.FactionType;
 import SwordsGame.server.gameplay.GameplayRegistry;
 import SwordsGame.server.gameplay.MythicCorePack;
 import SwordsGame.server.gameplay.MythicFactionPack;
-import SwordsGame.server.gameplay.RtsTemplates;
 import SwordsGame.server.gameplay.TemplateBase;
 import SwordsGame.shared.protocol.ui.UiFrameState;
 import SwordsGame.shared.protocol.ui.UiPanelState;
@@ -14,35 +10,11 @@ import SwordsGame.shared.protocol.ui.UiPanelState;
 import java.util.Collection;
 
 public class ServerUiComposer {
-    public UiFrameState compose(ChunkManager chunkManager, FactionType faction) {
+    public UiFrameState compose(SwordsGame.server.ChunkManager chunkManager, SwordsGame.server.gameplay.FactionType faction) {
         MythicCorePack.init();
         MythicFactionPack.init();
 
         UiFrameState frame = new UiFrameState();
-
-        if (chunkManager != null) {
-            int worldSize = chunkManager.getWorldSizeInBlocks();
-            int radius = chunkManager.getWorldRadiusBlocks();
-            frame.addPanel(new UiPanelState("world", String.format(
-                    "^2World^0\nsize^0 %d blocks\nradius^0 %d blocks\nchunks^0 %dx%d",
-                    worldSize,
-                    radius,
-                    worldSize / SwordsGame.server.Chunk.SIZE,
-                    worldSize / SwordsGame.server.Chunk.SIZE)));
-        }
-
-        if (faction != null) {
-            FactionTechTree tree = RtsTemplates.get(faction);
-            if (tree != null) {
-                frame.addPanel(new UiPanelState(
-                        "faction",
-                        String.format("^2Faction^0\n%s\nUnits^0 %d\nBuildings^0 %d\nTechs^0 %d",
-                                faction.name(),
-                                tree.getUnits().size(),
-                                tree.getBuildings().size(),
-                                tree.getTechnologies().size())));
-            }
-        }
 
         frame.addPanel(new UiPanelState(
                 "content",
