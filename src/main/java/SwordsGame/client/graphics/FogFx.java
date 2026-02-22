@@ -10,17 +10,11 @@ import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL20.*;
 
 public class FogFx {
-    private static final float BASE_START = -735.0f;
-    private static final float BASE_END = -315.0f;
     private static final float START_OFFSET = 0.05f;
     private static final float SOFTNESS = 2.0f;
-    private static final float CAMERA_ZOOM_MIN = 0.25f;
-    private static final float CAMERA_ZOOM_MAX = 2.5f;
-    private static final float FOG_SCALE_ZOOM_IN = 1.0f;
-    private static final float FOG_SCALE_ZOOM_OUT = 2.5f;
 
-    private float startDist = BASE_START;
-    private float endDist = BASE_END;
+    private float startDist = -640.0f;
+    private float endDist = -280.0f;
 
     private int shaderProgram = 0;
     private int depthUniform = -1;
@@ -35,12 +29,13 @@ public class FogFx {
     public float startDist() { return startDist; }
     public float endDist() { return endDist; }
 
+    public void setDistanceRange(float startDistance, float endDistance) {
+        startDist = startDistance;
+        endDist = endDistance;
+    }
+
     public void setZoom(float cameraZoom) {
-        float safeZoom = Math.clamp(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, cameraZoom);
-        float t = (safeZoom - CAMERA_ZOOM_MIN) / (CAMERA_ZOOM_MAX - CAMERA_ZOOM_MIN);
-        float fogScale = Math.lerp(FOG_SCALE_ZOOM_OUT, FOG_SCALE_ZOOM_IN, t);
-        startDist = BASE_START * fogScale;
-        endDist = BASE_END * fogScale;
+        // Fog range is controlled explicitly by day/night settings.
     }
 
     public void setColor(float r, float g, float b) {

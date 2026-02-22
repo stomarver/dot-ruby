@@ -77,7 +77,7 @@ public class Game {
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
             renderer.setNightTint(dayNightCycle.getNightBlend());
             renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
-            renderer.setFogZoom(camera.getZoom() * dayNightCycle.getFogDistanceMultiplier());
+            renderer.setFogZoom(camera.getZoom());
             updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
 

@@ -22,6 +22,10 @@ public class Renderer {
     private static final float NIGHT_TINT_R = 0.26f;
     private static final float NIGHT_TINT_G = 0.26f;
     private static final float NIGHT_TINT_B = 1.00f;
+    private static final float DAY_FOG_START_DISTANCE = -640.0f;
+    private static final float DAY_FOG_END_DISTANCE = -280.0f;
+    private static final float NIGHT_FOG_START_DISTANCE = -760.0f;
+    private static final float NIGHT_FOG_END_DISTANCE = -320.0f;
 
     private int viewportX = VIEWPORT_MARGIN_X;
     private int viewportY = 0;
@@ -39,6 +43,7 @@ public class Renderer {
 
     public Renderer() {
         setSunDirectionFromAngles(DEFAULT_SUN_YAW, DEFAULT_SUN_PITCH);
+        fogFx.setDistanceRange(DAY_FOG_START_DISTANCE, DAY_FOG_END_DISTANCE);
     }
 
     public int getViewportX() { return viewportX; }
@@ -119,6 +124,9 @@ public class Renderer {
 
     public void setNightTint(float blend) {
         nightBlend = Math.max(0.0f, Math.min(1.0f, blend));
+        float fogStart = lerp(DAY_FOG_START_DISTANCE, NIGHT_FOG_START_DISTANCE, nightBlend);
+        float fogEnd = lerp(DAY_FOG_END_DISTANCE, NIGHT_FOG_END_DISTANCE, nightBlend);
+        fogFx.setDistanceRange(fogStart, fogEnd);
         updateEnvironmentFromSun();
     }
 
@@ -163,6 +171,10 @@ public class Renderer {
 
     private void setupFog() {
         glDisable(GL_FOG);
+    }
+
+    private float lerp(float a, float b, float t) {
+        return a + ((b - a) * t);
     }
 
     private void updateEnvironmentFromSun() {

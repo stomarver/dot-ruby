@@ -93,7 +93,7 @@ public class Debug {
             renderer.setNightTint(dayNightCycle.getNightBlend());
             renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
             updateFogDistanceControls(window.getHandle());
-            renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier * dayNightCycle.getFogDistanceMultiplier());
+            renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier);
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
             updateVirtualResolutionToggle(window.getHandle());
