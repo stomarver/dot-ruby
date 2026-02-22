@@ -14,6 +14,10 @@ public class FogFx {
     private static final float BASE_END = -315.0f;
     private static final float START_OFFSET = 0.05f;
     private static final float SOFTNESS = 2.0f;
+    private static final float CAMERA_ZOOM_MIN = 0.25f;
+    private static final float CAMERA_ZOOM_MAX = 2.5f;
+    private static final float FOG_SCALE_ZOOM_IN = 1.0f;
+    private static final float FOG_SCALE_ZOOM_OUT = 2.5f;
 
     private float startDist = BASE_START;
     private float endDist = BASE_END;
@@ -27,9 +31,11 @@ public class FogFx {
     public float endDist() { return endDist; }
 
     public void setZoom(float cameraZoom) {
-        float safeZoom = Math.max(0.001f, cameraZoom);
-        startDist = BASE_START * safeZoom;
-        endDist = BASE_END * safeZoom;
+        float safeZoom = Math.clamp(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, cameraZoom);
+        float t = (safeZoom - CAMERA_ZOOM_MIN) / (CAMERA_ZOOM_MAX - CAMERA_ZOOM_MIN);
+        float fogScale = Math.lerp(FOG_SCALE_ZOOM_OUT, FOG_SCALE_ZOOM_IN, t);
+        startDist = BASE_START * fogScale;
+        endDist = BASE_END * fogScale;
     }
 
     public void apply(Window window, int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
