@@ -1,6 +1,6 @@
 package SwordsGame.client.graphics;
 
-import SwordsGame.client.core.Window;
+import SwordsGame.client.core.Win;
 import org.joml.Math;
 import org.joml.Vector2f;
 
@@ -38,7 +38,7 @@ public class FogFx {
         endDist = BASE_END * fogScale;
     }
 
-    public void apply(Window window, int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
+    public void apply(Win window, int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
         if (window == null) return;
 
         int depthTextureId = window.getDepthTextureId();

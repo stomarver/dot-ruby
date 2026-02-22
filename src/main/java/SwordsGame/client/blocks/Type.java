@@ -5,8 +5,8 @@ import SwordsGame.shared.world.BlockId;
 public enum Type {
     AIR(BlockId.AIR, "Air"),
     COBBLE(BlockId.COBBLE, "Cobblestone"),
-    GRASS(BlockId.GRASS, "Grass"),
-    STONE(BlockId.STONE, "Stone");
+    GRASS(BlockId.GRASS, "Grs"),
+    STONE(BlockId.STONE, "Stn");
 
     public final byte id;
     public final String name;
