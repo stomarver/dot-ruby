@@ -3,6 +3,7 @@ package SwordsGame.client.graphics;
 import SwordsGame.client.Smth;
 import SwordsGame.client.World;
 import SwordsGame.client.blocks.BlockRegistry;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,7 +44,7 @@ public class MeshBuilder {
         BlockProps props = block.getProperties();
         if (!props.isSolid()) return;
 
-        float colorMod = useVertexColor && props.hasRandomColor() ? 0.9f + (Math.abs(seed % 10) / 100f) : 1.0f;
+        float[] baseTint = useVertexColor ? BlockColorPipeline.resolveTint(props, seed) : new float[] {1.0f, 1.0f, 1.0f};
         int rot = props.hasRandomRotation() ? (Math.abs(seed) % 4) : 0;
 
         float baseX = (wx - totalOffset) * scale;
@@ -52,6 +53,7 @@ public class MeshBuilder {
 
         for (int face = 0; face < 6; face++) {
             if (topOnly && face != 2) continue;
+            if (props.isSurfaceOnly() && face != 2) continue;
             if (props.hasSmoothing() && face != 2) continue;
             if (!faces[face]) continue;
             int textureId = block.getTextureId(face);
@@ -59,7 +61,8 @@ public class MeshBuilder {
 
             Map<Integer, FloatCollector> target = props.isTransparent() ? transparent : (props.hasEmission() ? emissive : opaque);
             FloatCollector collector = target.computeIfAbsent(textureId, id -> new FloatCollector(2048));
-            float shadedColor = colorMod * getFaceShade(face);
+            float shade = getFaceShade(face);
+            float[] shadedColor = new float[] {baseTint[0] * shade, baseTint[1] * shade, baseTint[2] * shade};
             if (props.hasSmoothing() && face == 2) {
                 appendSmoothedTopFace(collector, block, rot, baseX, baseY, baseZ, shadedColor, faces);
             } else {
@@ -101,7 +104,7 @@ public class MeshBuilder {
     }
 
     private void appendFace(FloatCollector collector, int face, Block block, int rot,
-                            float baseX, float baseY, float baseZ, float color) {
+                            float baseX, float baseY, float baseZ, float[] color) {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[face];
         float[][] verts = FACE_VERTS[face];
@@ -116,7 +119,7 @@ public class MeshBuilder {
     }
 
     private void appendSmoothedTopFace(FloatCollector collector, Block block, int rot,
-                                       float baseX, float baseY, float baseZ, float color, boolean[] faces) {
+                                       float baseX, float baseY, float baseZ, float[] color, boolean[] faces) {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[2];
         float[][] verts = FACE_VERTS[2];
@@ -160,7 +163,7 @@ public class MeshBuilder {
                                                float[] b, float byOffset, float bu, float bv,
                                                float centerX, float centerYOffset, float centerZ, float centerU, float centerV,
                                                float baseX, float baseY, float baseZ,
-                                               float[] normal, float color) {
+                                               float[] normal, float[] color) {
         addSmoothedVertexWithYOffset(collector, a, ayOffset, baseX, baseY, baseZ, normal, au, av, color);
         addSmoothedVertexWithYOffset(collector, b, byOffset, baseX, baseY, baseZ, normal, bu, bv, color);
         addSmoothedVertexWithYOffset(collector,
@@ -170,7 +173,7 @@ public class MeshBuilder {
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
-                           float[] normal, float u, float vTex, float color) {
+                           float[] normal, float u, float vTex, float[] color) {
         float x = baseX + (v[0] * World.BLOCK_SIZE);
         float y = baseY + (v[1] * World.BLOCK_SIZE);
         float z = baseZ + (v[2] * World.BLOCK_SIZE);
@@ -178,13 +181,13 @@ public class MeshBuilder {
                 x, y, z,
                 normal[0], normal[1], normal[2],
                 u, vTex,
-                color, color, color
+                color[0], color[1], color[2]
         );
     }
 
     private void addSmoothedVertexWithYOffset(FloatCollector collector, float[] v, float yOffset,
                                               float baseX, float baseY, float baseZ,
-                                              float[] normal, float u, float vTex, float color) {
+                                              float[] normal, float u, float vTex, float[] color) {
         float x = baseX + (v[0] * World.BLOCK_SIZE);
         float y = baseY + (v[1] * World.BLOCK_SIZE) + yOffset;
         float z = baseZ + (v[2] * World.BLOCK_SIZE);
@@ -192,7 +195,7 @@ public class MeshBuilder {
                 x, y, z,
                 normal[0], normal[1], normal[2],
                 u, vTex,
-                color, color, color
+                color[0], color[1], color[2]
         );
     }
 }

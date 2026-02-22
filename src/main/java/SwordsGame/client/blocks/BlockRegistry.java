@@ -21,19 +21,19 @@ public class BlockRegistry {
         reg(Type.COBBLE,
                 Syn.blk(Type.COBBLE)
                         .tex(Paths.BLOCK_COBBLE)
-                        .props(p -> p.randomColor(0.4f))
+                        .props(p -> p.randomColor(0.4f).destructible().hardness(1.0f))
                         .build());
 
         reg(Type.GRASS,
                 Syn.blk(Type.GRASS)
                         .tex(Paths.BLOCK_GRASS, Paths.BLOCK_GRASS, Paths.BLOCK_GRASS)
-                        .props(p -> p.randomColor().smoothing().hardness(0.7f))
+                        .props(p -> p.randomColor().surfaceOnly().smoothing().hardness(0.7f))
                         .build());
 
         reg(Type.STONE,
                 Syn.blk(Type.STONE)
                         .tex(Paths.BLOCK_STONE)
-                        .props(p -> p.hardness(1.5f))
+                        .props(p -> p.surfaceOnly().hardness(1.5f))
                         .build());
     }
 
