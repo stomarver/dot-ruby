@@ -44,7 +44,7 @@ public class MeshBuilder {
         BlockProps props = block.getProperties();
         if (!props.isSolid()) return;
 
-        float[] baseTint = useVertexColor ? BlockColorPipeline.resolveTint(props, seed) : new float[] {1.0f, 1.0f, 1.0f};
+        float[] baseTint = useVertexColor ? BlockColorPipeline.resolveTint(props, seed, wx, wy, wz) : new float[] {1.0f, 1.0f, 1.0f};
         int rot = props.hasRandomRotation() ? (Math.abs(seed) % 4) : 0;
 
         float baseX = (wx - totalOffset) * scale;

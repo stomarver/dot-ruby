@@ -137,17 +137,10 @@ public class Terrain {
 
     private static byte resolveBlock(int y, int groundY, int plateauTopY, boolean hasPlateau) {
         if (!hasPlateau) {
-            if (y < groundY) {
-                return BlockId.COBBLE;
-            }
             if (y == groundY) {
                 return BlockId.GRASS;
             }
             return BlockId.AIR;
-        }
-
-        if (y < groundY) {
-            return BlockId.COBBLE;
         }
 
         if (y == groundY) {
