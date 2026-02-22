@@ -21,7 +21,7 @@ public class BlockRegistry {
         reg(Type.COBBLE,
                 Syn.blk(Type.COBBLE)
                         .tex(Paths.BLOCK_COBBLE)
-                        .props(p -> p.randomColor())
+                        .props(p -> p.randomColor(0.4f))
                         .build());
 
         reg(Type.GRASS,

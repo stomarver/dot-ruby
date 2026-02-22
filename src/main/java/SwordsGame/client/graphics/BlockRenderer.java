@@ -29,8 +29,18 @@ public class BlockRenderer {
         if (props.hasEmission()) glDisable(GL_LIGHTING);
 
         if (props.hasRandomColor()) {
-            float colorMod = 0.9f + (Math.abs(seed % 10) / 100f);
-            glColor4f(colorMod, colorMod, colorMod, alpha);
+            float shift = props.getRandomColorShift();
+            float low = 1.0f - shift;
+            int dominantChannel = Math.abs(seed) % 3;
+
+            float r = low;
+            float g = low;
+            float b = low;
+            if (dominantChannel == 0) r = 1.0f;
+            else if (dominantChannel == 1) g = 1.0f;
+            else b = 1.0f;
+
+            glColor4f(r, g, b, alpha);
         } else {
             glColor4f(1.0f, 1.0f, 1.0f, alpha);
         }
