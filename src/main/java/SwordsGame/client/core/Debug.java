@@ -98,7 +98,7 @@ public class Debug {
             float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
             float selectionMaxX = window.getVirtualWidth() - selectionMinX;
             float selectionMinY = 0f;
-            float selectionMaxY = window.getVirtualHeight() - 1f;
+            float selectionMaxY = window.getVirtualHeight();
 
             selection.update(mouseX, mouseY, leftMouseDown, selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
             window.setVirtualMouseClamp(leftMouseDown && selection.isActive(), selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);

@@ -3,28 +3,23 @@ package SwordsGame.client.ui;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Selection {
+    private final BoxSelectionMath boxSelectionMath = new BoxSelectionMath();
     private boolean active;
-    private float startX;
-    private float startY;
-    private float endX;
-    private float endY;
 
     public void update(float mouseX, float mouseY, boolean mouseHeld,
                        float minX, float minY, float maxX, float maxY) {
-        float clampedX = clamp(mouseX, minX, maxX);
-        float clampedY = clamp(mouseY, minY, maxY);
+        float clampedX = boxSelectionMath.clamp(mouseX, minX, maxX);
+        float clampedY = boxSelectionMath.clamp(mouseY, minY, maxY);
 
         if (mouseHeld) {
             if (!active) {
-                if (!isInside(mouseX, mouseY, minX, minY, maxX, maxY)) {
+                if (!boxSelectionMath.isInside(mouseX, mouseY, minX, minY, maxX, maxY)) {
                     return;
                 }
                 active = true;
-                startX = clampedX;
-                startY = clampedY;
+                boxSelectionMath.begin(clampedX, clampedY);
             }
-            endX = clampedX;
-            endY = clampedY;
+            boxSelectionMath.moveEnd(clampedX, clampedY);
         } else {
             active = false;
         }
@@ -34,29 +29,18 @@ public class Selection {
         return active;
     }
 
-    private boolean isInside(float x, float y, float minX, float minY, float maxX, float maxY) {
-        return x >= minX && x <= maxX && y >= minY && y <= maxY;
-    }
-
-    private float clamp(float value, float min, float max) {
-        return Math.max(min, Math.min(max, value));
-    }
-
-    private float snapToVirtualPixel(float value) {
-        return (float) Math.floor(value);
-    }
 
     public void render(float borderThickness) {
         if (!active) {
             return;
         }
 
-        float minX = snapToVirtualPixel(Math.min(startX, endX));
-        float minY = snapToVirtualPixel(Math.min(startY, endY));
-        float maxX = snapToVirtualPixel(Math.max(startX, endX));
-        float maxY = snapToVirtualPixel(Math.max(startY, endY));
+        float minX = boxSelectionMath.minX();
+        float minY = boxSelectionMath.minY();
+        float maxX = boxSelectionMath.maxX();
+        float maxY = boxSelectionMath.maxY();
 
-        if (maxX - minX < 1f || maxY - minY < 1f) {
+        if (!boxSelectionMath.hasVisibleArea()) {
             return;
         }
 

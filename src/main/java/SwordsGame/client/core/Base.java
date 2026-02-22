@@ -81,7 +81,7 @@ public class Base {
             float selectionMinX = (window.getVirtualWidth() - (window.getVirtualHeight() * 4f / 3f)) * 0.5f;
             float selectionMaxX = window.getVirtualWidth() - selectionMinX;
             float selectionMinY = 0f;
-            float selectionMaxY = window.getVirtualHeight() - 1f;
+            float selectionMaxY = window.getVirtualHeight();
 
             selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
             window.setVirtualMouseClamp(leftMouseHeld && selectionRectangle.isActive(), selectionMinX, selectionMinY, selectionMaxX, selectionMaxY);
