@@ -9,6 +9,7 @@ public class Info {
 
     private final Text text;
     private String cameraInfo = "";
+    private String timeInfo = "";
     private String serverInfo = "";
 
     public Info(Text text) {
@@ -18,6 +19,10 @@ public class Info {
 
     public void setCameraInfo(String info) {
         this.cameraInfo = info == null ? "" : info;
+    }
+
+    public void setTimeInfo(String info) {
+        this.timeInfo = info == null ? "" : info;
     }
 
     public void setServerInfo(String info) {
@@ -50,6 +55,10 @@ public class Info {
         float currentY = DEBUG_Y + TEXT_Y_OFFSET;
         if (!cameraInfo.isEmpty()) {
             currentY = drawDebugLines(cameraInfo, DEBUG_X, currentY, scale);
+            currentY += DEBUG_MODULE_GAP;
+        }
+        if (!timeInfo.isEmpty()) {
+            currentY = drawDebugLines(timeInfo, DEBUG_X, currentY, scale);
             currentY += DEBUG_MODULE_GAP;
         }
         if (!serverInfo.isEmpty()) {

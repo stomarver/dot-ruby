@@ -4,10 +4,11 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class DayNightCycle {
     private static final float CYCLE_SECONDS = 38f * 60f;
-    private static final float FAST_SKIP_SECONDS = 20f;
+    private static final float FAST_SKIP_SECONDS = 60f;
     private static final float BLUE_FOG_R = 0.40f;
     private static final float BLUE_FOG_G = 0.60f;
     private static final float BLUE_FOG_B = 0.85f;
+    private static final float DAY_FOG_DISTANCE_MULTIPLIER = 1.18f;
 
     private float timeSeconds = 0f;
     private int day = 0;
@@ -49,6 +50,17 @@ public class DayNightCycle {
 
     public float getFogB() {
         return isBlackFogWindow() ? 0f : BLUE_FOG_B;
+    }
+
+    public float getFogDistanceMultiplier() {
+        return isBlackFogWindow() ? 1.0f : DAY_FOG_DISTANCE_MULTIPLIER;
+    }
+
+    public String getTimeLabel() {
+        int total = (int) Math.floor(timeSeconds);
+        int minutes = (total / 60) % 60;
+        int seconds = total % 60;
+        return String.format("%02d:%02d", minutes, seconds);
     }
 
     private boolean isBlackFogWindow() {

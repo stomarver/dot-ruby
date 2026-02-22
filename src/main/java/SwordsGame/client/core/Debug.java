@@ -92,7 +92,7 @@ public class Debug {
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
             renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
             updateFogDistanceControls(window.getHandle());
-            renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier);
+            renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier * dayNightCycle.getFogDistanceMultiplier());
             updateBoundsToggle(window.getHandle());
             updateDebugToggle(window.getHandle());
             updateVirtualResolutionToggle(window.getHandle());
@@ -182,10 +182,12 @@ public class Debug {
         }
         if (!showDebugInfo) {
             hud.setCameraInfo("");
+            hud.setTimeInfo("");
             hud.setServerInfo("");
             return;
         }
         hud.setCameraInfo(buildCameraInfo());
+        hud.setTimeInfo(buildTimeInfo());
 
         UiFrameState frame = serverUiComposer.compose(chunkManager, FactionType.HUMANS);
         hud.setServerInfo(extractServerInfo(frame));
@@ -205,6 +207,10 @@ public class Debug {
             }
         }
         return builder.toString();
+    }
+
+    private String buildTimeInfo() {
+        return String.format("^4Time^0\n^3day^0 %d\n^2clock^0 %s", dayNightCycle.getDay(), dayNightCycle.getTimeLabel());
     }
 
     private String buildCameraInfo() {

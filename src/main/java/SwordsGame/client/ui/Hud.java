@@ -107,6 +107,10 @@ public class Hud {
         this.info.setCameraInfo(info);
     }
 
+    public void setTimeInfo(String info) {
+        this.info.setTimeInfo(info);
+    }
+
     public void setServerInfo(String info) {
         this.info.setServerInfo(info);
     }

@@ -76,7 +76,7 @@ public class Game {
             camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
             renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
-            renderer.setFogZoom(camera.getZoom());
+            renderer.setFogZoom(camera.getZoom() * dayNightCycle.getFogDistanceMultiplier());
             updateVirtualResolutionToggle(window.getHandle());
             updateHudInfo();
 
@@ -143,6 +143,7 @@ public class Game {
             return;
         }
         hud.setCameraInfo("");
+        hud.setTimeInfo("");
         hud.setServerInfo("");
     }
 }
