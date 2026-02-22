@@ -26,29 +26,7 @@ public class Info {
     }
 
     public void setServerInfo(String info) {
-        if (info == null || info.isEmpty()) {
-            this.serverInfo = "";
-            return;
-        }
-
-        String[] blocks = info.split("\n\n");
-        StringBuilder filtered = new StringBuilder();
-
-        for (String block : blocks) {
-            if (block.contains("World") || block.contains("Faction")) {
-                continue;
-            }
-            String trimmed = block.trim();
-            if (trimmed.isEmpty()) {
-                continue;
-            }
-            if (filtered.length() > 0) {
-                filtered.append("\n\n");
-            }
-            filtered.append(trimmed);
-        }
-
-        this.serverInfo = filtered.toString();
+        this.serverInfo = info == null ? "" : info;
     }
 
     public void renderDebug(float scale) {

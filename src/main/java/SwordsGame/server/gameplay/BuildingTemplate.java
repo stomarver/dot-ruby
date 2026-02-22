@@ -19,7 +19,21 @@ public class BuildingTemplate extends TemplateBase {
                             int storageBonus,
                             int populationUsage,
                             String note) {
-        super(id, name, faction, minAge, cost);
+        this(id, name, faction, minAge, cost, roles, storageBonus, populationUsage, note, "", Collections.emptySet());
+    }
+
+    public BuildingTemplate(String id,
+                            String name,
+                            FactionType faction,
+                            Age minAge,
+                            ResourceBundle cost,
+                            Set<BuildingRole> roles,
+                            int storageBonus,
+                            int populationUsage,
+                            String note,
+                            String modelId,
+                            Set<String> tags) {
+        super(id, name, faction, minAge, cost, modelId, tags);
         this.roles = roles == null || roles.isEmpty() ? EnumSet.noneOf(BuildingRole.class) : EnumSet.copyOf(roles);
         this.storageBonus = Math.max(0, storageBonus);
         this.populationUsage = Math.max(0, populationUsage);

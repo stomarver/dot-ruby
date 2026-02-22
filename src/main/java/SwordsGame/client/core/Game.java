@@ -14,6 +14,8 @@ import SwordsGame.client.ui.SelectionArea;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.DayNightCycle;
+import SwordsGame.server.gameplay.MythicCorePack;
+import SwordsGame.server.gameplay.MythicFactionPack;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -49,6 +51,8 @@ public class Game {
 
         Discord.init();
         BlockRegistry.init();
+        MythicCorePack.init();
+        MythicFactionPack.init();
 
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);

@@ -9,6 +9,8 @@ import SwordsGame.client.graphics.Renderer;
 import SwordsGame.client.graphics.TexLoad;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.DayNightCycle;
+import SwordsGame.server.gameplay.MythicCorePack;
+import SwordsGame.server.gameplay.MythicFactionPack;
 import SwordsGame.server.gameplay.FactionType;
 import SwordsGame.server.ui.ServerUiComposer;
 import SwordsGame.shared.protocol.ui.UiFrameState;
@@ -64,6 +66,8 @@ public class Debug {
 
         Discord.init();
         BlockRegistry.init();
+        MythicCorePack.init();
+        MythicFactionPack.init();
 
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
@@ -200,12 +204,10 @@ public class Debug {
         }
         StringBuilder builder = new StringBuilder();
         for (UiPanelState panel : frame.getPanels()) {
-            if ("world".equals(panel.getPanelId()) || "faction".equals(panel.getPanelId())) {
-                if (builder.length() > 0) {
-                    builder.append("\n\n");
-                }
-                builder.append(panel.getText());
+            if (builder.length() > 0) {
+                builder.append("\n\n");
             }
+            builder.append(panel.getText());
         }
         return builder.toString();
     }
