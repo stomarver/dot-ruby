@@ -6,6 +6,8 @@ import SwordsGame.client.assets.Paths;
 import SwordsGame.client.ui.Txt.*;
 import SwordsGame.client.graphics.Font;
 import SwordsGame.client.graphics.Spr;
+import SwordsGame.client.assets.Syn;
+import SwordsGame.client.graphics.ImgReg;
 import SwordsGame.client.graphics.TexLd;
 
 import java.util.ArrayList;
@@ -66,7 +68,7 @@ public class Hud {
     }
 
     private TexLd.Texture load(String path) {
-        TexLd.Texture t = TexLd.loadTexture(path, true);
+        TexLd.Texture t = ImgReg.reg(Syn.img(path).alphaKey());
         textures.add(t);
         return t;
     }

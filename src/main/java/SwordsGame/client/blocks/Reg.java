@@ -1,5 +1,7 @@
 package SwordsGame.client.blocks;
 
+import SwordsGame.client.assets.Paths;
+import SwordsGame.client.assets.Syn;
 import SwordsGame.client.graphics.Blk;
 import SwordsGame.client.graphics.BlkRdr;
 
@@ -13,13 +15,28 @@ public class Reg {
     public static void init() {
         destroyed = false;
         registry.clear();
-        register(Type.AIR, null);
-        register(Type.COBBLE, new Cob());
-        register(Type.GRASS, new Grs());
-        register(Type.STONE, new Stn());
+
+        reg(Type.AIR, null);
+
+        reg(Type.COBBLE,
+                Syn.blk(Type.COBBLE)
+                        .tex(Paths.BLOCK_COBBLE)
+                        .build());
+
+        reg(Type.GRASS,
+                Syn.blk(Type.GRASS)
+                        .tex(Paths.BLOCK_GRASS, Paths.BLOCK_GRASS, Paths.BLOCK_GRASS)
+                        .props(p -> p.randomRotation().randomColor().smoothing().hardness(0.7f))
+                        .build());
+
+        reg(Type.STONE,
+                Syn.blk(Type.STONE)
+                        .tex(Paths.BLOCK_STONE)
+                        .props(p -> p.hardness(1.5f))
+                        .build());
     }
 
-    public static void register(Type type, Blk block) {
+    public static void reg(Type type, Blk block) {
         registry.put(type, block);
     }
 
