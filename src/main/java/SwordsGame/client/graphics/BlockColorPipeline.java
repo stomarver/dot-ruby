@@ -1,7 +1,7 @@
 package SwordsGame.client.graphics;
 
 public final class BlockColorPipeline {
-    private static final float COLOR_MIN = 0.65f;
+    private static final float COLOR_MIN = 0.8f;
 
     private BlockColorPipeline() {}
 
@@ -33,7 +33,7 @@ public final class BlockColorPipeline {
 
     private static float randomChannel(int mixed, int channel) {
         int h = mix(mixed ^ (channel * 0x9E3779B9));
-        h = Math.abs(h % 36);
+        h = Math.abs(h % 21);
         return COLOR_MIN + (h / 100f);
     }
 }

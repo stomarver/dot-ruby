@@ -27,7 +27,7 @@ public class Camera {
     private static final float MIN_ZOOM = 0.25f;
     private static final float MAX_ZOOM = 2.5f;
     private static final float PITCH_BASE = 35.264f;
-    private static final float PITCH_NEAR = 12.0f;
+    private static final float PITCH_NEAR = 17.0f;
     private static final float PITCH_FAR = 60.0f;
     private static final float DEFAULT_ZOOM = 0.5f;
 
@@ -116,7 +116,7 @@ public class Camera {
         }
 
         currentRotationY += (targetRotationY - currentRotationY) * lerpSpeed;
-        clampPosition(chunkManager, renderer);
+        clampPosition(chunkManager);
     }
 
 
@@ -154,11 +154,11 @@ public class Camera {
         return t * t * t;
     }
 
-    private void clampPosition(ChunkManager chunkManager, Renderer renderer) {
+    private void clampPosition(ChunkManager chunkManager) {
         float blockSizeUnits = World.BLOCK_SIZE * 2.0f;
         float halfWorld = (chunkManager.getWorldSizeInBlocks() / 2.0f) * blockSizeUnits;
-        float viewportHalfWidth = renderer.getViewportWidth() / 2.0f;
-        float viewportHalfHeight = renderer.getViewportHeight() / 2.0f;
+        float viewportHalfWidth = ORTHO_WIDTH / 2.0f;
+        float viewportHalfHeight = ORTHO_HEIGHT / 2.0f;
         float zoomFactor = Math.max(MIN_ZOOM, zoom);
         float margin = Math.max(viewportHalfWidth, viewportHalfHeight) / zoomFactor;
 
