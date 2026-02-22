@@ -146,8 +146,8 @@ public final class GltfModel {
         return new GltfModel(out, minB, maxB);
     }
 
-    public FCol toFloatCollector() {
-        FCol collector = new FCol(4096);
+    public FloatCollector toFloatCollector() {
+        FloatCollector collector = new FloatCollector(4096);
         for (Primitive p : primitives) {
             int triVerts = p.indices != null ? p.indices.length : p.positions.length / 3;
             for (int i = 0; i < triVerts; i++) {
@@ -177,8 +177,8 @@ public final class GltfModel {
         return collector;
     }
 
-    public MshBuf toMeshBuffer() {
-        return MshBuf.build(toFloatCollector());
+    public MeshBuffer toMeshBuffer() {
+        return MeshBuffer.build(toFloatCollector());
     }
 
     public static final class Primitive {

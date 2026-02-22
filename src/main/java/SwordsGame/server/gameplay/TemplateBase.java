@@ -3,16 +3,16 @@ package SwordsGame.server.gameplay;
 public abstract class TemplateBase {
     private final String id;
     private final String name;
-    private final Fac faction;
+    private final FactionType faction;
     private final Age minAge;
-    private final ResPack cost;
+    private final ResourceBundle cost;
 
-    protected TemplateBase(String id, String name, Fac faction, Age minAge, ResPack cost) {
+    protected TemplateBase(String id, String name, FactionType faction, Age minAge, ResourceBundle cost) {
         this.id = id;
         this.name = name;
         this.faction = faction;
         this.minAge = minAge;
-        this.cost = cost == null ? new ResPack() : cost.copy();
+        this.cost = cost == null ? new ResourceBundle() : cost.copy();
     }
 
     public String getId() {
@@ -23,7 +23,7 @@ public abstract class TemplateBase {
         return name;
     }
 
-    public Fac getFaction() {
+    public FactionType getFaction() {
         return faction;
     }
 
@@ -31,7 +31,7 @@ public abstract class TemplateBase {
         return minAge;
     }
 
-    public ResPack getCost() {
+    public ResourceBundle getCost() {
         return cost.copy();
     }
 }

@@ -1,8 +1,8 @@
 package SwordsGame.client.assets;
 
 import SwordsGame.client.blocks.Type;
-import SwordsGame.client.graphics.Blk;
-import SwordsGame.client.graphics.BlkProps;
+import SwordsGame.client.graphics.Block;
+import SwordsGame.client.graphics.BlockProps;
 
 import java.util.function.Consumer;
 
@@ -46,7 +46,7 @@ public final class Syn {
 
     public static final class BlkDef {
         private final Type type;
-        private final BlkProps props = new BlkProps();
+        private final BlockProps props = new BlockProps();
         private String one;
         private String top;
         private String bottom;
@@ -72,16 +72,16 @@ public final class Syn {
             return this;
         }
 
-        public BlkDef props(Consumer<BlkProps> cfg) {
+        public BlkDef props(Consumer<BlockProps> cfg) {
             if (cfg != null) cfg.accept(props);
             return this;
         }
 
-        public Blk build() {
+        public Block build() {
             if (one != null) {
-                return new Blk(type, one, props);
+                return new Block(type, one, props);
             }
-            return new Blk(type, top, bottom, side, props);
+            return new Block(type, top, bottom, side, props);
         }
     }
 }

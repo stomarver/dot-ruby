@@ -3,12 +3,12 @@ package SwordsGame.client.ui;
 import static org.lwjgl.opengl.GL11.*;
 
 import SwordsGame.client.assets.Paths;
-import SwordsGame.client.ui.Txt.*;
+import SwordsGame.client.ui.Text.*;
 import SwordsGame.client.graphics.Font;
-import SwordsGame.client.graphics.Spr;
+import SwordsGame.client.graphics.Sprite;
 import SwordsGame.client.assets.Syn;
 import SwordsGame.client.graphics.ImgReg;
-import SwordsGame.client.graphics.TexLd;
+import SwordsGame.client.graphics.TexLoad;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,30 +18,30 @@ import java.nio.charset.StandardCharsets;
 
 public class Hud {
     private final int virtualWidth, virtualHeight, frameWidth;
-    private final Txt text;
-    private final Spr sprite;
-    private final Msg messageSystem;
-    private final List<TexLd.Texture> textures = new ArrayList<>();
-    private final Inf info;
-    private final Btn primaryButton;
+    private final Text text;
+    private final Sprite sprite;
+    private final Message messageSystem;
+    private final List<TexLoad.Texture> textures = new ArrayList<>();
+    private final Info info;
+    private final Button primaryButton;
     private String primaryButtonText = "Butt...on";
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
     private boolean primaryButtonHeld = false;
 
-    private final TexLd.Texture charFrameTex;
-    private final TexLd.Texture separatorTex;
+    private final TexLoad.Texture charFrameTex;
+    private final TexLoad.Texture separatorTex;
 
     public Hud(Font font, int w, int h) {
         this.virtualWidth = w;
         this.virtualHeight = h;
         this.frameWidth = (w - 720) / 2;
 
-        this.text = new Txt(font, w, h);
-        this.sprite = new Spr(w, h);
-        this.messageSystem = new Msg();
-        this.info = new Inf(text);
-        this.primaryButton = new Btn(text, w, h);
+        this.text = new Text(font, w, h);
+        this.sprite = new Sprite(w, h);
+        this.messageSystem = new Message();
+        this.info = new Info(text);
+        this.primaryButton = new Button(text, w, h);
 
         this.charFrameTex = load(Paths.UI_CHAR_FRAME);
         this.separatorTex = load(Paths.UI_SEPARATOR);
@@ -67,8 +67,8 @@ public class Hud {
         term.start();
     }
 
-    private TexLd.Texture load(String path) {
-        TexLd.Texture t = ImgReg.reg(Syn.img(path).alphaKey());
+    private TexLoad.Texture load(String path) {
+        TexLoad.Texture t = ImgReg.reg(Syn.img(path).alphaKey());
         textures.add(t);
         return t;
     }
@@ -91,13 +91,13 @@ public class Hud {
     }
 
     private void drawInterface() {
-        sprite.draw(charFrameTex, Anc.LEFT, Anc.TOP, 0, 18, 2.0f);
-        sprite.draw(separatorTex, Anc.LEFT, Anc.BOTTOM, 0, -28, 2.0f);
+        sprite.draw(charFrameTex, Anchor.LEFT, Anchor.TOP, 0, 18, 2.0f);
+        sprite.draw(separatorTex, Anchor.LEFT, Anchor.BOTTOM, 0, -28, 2.0f);
 
-        text.draw("unit.name", Anc.LEFT, Anc.TOP, 10, 2, 1);
+        text.draw("unit.name", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
         info.renderDebug(1.0f);
 
-        primaryButton.draw(primaryButtonText, Anc.LEFT, Anc.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
+        primaryButton.draw(primaryButtonText, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
 
         messageSystem.draw(text);
     }
@@ -122,15 +122,15 @@ public class Hud {
 
 
     public boolean consumePrimaryButtonClick(boolean mouseDown) {
-        boolean hovered = primaryButton.contains(Anc.LEFT, Anc.TOP, 10, 170, 100, 28, virtualCursorX, virtualCursorY);
+        boolean hovered = primaryButton.contains(Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, virtualCursorX, virtualCursorY);
         boolean clicked = hovered && mouseDown && !primaryButtonHeld;
         primaryButtonHeld = mouseDown;
         return clicked;
     }
 
     public void cleanup() {
-        for (TexLd.Texture t : textures) {
-            TexLd.deleteTexture(t.id);
+        for (TexLoad.Texture t : textures) {
+            TexLoad.deleteTexture(t.id);
         }
         textures.clear();
     }

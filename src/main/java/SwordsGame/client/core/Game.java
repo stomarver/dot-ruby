@@ -1,32 +1,32 @@
 package SwordsGame.client.core;
 
-import SwordsGame.client.Cam;
-import SwordsGame.client.Wld;
+import SwordsGame.client.Camera;
+import SwordsGame.client.World;
 import SwordsGame.client.assets.Paths;
-import SwordsGame.client.blocks.Reg;
+import SwordsGame.client.blocks.BlockRegistry;
 import SwordsGame.client.graphics.Font;
-import SwordsGame.client.graphics.Rdr;
-import SwordsGame.client.graphics.TexLd;
+import SwordsGame.client.graphics.Renderer;
+import SwordsGame.client.graphics.TexLoad;
 import SwordsGame.client.ui.Hud;
-import SwordsGame.client.ui.Cur;
-import SwordsGame.client.ui.SelBox;
-import SwordsGame.client.ui.SelArea;
-import SwordsGame.client.utils.Disc;
-import SwordsGame.server.ChMgr;
+import SwordsGame.client.ui.Cursor;
+import SwordsGame.client.ui.SelectionBox;
+import SwordsGame.client.ui.SelectionArea;
+import SwordsGame.client.utils.Discord;
+import SwordsGame.server.ChunkManager;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Game {
-    private Win window;
-    private Rdr renderer;
+    private Window window;
+    private Renderer renderer;
     private Font font;
     private Hud hud;
-    private Cur cursor;
-    private Wld world;
-    private Cam camera;
-    private SelBox selectionRectangle;
-    private final SelArea selArea = new SelArea();
-    private ChMgr chunkManager;
+    private Cursor cursor;
+    private World world;
+    private Camera camera;
+    private SelectionBox selectionRectangle;
+    private final SelectionArea selArea = new SelectionArea();
+    private ChunkManager chunkManager;
     private boolean toggleVirtualResHeld = false;
 
     public static void main(String[] args) {
@@ -34,24 +34,24 @@ public class Game {
     }
 
     public void start() {
-        window = new Win("SwordsGame");
+        window = new Window("SwordsGame");
         window.create();
-        renderer = new Rdr();
+        renderer = new Renderer();
 
-        chunkManager = new ChMgr();
-        world = new Wld();
-        camera = new Cam();
+        chunkManager = new ChunkManager();
+        world = new World();
+        camera = new Camera();
 
-        Disc.init();
-        Reg.init();
+        Discord.init();
+        BlockRegistry.init();
 
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
         hud.setPrimaryButtonText("butt...on");
 
-        cursor = new Cur();
-        selectionRectangle = new SelBox();
-        TexLd.finishLoading();
+        cursor = new Cursor();
+        selectionRectangle = new SelectionBox();
+        TexLoad.finishLoading();
 
         while (!window.shouldClose()) {
             float mouseX = window.getMouseRelX();
@@ -108,12 +108,12 @@ public class Game {
     }
 
     private void cleanup() {
-        Disc.shutdown();
+        Discord.shutdown();
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
-        Reg.destroy();
-        TexLd.finishCleanup();
+        BlockRegistry.destroy();
+        TexLoad.finishCleanup();
         window.destroy();
         System.exit(0);
     }

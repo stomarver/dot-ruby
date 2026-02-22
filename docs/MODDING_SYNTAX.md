@@ -18,12 +18,12 @@
 
 ## 2. Регистрация блоков
 
-Файл: `SwordsGame.client.blocks.Reg`.
+Файл: `SwordsGame.client.blocks.BlockRegistry`.
 
 ### 2.1 Один texture-слой
 
 ```java
-Reg.reg(Type.COBBLE,
+BlockRegistry.reg(Type.COBBLE,
         Syn.blk(Type.COBBLE)
                 .tex(Paths.BLOCK_COBBLE)
                 .build());
@@ -32,7 +32,7 @@ Reg.reg(Type.COBBLE,
 ### 2.2 Top/Bottom/Side текстуры + свойства
 
 ```java
-Reg.reg(Type.GRASS,
+BlockRegistry.reg(Type.GRASS,
         Syn.blk(Type.GRASS)
                 .tex(Paths.BLOCK_GRASS, Paths.BLOCK_GRASS, Paths.BLOCK_GRASS)
                 .props(p -> p.randomRotation()
@@ -42,7 +42,7 @@ Reg.reg(Type.GRASS,
                 .build());
 ```
 
-### 2.3 Поддерживаемые свойства `BlkProps`
+### 2.3 Поддерживаемые свойства `BlockProps`
 
 - `randomRotation()`
 - `randomColor()`
@@ -59,7 +59,7 @@ Reg.reg(Type.GRASS,
 Используйте `ImgReg` + `Syn.img`.
 
 ```java
-TexLd.Texture t = ImgReg.reg(Syn.img(Paths.UI_CURSOR).alphaKey());
+TexLoad.Texture t = ImgReg.reg(Syn.img(Paths.UI_CURSOR).alphaKey());
 ```
 
 Где:
@@ -69,7 +69,7 @@ TexLd.Texture t = ImgReg.reg(Syn.img(Paths.UI_CURSOR).alphaKey());
 Пример без alpha key:
 
 ```java
-TexLd.Texture raw = ImgReg.reg(Syn.img("ui/icon.png"));
+TexLoad.Texture raw = ImgReg.reg(Syn.img("ui/icon.png"));
 ```
 
 ---
@@ -113,12 +113,12 @@ MdlReg.Ent house = MdlReg.get("house");
 
 ## 6. Синтаксис текста (HUD / UI)
 
-Текст рисуется через `Txt.draw(...)`.
+Текст рисуется через `Text.draw(...)`.
 
 Пример:
 
 ```java
-text.draw("unit.name", Anc.LEFT, Anc.TOP, 10, 2, 1);
+text.draw("unit.name", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
 ```
 
 ### 6.1 Цвет-коды в строке
@@ -140,16 +140,16 @@ text.draw("unit.name", Anc.LEFT, Anc.TOP, 10, 2, 1);
 
 ### 6.2 Выравнивание/anchor
 
-Используйте `Anc` (`LEFT/CENTER/RIGHT`, `TOP/CENTER/BOTTOM`) и офсеты.
+Используйте `Anchor` (`LEFT/CENTER/RIGHT`, `TOP/CENTER/BOTTOM`) и офсеты.
 
 ---
 
 ## 7. Кнопки и UI элементы
 
-`Btn.draw(...)` принимает anchor, размеры и текущий курсор:
+`Button.draw(...)` принимает anchor, размеры и текущий курсор:
 
 ```java
-primaryButton.draw(label, Anc.LEFT, Anc.TOP, 10, 170, 100, 28, 1.0f, cursorX, cursorY);
+primaryButton.draw(label, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, cursorX, cursorY);
 ```
 
 Клик обрабатывается через hit-test (`contains`) + состояние кнопки в HUD.
@@ -161,7 +161,7 @@ primaryButton.draw(label, Anc.LEFT, Anc.TOP, 10, 170, 100, 28, 1.0f, cursorX, cu
 1. Добавить изображения/модели в ресурсы/asset-папку.
 2. Добавить путь в `Paths` (желательно).
 3. Зарегистрировать:
-   - блок -> `Reg.reg(... Syn.blk ...)`
+   - блок -> `BlockRegistry.reg(... Syn.blk ...)`
    - текстуру -> `ImgReg.reg(Syn.img(...))`
    - модель -> `MdlReg.reg(Syn.mdl(...))`
 4. Использовать id/type/path в рендер- или gameplay-логике.

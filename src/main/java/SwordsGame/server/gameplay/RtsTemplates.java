@@ -6,368 +6,368 @@ import java.util.EnumSet;
 import java.util.Map;
 
 public final class RtsTemplates {
-    private static final EnumMap<Fac, FTech> TREES = new EnumMap<>(Fac.class);
+    private static final EnumMap<FactionType, FactionTechTree> TREES = new EnumMap<>(FactionType.class);
 
     static {
-        TREES.put(Fac.HUMANS, buildHumans());
-        TREES.put(Fac.ELVES, buildElves());
-        TREES.put(Fac.DWARVES, buildDwarves());
+        TREES.put(FactionType.HUMANS, buildHumans());
+        TREES.put(FactionType.ELVES, buildElves());
+        TREES.put(FactionType.DWARVES, buildDwarves());
     }
 
     private RtsTemplates() {
     }
 
-    public static FTech get(Fac faction) {
+    public static FactionTechTree get(FactionType faction) {
         return TREES.get(faction);
     }
 
-    public static Map<Fac, FTech> getAll() {
+    public static Map<FactionType, FactionTechTree> getAll() {
         return Collections.unmodifiableMap(new EnumMap<>(TREES));
     }
 
-    private static FTech buildHumans() {
-        FTech tree = new FTech(Fac.HUMANS);
+    private static FactionTechTree buildHumans() {
+        FactionTechTree tree = new FactionTechTree(FactionType.HUMANS);
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "human_worker",
                 "Peasant",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.FOOD, 65),
-                EnumSet.of(URole.WORKER),
-                Cbt.NONE,
-                new UStat(100, 15, 100, 100, 100, gather(100, 100, 100, 100)),
+                ResourceBundle.of(ResourceType.FOOD, 65),
+                EnumSet.of(UnitRole.WORKER),
+                CombatType.NONE,
+                new UnitStats(100, 15, 100, 100, 100, gather(100, 100, 100, 100)),
                 "Universal worker."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "human_swordsman",
                 "Swordsman",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.FOOD, 70),
-                EnumSet.of(URole.INFANTRY),
-                Cbt.MELEE,
-                new UStat(110, 100, 95, 100, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.FOOD, 70),
+                EnumSet.of(UnitRole.INFANTRY),
+                CombatType.MELEE,
+                new UnitStats(110, 100, 95, 100, 0, gather(0, 0, 0, 0)),
                 "Core infantry of the first age."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "human_archer",
                 "Archer",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 90, Res.FOOD, 40),
-                EnumSet.of(URole.RANGED),
-                Cbt.RANGED,
-                new UStat(90, 105, 100, 100, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.WOOD, 90, ResourceType.FOOD, 40),
+                EnumSet.of(UnitRole.RANGED),
+                CombatType.RANGED,
+                new UnitStats(90, 105, 100, 100, 0, gather(0, 0, 0, 0)),
                 "Ranged support."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "human_rider",
                 "Rider",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.FOOD, 120, Res.MINERALS, 70),
-                EnumSet.of(URole.CAVALRY),
-                Cbt.MELEE,
-                new UStat(125, 115, 120, 95, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.FOOD, 120, ResourceType.MINERALS, 70),
+                EnumSet.of(UnitRole.CAVALRY),
+                CombatType.MELEE,
+                new UnitStats(125, 115, 120, 95, 0, gather(0, 0, 0, 0)),
                 "Mobile melee unit."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "orc_elite",
                 "Orc Elite",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.HISTORIES,
-                ResPack.of(Res.MINERALS, 200, Res.FOOD, 100),
-                EnumSet.of(URole.ELITE, URole.INFANTRY),
-                Cbt.MELEE,
-                new UStat(150, 140, 80, 90, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.MINERALS, 200, ResourceType.FOOD, 100),
+                EnumSet.of(UnitRole.ELITE, UnitRole.INFANTRY),
+                CombatType.MELEE,
+                new UnitStats(150, 140, 80, 90, 0, gather(0, 0, 0, 0)),
                 "Allied elite from orc clans."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "orc_leader",
                 "Orc Leader",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.HISTORIES,
-                ResPack.of(Res.MINERALS, 250, Res.FOOD, 150),
-                EnumSet.of(URole.ELITE, URole.SUPPORT),
-                Cbt.AURA,
-                new UStat(120, 100, 90, 100, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.MINERALS, 250, ResourceType.FOOD, 150),
+                EnumSet.of(UnitRole.ELITE, UnitRole.SUPPORT),
+                CombatType.AURA,
+                new UnitStats(120, 100, 90, 100, 0, gather(0, 0, 0, 0)),
                 "Aura: +20% damage and health in radius."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "human_town_center",
                 "Town Center",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                new ResPack(),
-                EnumSet.of(BRole.TOWN_CENTER),
+                new ResourceBundle(),
+                EnumSet.of(BuildingRole.TOWN_CENTER),
                 0,
                 0,
                 "Main base and age progression."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "human_barn",
                 "Barn",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 120),
-                EnumSet.of(BRole.STORAGE),
+                ResourceBundle.of(ResourceType.WOOD, 120),
+                EnumSet.of(BuildingRole.STORAGE),
                 400,
                 0,
                 "Specialized storage for food."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "human_lumberyard",
                 "Lumberyard",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 110),
-                EnumSet.of(BRole.STORAGE),
+                ResourceBundle.of(ResourceType.WOOD, 110),
+                EnumSet.of(BuildingRole.STORAGE),
                 400,
                 0,
                 "Specialized storage for wood."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "human_quarry",
                 "Quarry",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 110, Res.STONE, 50),
-                EnumSet.of(BRole.STORAGE),
+                ResourceBundle.of(ResourceType.WOOD, 110, ResourceType.STONE, 50),
+                EnumSet.of(BuildingRole.STORAGE),
                 400,
                 0,
                 "Specialized storage for stone."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "human_barracks",
                 "Barracks",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 150, Res.STONE, 80),
-                EnumSet.of(BRole.TRAINING),
+                ResourceBundle.of(ResourceType.WOOD, 150, ResourceType.STONE, 80),
+                EnumSet.of(BuildingRole.TRAINING),
                 0,
                 0,
                 "Trains infantry."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "human_tower",
                 "Tower",
-                Fac.HUMANS,
+                FactionType.HUMANS,
                 Age.LEGENDS,
-                ResPack.of(Res.STONE, 140),
-                EnumSet.of(BRole.DEFENSE, BRole.TRAINING),
+                ResourceBundle.of(ResourceType.STONE, 140),
+                EnumSet.of(BuildingRole.DEFENSE, BuildingRole.TRAINING),
                 0,
                 0,
                 "Defensive tower."));
 
-        tree.addTechnology(ageUp(Fac.HUMANS, Age.LEGENDS, Age.HISTORIES, 400));
-        tree.addTechnology(ageUp(Fac.HUMANS, Age.HISTORIES, Age.CHRONICLES, 800));
+        tree.addTechnology(ageUp(FactionType.HUMANS, Age.LEGENDS, Age.HISTORIES, 400));
+        tree.addTechnology(ageUp(FactionType.HUMANS, Age.HISTORIES, Age.CHRONICLES, 800));
 
         return tree;
     }
 
-    private static FTech buildElves() {
-        FTech tree = new FTech(Fac.ELVES);
+    private static FactionTechTree buildElves() {
+        FactionTechTree tree = new FactionTechTree(FactionType.ELVES);
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "elf_worker",
                 "Gnoll Worker",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.LEGENDS,
-                ResPack.of(Res.FOOD, 50),
-                EnumSet.of(URole.WORKER),
-                Cbt.NONE,
-                new UStat(80, 10, 90, 100, 65, gather(70, 50, 60, 55)),
+                ResourceBundle.of(ResourceType.FOOD, 50),
+                EnumSet.of(UnitRole.WORKER),
+                CombatType.NONE,
+                new UnitStats(80, 10, 90, 100, 65, gather(70, 50, 60, 55)),
                 "Cheap but slower worker."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "gnollid",
                 "Gnollid",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.LEGENDS,
-                ResPack.of(Res.MINERALS, 75),
-                EnumSet.of(URole.INFANTRY),
-                Cbt.MELEE,
-                new UStat(110, 90, 95, 85, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.MINERALS, 75),
+                EnumSet.of(UnitRole.INFANTRY),
+                CombatType.MELEE,
+                new UnitStats(110, 90, 95, 85, 0, gather(0, 0, 0, 0)),
                 "Worker transformation into melee defender."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "elf_archer",
                 "Elven Archer",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 100, Res.MINERALS, 50),
-                EnumSet.of(URole.RANGED),
-                Cbt.RANGED,
-                new UStat(90, 120, 110, 105, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.WOOD, 100, ResourceType.MINERALS, 50),
+                EnumSet.of(UnitRole.RANGED),
+                CombatType.RANGED,
+                new UnitStats(90, 120, 110, 105, 0, gather(0, 0, 0, 0)),
                 "Strong ranged core unit."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "elf_spearman",
                 "Spearman",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.LEGENDS,
-                ResPack.of(Res.FOOD, 80, Res.WOOD, 40),
-                EnumSet.of(URole.INFANTRY),
-                Cbt.MELEE,
-                new UStat(100, 95, 100, 100, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.FOOD, 80, ResourceType.WOOD, 40),
+                EnumSet.of(UnitRole.INFANTRY),
+                CombatType.MELEE,
+                new UnitStats(100, 95, 100, 100, 0, gather(0, 0, 0, 0)),
                 "Anti-cavalry placeholder."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "elf_town_center",
                 "Ancient Center",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.LEGENDS,
-                new ResPack(),
-                EnumSet.of(BRole.TOWN_CENTER),
+                new ResourceBundle(),
+                EnumSet.of(BuildingRole.TOWN_CENTER),
                 0,
                 0,
                 "Main base and age progression."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "elf_storehouse",
                 "Storehouse",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 120),
-                EnumSet.of(BRole.STORAGE),
+                ResourceBundle.of(ResourceType.WOOD, 120),
+                EnumSet.of(BuildingRole.STORAGE),
                 800,
                 0,
                 "Universal storage."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "elf_archery",
                 "Archery",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.LEGENDS,
-                ResPack.of(Res.WOOD, 160, Res.STONE, 60),
-                EnumSet.of(BRole.TRAINING),
+                ResourceBundle.of(ResourceType.WOOD, 160, ResourceType.STONE, 60),
+                EnumSet.of(BuildingRole.TRAINING),
                 0,
                 0,
                 "Ranged unit training."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "elf_academy",
                 "Academy",
-                Fac.ELVES,
+                FactionType.ELVES,
                 Age.HISTORIES,
-                ResPack.of(Res.MINERALS, 140, Res.WOOD, 110),
-                EnumSet.of(BRole.TRAINING, BRole.WORKSHOP),
+                ResourceBundle.of(ResourceType.MINERALS, 140, ResourceType.WOOD, 110),
+                EnumSet.of(BuildingRole.TRAINING, BuildingRole.WORKSHOP),
                 0,
                 0,
                 "Magic/support research building."));
 
-        tree.addTechnology(ageUp(Fac.ELVES, Age.LEGENDS, Age.HISTORIES, 400));
-        tree.addTechnology(ageUp(Fac.ELVES, Age.HISTORIES, Age.CHRONICLES, 800));
+        tree.addTechnology(ageUp(FactionType.ELVES, Age.LEGENDS, Age.HISTORIES, 400));
+        tree.addTechnology(ageUp(FactionType.ELVES, Age.HISTORIES, Age.CHRONICLES, 800));
 
         return tree;
     }
 
-    private static FTech buildDwarves() {
-        FTech tree = new FTech(Fac.DWARVES);
+    private static FactionTechTree buildDwarves() {
+        FactionTechTree tree = new FactionTechTree(FactionType.DWARVES);
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "dwarf_worker",
                 "Gnome Worker",
-                Fac.DWARVES,
+                FactionType.DWARVES,
                 Age.LEGENDS,
-                ResPack.of(Res.FOOD, 75),
-                EnumSet.of(URole.WORKER),
-                Cbt.NONE,
-                new UStat(120, 12, 85, 100, 95, gather(80, 140, 80, 90)),
+                ResourceBundle.of(ResourceType.FOOD, 75),
+                EnumSet.of(UnitRole.WORKER),
+                CombatType.NONE,
+                new UnitStats(120, 12, 85, 100, 95, gather(80, 140, 80, 90)),
                 "Durable worker with mineral focus."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "dwarf_enforcer",
                 "Enforcer",
-                Fac.DWARVES,
+                FactionType.DWARVES,
                 Age.LEGENDS,
-                ResPack.of(Res.MINERALS, 150, Res.STONE, 75),
-                EnumSet.of(URole.INFANTRY),
-                Cbt.MELEE,
-                new UStat(140, 110, 70, 90, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.MINERALS, 150, ResourceType.STONE, 75),
+                EnumSet.of(UnitRole.INFANTRY),
+                CombatType.MELEE,
+                new UnitStats(140, 110, 70, 90, 0, gather(0, 0, 0, 0)),
                 "Heavy frontline unit."));
 
-        tree.addUnit(new UTemp(
+        tree.addUnit(new UnitTemplate(
                 "dwarf_sapper",
                 "Sapper",
-                Fac.DWARVES,
+                FactionType.DWARVES,
                 Age.HISTORIES,
-                ResPack.of(Res.STONE, 200, Res.MINERALS, 100),
-                EnumSet.of(URole.SIEGE),
-                Cbt.SIEGE,
-                new UStat(130, 130, 60, 85, 0, gather(0, 0, 0, 0)),
+                ResourceBundle.of(ResourceType.STONE, 200, ResourceType.MINERALS, 100),
+                EnumSet.of(UnitRole.SIEGE),
+                CombatType.SIEGE,
+                new UnitStats(130, 130, 60, 85, 0, gather(0, 0, 0, 0)),
                 "Siege specialist / demolitions."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "dwarf_town_center",
                 "Forge Hall",
-                Fac.DWARVES,
+                FactionType.DWARVES,
                 Age.LEGENDS,
-                new ResPack(),
-                EnumSet.of(BRole.TOWN_CENTER),
+                new ResourceBundle(),
+                EnumSet.of(BuildingRole.TOWN_CENTER),
                 0,
                 0,
                 "Main base and age progression."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "dwarf_wagon",
                 "Storage Wagon",
-                Fac.DWARVES,
+                FactionType.DWARVES,
                 Age.HISTORIES,
-                ResPack.of(Res.STONE, 150, Res.MINERALS, 100),
-                EnumSet.of(BRole.STORAGE, BRole.ECONOMY),
+                ResourceBundle.of(ResourceType.STONE, 150, ResourceType.MINERALS, 100),
+                EnumSet.of(BuildingRole.STORAGE, BuildingRole.ECONOMY),
                 600,
                 2,
                 "Mobile storage unit."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "dwarf_foundry",
                 "Foundry",
-                Fac.DWARVES,
+                FactionType.DWARVES,
                 Age.LEGENDS,
-                ResPack.of(Res.MINERALS, 170, Res.STONE, 90),
-                EnumSet.of(BRole.TRAINING, BRole.WORKSHOP),
+                ResourceBundle.of(ResourceType.MINERALS, 170, ResourceType.STONE, 90),
+                EnumSet.of(BuildingRole.TRAINING, BuildingRole.WORKSHOP),
                 0,
                 0,
                 "Military and upgrade workshop."));
 
-        tree.addBuilding(new BTemp(
+        tree.addBuilding(new BuildingTemplate(
                 "dwarf_turret",
                 "Turret",
-                Fac.DWARVES,
+                FactionType.DWARVES,
                 Age.HISTORIES,
-                ResPack.of(Res.STONE, 160, Res.MINERALS, 80),
-                EnumSet.of(BRole.DEFENSE),
+                ResourceBundle.of(ResourceType.STONE, 160, ResourceType.MINERALS, 80),
+                EnumSet.of(BuildingRole.DEFENSE),
                 0,
                 0,
                 "Static defensive emplacement."));
 
-        tree.addTechnology(ageUp(Fac.DWARVES, Age.LEGENDS, Age.HISTORIES, 400));
-        tree.addTechnology(ageUp(Fac.DWARVES, Age.HISTORIES, Age.CHRONICLES, 800));
+        tree.addTechnology(ageUp(FactionType.DWARVES, Age.LEGENDS, Age.HISTORIES, 400));
+        tree.addTechnology(ageUp(FactionType.DWARVES, Age.HISTORIES, Age.CHRONICLES, 800));
 
         return tree;
     }
 
-    private static TTemp ageUp(Fac faction, Age from, Age target, int costPerResource) {
-        return new TTemp(
+    private static TechnologyTemplate ageUp(FactionType faction, Age from, Age target, int costPerResource) {
+        return new TechnologyTemplate(
                 faction.name().toLowerCase() + "_age_" + target.name().toLowerCase(),
                 "Advance to " + target.name(),
                 faction,
                 from,
                 target,
-                ResPack.of(Res.WOOD, costPerResource,
-                        Res.MINERALS, costPerResource).add(ResPack.of(Res.FOOD, costPerResource,
-                        Res.STONE, costPerResource)),
+                ResourceBundle.of(ResourceType.WOOD, costPerResource,
+                        ResourceType.MINERALS, costPerResource).add(ResourceBundle.of(ResourceType.FOOD, costPerResource,
+                        ResourceType.STONE, costPerResource)),
                 "Age progression research at Town Center.");
     }
 
-    private static ResPack gather(int wood, int minerals, int food, int stone) {
-        ResPack bundle = new ResPack();
-        bundle.set(Res.WOOD, wood);
-        bundle.set(Res.MINERALS, minerals);
-        bundle.set(Res.FOOD, food);
-        bundle.set(Res.STONE, stone);
+    private static ResourceBundle gather(int wood, int minerals, int food, int stone) {
+        ResourceBundle bundle = new ResourceBundle();
+        bundle.set(ResourceType.WOOD, wood);
+        bundle.set(ResourceType.MINERALS, minerals);
+        bundle.set(ResourceType.FOOD, food);
+        bundle.set(ResourceType.STONE, stone);
         return bundle;
     }
 }

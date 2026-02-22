@@ -6,17 +6,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class ImgReg {
-    private static final Map<String, TexLd.Texture> IMG = new HashMap<>();
+    private static final Map<String, TexLoad.Texture> IMG = new HashMap<>();
 
     private ImgReg() {}
 
-    public static TexLd.Texture reg(Syn.Img def) {
-        TexLd.Texture tex = TexLd.loadTexture(def.path, def.alphaKey);
+    public static TexLoad.Texture reg(Syn.Img def) {
+        TexLoad.Texture tex = TexLoad.loadTexture(def.path, def.alphaKey);
         IMG.put(def.path, tex);
         return tex;
     }
 
-    public static TexLd.Texture get(String path) {
+    public static TexLoad.Texture get(String path) {
         return IMG.get(path);
     }
 

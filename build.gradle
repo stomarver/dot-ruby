@@ -42,7 +42,7 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-opengl::natives-windows"
     runtimeOnly "org.lwjgl:lwjgl-stb::natives-windows"
 
-    // Disc RPC (локальный файл) и JNA
+    // Discord RPC (локальный файл) и JNA
     implementation files('libs/java-discord-rpc-2.0.1-all.jar')
     implementation 'net.java.dev.jna:jna:5.12.0'
 }
@@ -129,14 +129,14 @@ shadowJar {
     }
 }
 
-// ===== DEBUG JAR (Main-Class: Dbg) =====
+// ===== DEBUG JAR (Main-Class: Debug) =====
 
 tasks.register('shadowJarDebug', shadowJar.getClass()) {
     commonShadowConfig.delegate = delegate
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.client.core.Dbg'  // Поправьте, если путь к классу другой
+        attributes 'Main-Class': 'SwordsGame.client.core.Debug'  // Поправьте, если путь к классу другой
     }
 
     doFirst {
@@ -149,7 +149,7 @@ tasks.register('shadowJarDebug', shadowJar.getClass()) {
 
         archiveFileName.set("debug-ruby-${dateTimePart}.jar")
 
-        println "[Build] Dbg JAR: ${outputDir}/${archiveFileName.get()}"
+        println "[Build] Debug JAR: ${outputDir}/${archiveFileName.get()}"
     }
 }
 

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Font {
-    private final TexLd.Texture texture;
+    private final TexLoad.Texture texture;
 
     private final int charWidth = 6, charHeight = 8, spacing = 1;
 
@@ -27,7 +27,7 @@ public class Font {
     }
 
     public Font(String path) {
-        this.texture = TexLd.loadTexture(path, true);
+        this.texture = TexLoad.loadTexture(path, true);
         initCharMap();
         initDiacritics();
     }
@@ -109,6 +109,6 @@ public class Font {
     public int getCharHeight() { return charHeight; }
 
     public void destroy() {
-        if (texture != null) TexLd.deleteTexture(texture.id);
+        if (texture != null) TexLoad.deleteTexture(texture.id);
     }
 }
