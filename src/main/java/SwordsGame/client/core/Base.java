@@ -54,7 +54,16 @@ public class Base {
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
-            camera.update(window, chunkManager, renderer);
+            float mouseX = window.getMouseRelX();
+            float mouseY = window.getMouseRelY();
+            boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+
+            selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
+            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selArea);
+
+            boolean blockVerticalEdgeScroll = leftMouseHeld && selectionRectangle.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
+
+            camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
             renderer.setFogZoom(camera.getZoom());
             updateVirtualResolutionToggle(window.getHandle());
@@ -75,13 +84,6 @@ public class Base {
             renderer.applyScreenSpaceFog(window);
             renderer.setup2D(window);
 
-            float mouseX = window.getMouseRelX();
-            float mouseY = window.getMouseRelY();
-            boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-
-            selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
-
-            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selArea);
             window.setVirtualMouseClamp(leftMouseHeld && selectionRectangle.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
 
             if (hud != null) {

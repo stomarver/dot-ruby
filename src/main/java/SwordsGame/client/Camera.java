@@ -37,7 +37,7 @@ public class Camera {
     public float getOrthoHeight() { return ORTHO_HEIGHT; }
 
 
-    public void update(Window window, ChunkManager chunkManager, Renderer renderer) {
+    public void update(Window window, ChunkManager chunkManager, Renderer renderer, boolean blockVerticalEdgeScroll) {
         long windowHandle = window.getHandle();
 
         Vector2f forward = forwardFromAngle(currentRotationY);
@@ -79,10 +79,12 @@ public class Camera {
             position.fma(-EDGE_SCROLL_SPEED, right);
         }
 
-        if (mouseY < EDGE_SCROLL_ZONE) {
-            position.fma(EDGE_SCROLL_SPEED, forward);
-        } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
-            position.fma(-EDGE_SCROLL_SPEED, forward);
+        if (!blockVerticalEdgeScroll) {
+            if (mouseY < EDGE_SCROLL_ZONE) {
+                position.fma(EDGE_SCROLL_SPEED, forward);
+            } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
+                position.fma(-EDGE_SCROLL_SPEED, forward);
+            }
         }
 
         if (glfwGetKey(windowHandle, GLFW_KEY_EQUAL) == GLFW_PRESS) zoom += zoomSpeed;
@@ -112,6 +114,11 @@ public class Camera {
 
         currentRotationY += (targetRotationY - currentRotationY) * lerpSpeed;
         clampPosition(chunkManager, renderer);
+    }
+
+
+    public boolean isInVerticalEdgeZone(float mouseY, int virtualHeight) {
+        return mouseY < EDGE_SCROLL_ZONE || mouseY > virtualHeight - EDGE_SCROLL_ZONE;
     }
 
     public void applyTransformations() {

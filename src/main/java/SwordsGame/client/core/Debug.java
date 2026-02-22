@@ -69,7 +69,16 @@ public class Debug {
         TextureLoader.finishLoading();
 
         while (!window.shouldClose()) {
-            camera.update(window, chunkManager, renderer);
+            float mouseX = window.getMouseRelX();
+            float mouseY = window.getMouseRelY();
+            boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+
+            selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
+            selection.update(mouseX, mouseY, leftMouseHeld, selArea);
+
+            boolean blockVerticalEdgeScroll = leftMouseHeld && selection.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
+
+            camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
             renderer.setSunDirectionFromAngles(30.0f, 15.0f);
             updateFogDistanceControls(window.getHandle());
             renderer.setFogZoom(camera.getZoom() * fogDistanceMultiplier);
@@ -96,17 +105,10 @@ public class Debug {
             renderer.applyScreenSpaceFog(window);
             renderer.setup2D(window);
 
-            float mouseX = window.getMouseRelX();
-            float mouseY = window.getMouseRelY();
-            boolean leftMouseDown = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-
-            selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
-
-            selection.update(mouseX, mouseY, leftMouseDown, selArea);
-            window.setVirtualMouseClamp(leftMouseDown && selection.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
+            window.setVirtualMouseClamp(leftMouseHeld && selection.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
-                if (hud.consumePrimaryButtonClick(leftMouseDown)) {
+                if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     showDebugInfo = !showDebugInfo;
                 }
                 hud.render();
