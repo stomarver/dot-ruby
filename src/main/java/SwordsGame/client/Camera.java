@@ -27,7 +27,7 @@ public class Camera {
     private static final float MIN_ZOOM = 0.25f;
     private static final float MAX_ZOOM = 2.5f;
     private static final float PITCH_BASE = 35.264f;
-    private static final float PITCH_NEAR = 28.0f;
+    private static final float PITCH_NEAR = 12.0f;
     private static final float PITCH_FAR = 60.0f;
     private static final float DEFAULT_ZOOM = 0.5f;
 
@@ -136,11 +136,22 @@ public class Camera {
         if (zoom <= DEFAULT_ZOOM) {
             float t = (zoom - MIN_ZOOM) / (DEFAULT_ZOOM - MIN_ZOOM);
             t = clamp(t, 0.0f, 1.0f);
-            return PITCH_FAR + (PITCH_BASE - PITCH_FAR) * t;
+            float eased = easeOutCubic(t);
+            return PITCH_FAR + (PITCH_BASE - PITCH_FAR) * eased;
         }
         float t = (zoom - DEFAULT_ZOOM) / (MAX_ZOOM - DEFAULT_ZOOM);
         t = clamp(t, 0.0f, 1.0f);
-        return PITCH_BASE + (PITCH_NEAR - PITCH_BASE) * t;
+        float eased = easeInCubic(t);
+        return PITCH_BASE + (PITCH_NEAR - PITCH_BASE) * eased;
+    }
+
+    private float easeOutCubic(float t) {
+        float inv = 1.0f - t;
+        return 1.0f - (inv * inv * inv);
+    }
+
+    private float easeInCubic(float t) {
+        return t * t * t;
     }
 
     private void clampPosition(ChunkManager chunkManager, Renderer renderer) {
