@@ -22,6 +22,9 @@ public class Renderer {
     private static final float NIGHT_TINT_R = 0.26f;
     private static final float NIGHT_TINT_G = 0.26f;
     private static final float NIGHT_TINT_B = 1.00f;
+    private static final float ORANGE_TINT_R = 1.00f;
+    private static final float ORANGE_TINT_G = 0.68f;
+    private static final float ORANGE_TINT_B = 0.34f;
     private static final float DAY_FOG_START_DISTANCE = -640.0f;
     private static final float DAY_FOG_END_DISTANCE = -280.0f;
     private static final float NIGHT_FOG_START_DISTANCE = -760.0f;
@@ -39,6 +42,7 @@ public class Renderer {
     private float diffuseG = DAY_DIFFUSE_G;
     private float diffuseB = DAY_DIFFUSE_B;
     private float nightBlend = 0.0f;
+    private float orangeBlend = 0.0f;
     private final FogFx fogFx = new FogFx();
 
     public Renderer() {
@@ -123,7 +127,12 @@ public class Renderer {
     }
 
     public void setNightTint(float blend) {
-        nightBlend = Math.max(0.0f, Math.min(1.0f, blend));
+        setCycleTint(blend, 0.0f);
+    }
+
+    public void setCycleTint(float nightBlendValue, float orangeBlendValue) {
+        nightBlend = Math.max(0.0f, Math.min(1.0f, nightBlendValue));
+        orangeBlend = Math.max(0.0f, Math.min(1.0f, orangeBlendValue));
         float fogStart = lerp(DAY_FOG_START_DISTANCE, NIGHT_FOG_START_DISTANCE, nightBlend);
         float fogEnd = lerp(DAY_FOG_END_DISTANCE, NIGHT_FOG_END_DISTANCE, nightBlend);
         fogFx.setDistanceRange(fogStart, fogEnd);
@@ -187,14 +196,20 @@ public class Renderer {
     }
 
     private float tintR() {
-        return 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_R));
+        float warm = lerp(1.0f, ORANGE_TINT_R, orangeBlend);
+        float night = 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_R));
+        return lerp(warm, night, nightBlend);
     }
 
     private float tintG() {
-        return 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_G));
+        float warm = lerp(1.0f, ORANGE_TINT_G, orangeBlend);
+        float night = 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_G));
+        return lerp(warm, night, nightBlend);
     }
 
     private float tintB() {
-        return 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_B));
+        float warm = lerp(1.0f, ORANGE_TINT_B, orangeBlend);
+        float night = 1.0f - (nightBlend * NIGHT_TINT_STRENGTH * (1.0f - NIGHT_TINT_B));
+        return lerp(warm, night, nightBlend);
     }
 }

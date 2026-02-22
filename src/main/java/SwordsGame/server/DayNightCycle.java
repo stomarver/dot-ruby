@@ -106,6 +106,20 @@ public class DayNightCycle {
         return day;
     }
 
+
+    public float getOrangeBlend() {
+        float m = getCycleMinutes();
+        float t = FOG_TRANSITION_MINUTES;
+        float dusk = transitionBump(m, 24f, t);
+        float dawn = transitionBump(m, 32f, t);
+        return Math.max(dusk, dawn);
+    }
+
+    private float transitionBump(float minutes, float center, float halfWidth) {
+        if (minutes < center - halfWidth || minutes > center + halfWidth) return 0f;
+        if (minutes <= center) return smooth01((minutes - (center - halfWidth)) / halfWidth);
+        return 1f - smooth01((minutes - center) / halfWidth);
+    }
     public float getNightBlend() {
         float m = getCycleMinutes();
         float t = FOG_TRANSITION_MINUTES;
