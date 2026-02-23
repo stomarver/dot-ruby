@@ -19,7 +19,12 @@ tasks.withType(JavaCompile) {
 
 repositories {
     mavenCentral()
-    maven { url 'https://maven.firstdark.dev/releases' }
+    maven {
+        url 'https://maven.firstdark.dev/releases'
+        content {
+            includeGroupByRegex 'dev\\.firstdark(\\..*)?'
+        }
+    }
 }
 
 dependencies {
@@ -45,6 +50,7 @@ dependencies {
     // Discord RPC (локальный файл) и JNA
     implementation files('libs/java-discord-rpc-2.0.1-all.jar')
     implementation 'net.java.dev.jna:jna:5.12.0'
+    implementation 'org.apache.groovy:groovy:4.0.23'
 }
 
 // ===== VERSION GENERATION =====
