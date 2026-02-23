@@ -33,6 +33,24 @@ public class FaceSmoothing {
         propagateLoweredEdge(leftExposed, offsets, 0, 1, loweredY);
         propagateLoweredEdge(rightExposed, offsets, 2, 3, loweredY);
 
+        // Corner closure pass:
+        // if a corner is between two already-lowered neighboring corners,
+        // force it down as well to avoid lone unsnapped "0" corners.
+        boolean[] lowered = new boolean[4];
+        for (int i = 0; i < 4; i++) {
+            lowered[i] = isNear(offsets[i], loweredY);
+        }
+        for (int i = 0; i < 4; i++) {
+            if (lowered[i]) {
+                continue;
+            }
+            int prev = (i + 3) & 3;
+            int next = (i + 1) & 3;
+            if (lowered[prev] && lowered[next]) {
+                offsets[i] = loweredY;
+            }
+        }
+
         return offsets;
     }
 
