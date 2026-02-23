@@ -27,6 +27,7 @@ public class MainMenuState implements SessionState {
     public void onEnter(SessionContext context) {
         this.context = context;
         this.window = context.getWindow();
+        window.setVirtualMouseClamp(false, 0, 0, window.getVirtualWidth() - 1f, window.getVirtualHeight());
 
         renderer = new Renderer();
         font = new Font(Paths.FONT_MAIN);
@@ -61,6 +62,7 @@ public class MainMenuState implements SessionState {
         float mouseY = window.getMouseRelY();
         boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
+        window.setVirtualMouseClamp(false, 0, 0, window.getVirtualWidth() - 1f, window.getVirtualHeight());
         hud.setVirtualCursor(mouseX, mouseY);
         String action = hud.pollDialogButtonClick(leftMouseHeld);
         if (action == null) {
@@ -71,6 +73,11 @@ public class MainMenuState implements SessionState {
                 hud.setGlobalLoadingText("loading");
                 hud.setGlobalLoadingVisible(true);
                 context.getCommands().startScenario(context.isDebugProfile());
+            }
+            case "open-showcase" -> {
+                hud.setGlobalLoadingText("loading");
+                hud.setGlobalLoadingVisible(true);
+                context.getCommands().openShowcase();
             }
             case "exit-app" -> {
                 hud.setGlobalLoadingText("loading");

@@ -5,5 +5,7 @@ public interface SessionCommands {
 
     void startScenario(boolean debugProfile);
 
+    void openShowcase();
+
     void exitApplication();
 }

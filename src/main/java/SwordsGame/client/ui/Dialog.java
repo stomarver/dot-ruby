@@ -1,7 +1,9 @@
 package SwordsGame.client.ui;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -24,6 +26,11 @@ public class Dialog {
         FULL_SCREEN
     }
 
+    public enum DialogFlag {
+        LOCK_CURSOR_TO_DIALOG,
+        BLOCK_EDGE_SCROLL
+    }
+
     private final int screenW;
     private final int screenH;
 
@@ -37,6 +44,7 @@ public class Dialog {
     private float height = 120;
     private String text = "";
     private SelectionBlockMode selectionBlockMode = SelectionBlockMode.NONE;
+    private EnumSet<DialogFlag> flags = EnumSet.noneOf(DialogFlag.class);
 
     private final List<TextSlot> textSlots = new ArrayList<>();
     private final List<ButtonSlot> buttonSlots = new ArrayList<>();
@@ -57,7 +65,8 @@ public class Dialog {
                      float y,
                      float width,
                      float height,
-                     SelectionBlockMode blockMode) {
+                     SelectionBlockMode blockMode,
+                     Set<DialogFlag> flags) {
         this.anchorX = ax == null ? Anchor.LEFT : ax;
         this.anchorY = ay == null ? Anchor.TOP : ay;
         this.pivot = null;
@@ -67,7 +76,19 @@ public class Dialog {
         this.height = Math.max(1f, height);
         this.text = text == null ? "" : text;
         this.selectionBlockMode = blockMode == null ? SelectionBlockMode.NONE : blockMode;
+        this.flags = flags == null || flags.isEmpty() ? EnumSet.noneOf(DialogFlag.class) : EnumSet.copyOf(flags);
         this.visible = true;
+    }
+
+    public void show(String text,
+                     Anchor.TypeX ax,
+                     Anchor.TypeY ay,
+                     float x,
+                     float y,
+                     float width,
+                     float height,
+                     SelectionBlockMode blockMode) {
+        show(text, ax, ay, x, y, width, height, blockMode, EnumSet.noneOf(DialogFlag.class));
     }
 
 
@@ -80,6 +101,19 @@ public class Dialog {
                      float width,
                      float height,
                      SelectionBlockMode blockMode) {
+        show(text, pivot, alignX, alignY, x, y, width, height, blockMode, EnumSet.noneOf(DialogFlag.class));
+    }
+
+    public void show(String text,
+                     Anchor pivot,
+                     Anchor.TypeX alignX,
+                     Anchor.TypeY alignY,
+                     float x,
+                     float y,
+                     float width,
+                     float height,
+                     SelectionBlockMode blockMode,
+                     Set<DialogFlag> flags) {
         this.anchorX = alignX == null ? Anchor.LEFT : alignX;
         this.anchorY = alignY == null ? Anchor.TOP : alignY;
         this.pivot = pivot;
@@ -89,6 +123,7 @@ public class Dialog {
         this.height = Math.max(1f, height);
         this.text = text == null ? "" : text;
         this.selectionBlockMode = blockMode == null ? SelectionBlockMode.NONE : blockMode;
+        this.flags = flags == null || flags.isEmpty() ? EnumSet.noneOf(DialogFlag.class) : EnumSet.copyOf(flags);
         this.visible = true;
     }
 
@@ -101,10 +136,23 @@ public class Dialog {
                        float width,
                        float height,
                        SelectionBlockMode blockMode) {
+        toggle(text, pivot, alignX, alignY, x, y, width, height, blockMode, EnumSet.noneOf(DialogFlag.class));
+    }
+
+    public void toggle(String text,
+                       Anchor pivot,
+                       Anchor.TypeX alignX,
+                       Anchor.TypeY alignY,
+                       float x,
+                       float y,
+                       float width,
+                       float height,
+                       SelectionBlockMode blockMode,
+                       Set<DialogFlag> flags) {
         if (visible) {
             visible = false;
         } else {
-            show(text, pivot, alignX, alignY, x, y, width, height, blockMode);
+            show(text, pivot, alignX, alignY, x, y, width, height, blockMode, flags);
         }
     }
 
@@ -116,15 +164,28 @@ public class Dialog {
                        float width,
                        float height,
                        SelectionBlockMode blockMode) {
+        toggle(text, ax, ay, x, y, width, height, blockMode, EnumSet.noneOf(DialogFlag.class));
+    }
+
+    public void toggle(String text,
+                       Anchor.TypeX ax,
+                       Anchor.TypeY ay,
+                       float x,
+                       float y,
+                       float width,
+                       float height,
+                       SelectionBlockMode blockMode,
+                       Set<DialogFlag> flags) {
         if (visible) {
             visible = false;
         } else {
-            show(text, ax, ay, x, y, width, height, blockMode);
+            show(text, ax, ay, x, y, width, height, blockMode, flags);
         }
     }
 
     public void hide() {
         this.visible = false;
+        this.flags = EnumSet.noneOf(DialogFlag.class);
     }
 
     public boolean isVisible() {
@@ -133,6 +194,22 @@ public class Dialog {
 
     public boolean blocksSelection(float cursorX, float cursorY) {
         return visible && selectionBlockMode == SelectionBlockMode.FULL_SCREEN;
+    }
+
+    public boolean shouldLockCursorToDialog() {
+        return visible && flags.contains(DialogFlag.LOCK_CURSOR_TO_DIALOG);
+    }
+
+    public boolean shouldBlockEdgeScroll() {
+        return visible && flags.contains(DialogFlag.BLOCK_EDGE_SCROLL);
+    }
+
+    public float[] getBounds() {
+        if (!visible) {
+            return null;
+        }
+        Rect r = resolveRect(anchorX, anchorY, offsetX, offsetY, width, height);
+        return new float[]{r.x, r.y, r.w, r.h};
     }
 
     public Anchor resolveLocalAnchor(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y) {

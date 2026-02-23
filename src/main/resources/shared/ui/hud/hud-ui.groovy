@@ -3,7 +3,6 @@
 // - ctx.primaryButtonText
 // - ctx.state (Map<String, Object>)
 
-
 def S = { ctx -> (ctx?.state ?: [:]) as Map }
 
 def btn = { String id, String label, String alignX, String alignY,
@@ -43,15 +42,16 @@ def btn = { String id, String label, String alignX, String alignY,
             ]
         },
         dialogs: [
-                'main.menu'   : { ctx ->
+                'main.menu'    : { ctx ->
                     [
                             texts  : [
                                     [text: '^2DotRuby^0\nMain Menu', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 20, scale: 1.0],
-                                    [text: 'Use buttons to start or exit', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 62, scale: 1.0]
+                                    [text: 'Choose a runtime session', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 62, scale: 1.0]
                             ],
                             buttons: [
-                                    btn('start-session', 'start session', 'CENTER', 'TOP', 0, 108, 200, 28),
-                                    btn('exit-app', 'exit', 'CENTER', 'TOP', 0, 142, 200, 28)
+                                    btn('start-session', 'start session', 'CENTER', 'TOP', 0, 102, 220, 28),
+                                    btn('open-showcase', 'showcase session', 'CENTER', 'TOP', 0, 136, 220, 28),
+                                    btn('exit-app', 'exit', 'CENTER', 'TOP', 0, 170, 220, 28)
                             ]
                     ]
                 },
@@ -66,7 +66,22 @@ def btn = { String id, String label, String alignX, String alignY,
                             ]
                     ]
                 },
-                'debug.info'  : { ctx ->
+                'showcase.menu' : { ctx ->
+                    [
+                            texts  : [
+                                    [text: '^2Showcase Session^0', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 16, scale: 1.0],
+                                    [text: 'Dialog flags + text preview', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 38, scale: 1.0]
+                            ],
+                            buttons: [
+                                    btn('showcase-open-none', 'dialog: none', 'CENTER', 'TOP', 0, 74, 220, 24),
+                                    btn('showcase-open-cursor-lock', 'dialog: lock cursor', 'CENTER', 'TOP', 0, 102, 220, 24),
+                                    btn('showcase-open-edge-block', 'dialog: block edge', 'CENTER', 'TOP', 0, 130, 220, 24),
+                                    btn('showcase-open-all', 'dialog: all flags', 'CENTER', 'TOP', 0, 158, 220, 24),
+                                    btn('showcase-main-menu', 'main menu', 'CENTER', 'TOP', 0, 190, 220, 24)
+                            ]
+                    ]
+                },
+                'debug.info'   : { ctx ->
                     def state = S(ctx)
                     [
                             texts  : [],

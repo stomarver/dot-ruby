@@ -81,7 +81,7 @@ public class SessionScenarioState implements SessionState {
 
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
-        hud.setPrimaryButtonText(debugProfile ? "deb...ug" : "menu");
+        hud.setPrimaryButtonText("menu");
         hud.setGlobalLoadingText("loading");
         hud.setGlobalLoadingVisible(false);
         hud.putUiState("debugMode", debugProfile);
@@ -124,7 +124,8 @@ public class SessionScenarioState implements SessionState {
         lastCycleTickSeconds = nowCycleTickSeconds;
         dayNightCycle.update(window.getHandle(), deltaCycleSeconds);
 
-        camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll);
+        boolean edgeScrollBlockedByDialog = hud != null && hud.isEdgeScrollBlockedByDialog();
+        camera.update(window, chunkManager, renderer, blockVerticalEdgeScroll, edgeScrollBlockedByDialog);
         renderer.setSunDirectionFromAngles(30.0f, 15.0f);
         renderer.setCycleTint(dayNightCycle.getNightBlend(), dayNightCycle.getOrangeBlend());
         renderer.setFogColor(dayNightCycle.getFogR(), dayNightCycle.getFogG(), dayNightCycle.getFogB());
@@ -148,7 +149,8 @@ public class SessionScenarioState implements SessionState {
                 hud.applyDialogLayout(HudLayoutRegistry.DIALOG_SESSION_PAUSE);
                 hud.setDialogOpacity(1.0f, 1.0f);
                 hud.toggleDialogAtPivot("", "screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 200,
-                        Dialog.SelectionBlockMode.NONE);
+                        Dialog.SelectionBlockMode.NONE,
+                        java.util.Set.of(Dialog.DialogFlag.LOCK_CURSOR_TO_DIALOG, Dialog.DialogFlag.BLOCK_EDGE_SCROLL));
             }
 
             if (hud.consumeBaseButtonClick("debug-button", leftMouseHeld)) {
@@ -156,14 +158,31 @@ public class SessionScenarioState implements SessionState {
                 hud.applyDialogLayout(HudLayoutRegistry.DIALOG_DEBUG_INFO);
                 hud.setDialogOpacity(1.0f, 1.0f);
                 hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
-                        Dialog.SelectionBlockMode.NONE);
+                        Dialog.SelectionBlockMode.NONE,
+                        java.util.Set.of(Dialog.DialogFlag.BLOCK_EDGE_SCROLL));
             }
 
             String dialogButton = hud.pollDialogButtonClick(leftMouseHeld);
             handleDialogButton(dialogButton);
         }
 
-        window.setVirtualMouseClamp(leftMouseHeld && selection.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
+        boolean clampToSelection = leftMouseHeld && selection.isActive();
+        if (hud != null && hud.isCursorLockedByDialog()) {
+            float[] dialogBounds = hud.getDialogBounds();
+            if (dialogBounds != null && dialogBounds.length == 4) {
+                float minX = Math.max(0f, dialogBounds[0]);
+                float minY = Math.max(0f, dialogBounds[1]);
+                float maxX = Math.min(window.getVirtualWidth() - 1f, dialogBounds[0] + dialogBounds[2]);
+                float maxY = Math.min(window.getVirtualHeight(), dialogBounds[1] + dialogBounds[3]);
+                window.setVirtualMouseClamp(true, minX, minY, maxX, maxY);
+            } else {
+                window.setVirtualMouseClamp(false, 0, 0, window.getVirtualWidth() - 1f, window.getVirtualHeight());
+            }
+        } else if (clampToSelection) {
+            window.setVirtualMouseClamp(true, selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
+        } else {
+            window.setVirtualMouseClamp(false, 0, 0, window.getVirtualWidth() - 1f, window.getVirtualHeight());
+        }
     }
 
     @Override

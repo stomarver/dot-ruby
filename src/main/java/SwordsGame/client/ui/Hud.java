@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Hud {
     private final int virtualWidth, virtualHeight, frameWidth;
@@ -67,9 +68,7 @@ public class Hud {
 
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (!line.isEmpty()) {
-                        messageSystem.add(line);
-                    }
+                    messageSystem.add(line);
                 }
             } catch (Exception e) {
                 System.err.println("[Hud] Terminal message reader stopped: " + e.getMessage());
@@ -260,6 +259,18 @@ public class Hud {
         return dialog.blocksSelection(virtualCursorX, virtualCursorY);
     }
 
+    public boolean isCursorLockedByDialog() {
+        return dialog.shouldLockCursorToDialog();
+    }
+
+    public boolean isEdgeScrollBlockedByDialog() {
+        return dialog.shouldBlockEdgeScroll();
+    }
+
+    public float[] getDialogBounds() {
+        return dialog.getBounds();
+    }
+
     public boolean isDialogVisible() {
         return dialog.isVisible();
     }
@@ -365,7 +376,20 @@ public class Hud {
                                     float width,
                                     float height,
                                     Dialog.SelectionBlockMode blockMode) {
-        dialog.toggle(body, getPivot(pivotId), alignX, alignY, x, y, width, height, blockMode);
+        toggleDialogAtPivot(body, pivotId, alignX, alignY, x, y, width, height, blockMode, Set.of());
+    }
+
+    public void toggleDialogAtPivot(String body,
+                                    String pivotId,
+                                    Anchor.TypeX alignX,
+                                    Anchor.TypeY alignY,
+                                    float x,
+                                    float y,
+                                    float width,
+                                    float height,
+                                    Dialog.SelectionBlockMode blockMode,
+                                    Set<Dialog.DialogFlag> flags) {
+        dialog.toggle(body, getPivot(pivotId), alignX, alignY, x, y, width, height, blockMode, flags);
     }
 
     public void setGlobalLoadingText(String value) {
