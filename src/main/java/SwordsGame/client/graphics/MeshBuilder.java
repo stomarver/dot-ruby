@@ -1,6 +1,6 @@
 package SwordsGame.client.graphics;
 
-import SwordsGame.client.Smth;
+import SwordsGame.client.TopFaceSmoothing;
 import SwordsGame.client.World;
 import SwordsGame.client.blocks.BlockRegistry;
 
@@ -123,7 +123,7 @@ public class MeshBuilder {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[2];
         float[][] verts = FACE_VERTS[2];
-        Smth smoothing = new Smth(faces);
+        TopFaceSmoothing smoothing = new TopFaceSmoothing(faces);
 
         float[] yOffsets = new float[4];
         for (int i = 0; i < 4; i++) {

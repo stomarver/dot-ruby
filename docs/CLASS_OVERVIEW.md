@@ -42,10 +42,10 @@ RTS-камера.
 - Culling, LOD-подобный отбор чанков.
 - Рендер границ чанков (debug).
 
-### `SwordsGame.client.FallBlk`
+### `SwordsGame.client.FallingBlock`
 Вспомогательный клиентский класс, исторически связанный с block-логикой/экспериментами.
 
-### `SwordsGame.client.Smth`
+### `SwordsGame.client.TopFaceSmoothing`
 Технический/временный класс-заглушка.
 
 ---

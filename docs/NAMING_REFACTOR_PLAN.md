@@ -12,7 +12,7 @@
 1. **UI/Core** — уже частично сделано (`setLayout`, `resolveLocalAnchor`, `getHoveredButtonId`).
 2. **Graphics** — выровнять helper/registry naming (`TexLoad`, `ImgReg`, `MdlReg` API).
 3. **Gameplay** — единые глаголы для DSL и registry методов.
-4. **Legacy/temporary classes** — удалить/переименовать (`Smth`, `FallBlk`).
+4. **Legacy/temporary classes** — удалить/переименовать (`TopFaceSmoothing`, `FallingBlock` done; remaining legacy classes next).
 5. **Shared protocol DTO naming** — единая терминология frame/panel/state.
 
 ## Compatibility policy

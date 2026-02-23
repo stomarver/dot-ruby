@@ -65,4 +65,4 @@ Refactored naming in dialog/HUD path follows short verb-based style:
 - `getHoveredButtonId(...)` for hit-testing
 - `resolveLocalAnchor(...)` for internal anchor resolution
 
-Compatibility wrappers are preserved (`setContent`, `findHoveredButtonId`, `localAnchor`) to avoid breaking existing call-sites/mod code.
+Legacy wrapper methods were removed; use only the current API names shown above.

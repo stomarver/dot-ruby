@@ -154,19 +154,6 @@ public class Dialog {
     }
 
 
-    // Compatibility wrappers for older call-sites.
-    public Anchor localAnchor(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y) {
-        return resolveLocalAnchor(ax, ay, x, y);
-    }
-
-    public void setContent(List<TextSlot> textSlots, List<ButtonSlot> buttonSlots) {
-        setLayout(textSlots, buttonSlots);
-    }
-
-    public String findHoveredButtonId(Button buttonRenderer, float cursorX, float cursorY) {
-        return getHoveredButtonId(buttonRenderer, cursorX, cursorY);
-    }
-
     public void renderBackground() {
         if (!visible) return;
 
