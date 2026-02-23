@@ -36,13 +36,12 @@ public class MainMenuState implements SessionState {
         cursor = new Cursor();
         TexLoad.finishLoading();
 
-        hud.setGlobalLoadingVisible(true);
-        hud.setGlobalLoadingText("loading menu...");
+        hud.setGlobalLoadingVisible(false);
+        hud.setGlobalLoadingText("loading");
         hud.applyDialogLayout("main.menu");
         hud.setDialogOpacity(1.0f, 1.0f);
         hud.toggleDialogAtPivot("", "menu.dialog", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 220,
                 Dialog.SelectionBlockMode.NONE);
-        hud.setGlobalLoadingText("menu ready");
     }
 
     @Override
@@ -65,8 +64,16 @@ public class MainMenuState implements SessionState {
             return;
         }
         switch (action) {
-            case "start-session" -> context.getCommands().startScenario(false);
-            case "exit-app" -> context.getCommands().exitApplication();
+            case "start-session" -> {
+                hud.setGlobalLoadingText("loading");
+                hud.setGlobalLoadingVisible(true);
+                context.getCommands().startScenario(false);
+            }
+            case "exit-app" -> {
+                hud.setGlobalLoadingText("loading");
+                hud.setGlobalLoadingVisible(true);
+                context.getCommands().exitApplication();
+            }
             default -> {
             }
         }
@@ -77,7 +84,6 @@ public class MainMenuState implements SessionState {
         window.beginRenderToFBO();
         renderer.setup2D(window);
 
-        hud.renderBaseInterface();
         hud.renderDialogOverlay();
 
         window.endRenderToFBO();
