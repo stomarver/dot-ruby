@@ -47,7 +47,7 @@ java -jar build/libs/dot-ruby-*/dot-ruby-*.jar --debug
 - `=` / `-` (or zoom wheel behavior) — zoom
 - `R` — reset camera
 
-### System / Debug
+### Debug
 - `F7` — toggle Virtual/Real render mode
 - `F8` — toggle debug info visibility
 - `B` — toggle chunk bounds
