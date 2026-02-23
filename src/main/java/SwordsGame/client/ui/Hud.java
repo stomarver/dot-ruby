@@ -29,6 +29,7 @@ public class Hud {
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
     private boolean primaryButtonHeld = false;
+    private boolean dialogButtonHeld = false;
 
     private final TexLoad.Texture charFrameTex;
     private final TexLoad.Texture separatorTex;
@@ -49,7 +50,6 @@ public class Hud {
         this.separatorTex = load(Paths.UI_SEPARATOR);
 
         startTerminalThread();
-        installDialogLayoutTemplate();
     }
 
     private void startTerminalThread() {
@@ -114,7 +114,6 @@ public class Hud {
         messageSystem.draw(text);
     }
 
-
     public void setCameraInfo(String info) {
         this.info.setCameraInfo(info);
     }
@@ -136,7 +135,6 @@ public class Hud {
         this.virtualCursorY = y;
     }
 
-
     public boolean consumePrimaryButtonClick(boolean mouseDown) {
         boolean hovered = primaryButton.contains(Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, virtualCursorX, virtualCursorY);
         boolean clicked = hovered && mouseDown && !primaryButtonHeld;
@@ -144,8 +142,23 @@ public class Hud {
         return clicked;
     }
 
+    public String consumeDialogButtonClick(boolean mouseDown) {
+        String hoveredId = dialog.findHoveredButtonId(primaryButton, virtualCursorX, virtualCursorY);
+        boolean clicked = hoveredId != null && mouseDown && !dialogButtonHeld;
+        dialogButtonHeld = mouseDown;
+        return clicked ? hoveredId : null;
+    }
+
     public boolean blocksSelectionAtCursor() {
         return dialog.blocksSelection(virtualCursorX, virtualCursorY);
+    }
+
+    public boolean isDialogVisible() {
+        return dialog.isVisible();
+    }
+
+    public void hideDialog() {
+        dialog.hide();
     }
 
     public void toggleDialog(String body,
@@ -159,14 +172,7 @@ public class Hud {
         dialog.toggle(body, ax, ay, x, y, width, height, blockMode);
     }
 
-    private void installDialogLayoutTemplate() {
-        List<Dialog.TextSlot> textSlots = new ArrayList<>();
-        textSlots.add(new Dialog.TextSlot("^3dialog.header", Anchor.LEFT, Anchor.TOP, 10, 34, 0.9f));
-        textSlots.add(new Dialog.TextSlot("anchor/local layout enabled", Anchor.LEFT, Anchor.TOP, 10, 54, 0.8f));
-
-        List<Dialog.ButtonSlot> buttonSlots = new ArrayList<>();
-        buttonSlots.add(new Dialog.ButtonSlot("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -10, -10, 78, 24, 0.8f));
-
+    public void setDialogContent(List<Dialog.TextSlot> textSlots, List<Dialog.ButtonSlot> buttonSlots) {
         dialog.setContent(textSlots, buttonSlots);
     }
 

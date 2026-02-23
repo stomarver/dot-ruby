@@ -16,9 +16,14 @@ import SwordsGame.shared.protocol.ui.UiFrameState;
 import SwordsGame.shared.protocol.ui.UiPanelState;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.Hud;
+import SwordsGame.client.ui.Dialog;
 import SwordsGame.client.ui.SelectionBox;
 import SwordsGame.client.ui.SelectionArea;
+import SwordsGame.client.ui.Anchor;
 import SwordsGame.client.utils.Discord;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -36,6 +41,9 @@ public class Debug {
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
     private boolean showDebugInfo = true;
+    private boolean showCameraBlock = true;
+    private boolean showTimeBlock = true;
+    private boolean showServerBlock = true;
     private boolean toggleDebugHeld = false;
     private boolean toggleVirtualResHeld = false;
     private DayNightCycle dayNightCycle;
@@ -86,7 +94,8 @@ public class Debug {
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
             selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
-            selection.update(mouseX, mouseY, leftMouseHeld, selArea);
+            boolean selectionBlockedByDialog = hud != null && hud.blocksSelectionAtCursor();
+            selection.update(mouseX, mouseY, leftMouseHeld && !selectionBlockedByDialog, selArea);
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selection.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
 
@@ -129,13 +138,22 @@ public class Debug {
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
-                    showDebugInfo = !showDebugInfo;
+                    rebuildDebugDialogContent();
+                    hud.toggleDialog("^4Debug Info Panel", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 520, 260,
+                            Dialog.SelectionBlockMode.DIALOG_AREA);
                 }
-                hud.render();
+
+                String dialogButton = hud.consumeDialogButtonClick(leftMouseHeld);
+                handleDialogButton(dialogButton);
+                hud.renderBaseInterface();
             }
 
             float selectionThickness = window.getVirtualUnitsForPhysicalPixels(2f);
             selection.render(selectionThickness);
+
+            if (hud != null) {
+                hud.renderDialogOverlay();
+            }
 
             window.endRenderToFBO();
 
@@ -195,38 +213,42 @@ public class Debug {
             hud.setServerInfo("");
             return;
         }
-        hud.setCameraInfo(buildCameraInfo());
-        hud.setTimeInfo(buildTimeInfo());
+        hud.setCameraInfo(showCameraBlock ? buildCameraInfo() : "");
+        hud.setTimeInfo(showTimeBlock ? buildTimeInfo() : "");
 
         UiFrameState frame = serverUiComposer.compose(chunkManager, null);
-        hud.setServerInfo(extractServerInfo(frame));
+        hud.setServerInfo(showServerBlock ? extractServerInfo(frame) : "");
     }
 
     private String extractServerInfo(UiFrameState frame) {
         if (frame == null) {
             return "";
         }
-        StringBuilder builder = new StringBuilder();
+
+        StringBuilder builder = new StringBuilder("# Server\n");
+        int panelIndex = 1;
         for (UiPanelState panel : frame.getPanels()) {
-            if (builder.length() > 0) {
-                builder.append("\n\n");
+            if (panel == null || panel.getText() == null || panel.getText().isBlank()) {
+                continue;
             }
-            builder.append(panel.getText());
+            builder.append(String.format("^3Panel %d:^0 %s", panelIndex++, panel.getText().replace("\n", " | "))).append("\n");
+        }
+
+        if (panelIndex == 1) {
+            builder.append("^1No server panels available^0");
         }
         return builder.toString();
     }
 
     private String buildTimeInfo() {
         return String.format(
-                "^4Time^0\n^3day^0 %d\n^2clock^0 %s / 38:00\n^5phase^0 %s",
+                "# Time\n^3Day:^0 %d\n^2Clock:^0 %s / 38:00\n^5Phase:^0 %s",
                 dayNightCycle.getUiDay(),
                 dayNightCycle.getTimeLabel(),
                 dayNightCycle.getPhaseLabel());
     }
 
     private String buildCameraInfo() {
-
-
         float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
         int worldBlockX = (int) Math.floor((-camera.getX() / World.BLOCK_SCALE) + totalOffsetBlocks);
         int worldBlockZ = (int) Math.floor((-camera.getZ() / World.BLOCK_SCALE) + totalOffsetBlocks);
@@ -244,10 +266,58 @@ public class Debug {
         long maxMb = rt.maxMemory() / (1024L * 1024L);
 
         return String.format(
-                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)\n----\n^5fog^0 x%.2f [%.0f..%.0f]\n^6fps^0 %d\n----\n^2mem^0 used %d MB | alloc %d MB | max %d MB",
+                "# Camera\n^3Position:^0 (%.1f, %.1f)\n^4Chunk:^0 (%d, %d)  ^1Local:^0 (%d, %d)\n^5Fog:^0 x%.2f [%.0f..%.0f]\n^6FPS:^0 %d\n^2Memory:^0 %dMB used / %dMB alloc / %dMB max",
                 camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ,
                 fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance(),
                 fps, usedMb, totalMb, maxMb);
+    }
+
+
+    private void handleDialogButton(String buttonId) {
+        if (buttonId == null) {
+            return;
+        }
+        switch (buttonId) {
+            case "toggle-camera" -> showCameraBlock = !showCameraBlock;
+            case "toggle-time" -> showTimeBlock = !showTimeBlock;
+            case "toggle-server" -> showServerBlock = !showServerBlock;
+            case "toggle-all" -> {
+                boolean enableAll = !(showCameraBlock && showTimeBlock && showServerBlock);
+                showCameraBlock = enableAll;
+                showTimeBlock = enableAll;
+                showServerBlock = enableAll;
+            }
+            case "close" -> hud.hideDialog();
+            default -> {
+                return;
+            }
+        }
+        rebuildDebugDialogContent();
+    }
+
+    private void rebuildDebugDialogContent() {
+        if (hud == null) {
+            return;
+        }
+
+        List<Dialog.TextSlot> textSlots = new ArrayList<>();
+        textSlots.add(new Dialog.TextSlot("^3Configure visible debug panels", Anchor.LEFT, Anchor.TOP, 14, 38, 0.9f));
+        textSlots.add(new Dialog.TextSlot(statusLine("camera", showCameraBlock), Anchor.LEFT, Anchor.TOP, 14, 72, 0.8f));
+        textSlots.add(new Dialog.TextSlot(statusLine("time", showTimeBlock), Anchor.LEFT, Anchor.TOP, 14, 104, 0.8f));
+        textSlots.add(new Dialog.TextSlot(statusLine("server", showServerBlock), Anchor.LEFT, Anchor.TOP, 14, 136, 0.8f));
+
+        List<Dialog.ButtonSlot> buttons = new ArrayList<>();
+        buttons.add(new Dialog.ButtonSlot("toggle-camera", "camera", Anchor.RIGHT, Anchor.TOP, -14, 66, 110, 24, 0.8f));
+        buttons.add(new Dialog.ButtonSlot("toggle-time", "time", Anchor.RIGHT, Anchor.TOP, -14, 98, 110, 24, 0.8f));
+        buttons.add(new Dialog.ButtonSlot("toggle-server", "server", Anchor.RIGHT, Anchor.TOP, -14, 130, 110, 24, 0.8f));
+        buttons.add(new Dialog.ButtonSlot("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 14, -12, 90, 24, 0.8f));
+        buttons.add(new Dialog.ButtonSlot("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -14, -12, 90, 24, 0.8f));
+
+        hud.setDialogContent(textSlots, buttons);
+    }
+
+    private String statusLine(String name, boolean enabled) {
+        return String.format("^2%s:^0 %s", name, enabled ? "enabled" : "disabled");
     }
 
     private void updateFpsCounter(double nowSeconds) {

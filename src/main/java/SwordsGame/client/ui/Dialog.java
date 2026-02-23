@@ -126,6 +126,19 @@ public class Dialog {
         }
     }
 
+    public String findHoveredButtonId(Button buttonRenderer, float cursorX, float cursorY) {
+        if (!visible || buttonRenderer == null) {
+            return null;
+        }
+        for (ButtonSlot slot : buttonSlots) {
+            Rect rect = resolveButtonRect(slot);
+            if (buttonRenderer.containsAbsolute(rect.x, rect.y, rect.w, rect.h, cursorX, cursorY)) {
+                return slot.id;
+            }
+        }
+        return null;
+    }
+
     public void renderBackground() {
         if (!visible) return;
 
@@ -166,19 +179,24 @@ public class Dialog {
 
         if (buttonRenderer != null) {
             for (ButtonSlot slot : buttonSlots) {
-                Anchor anchor = localAnchor(slot.anchorX, slot.anchorY, slot.offsetX, slot.offsetY);
-                float buttonX = anchor.x;
-                float buttonY = anchor.y;
-
-                if (anchor.tx == Anchor.TypeX.CENTER) buttonX -= slot.width / 2f;
-                else if (anchor.tx == Anchor.TypeX.RIGHT) buttonX -= slot.width;
-
-                if (anchor.ty == Anchor.TypeY.CENTER) buttonY -= slot.height / 2f;
-                else if (anchor.ty == Anchor.TypeY.BOTTOM) buttonY -= slot.height;
-
-                buttonRenderer.drawAbsolute(slot.label, buttonX, buttonY, slot.width, slot.height, slot.scale, cursorX, cursorY);
+                Rect rect = resolveButtonRect(slot);
+                buttonRenderer.drawAbsolute(slot.label, rect.x, rect.y, rect.w, rect.h, slot.scale, cursorX, cursorY);
             }
         }
+    }
+
+    private Rect resolveButtonRect(ButtonSlot slot) {
+        Anchor anchor = localAnchor(slot.anchorX, slot.anchorY, slot.offsetX, slot.offsetY);
+        float buttonX = anchor.x;
+        float buttonY = anchor.y;
+
+        if (anchor.tx == Anchor.TypeX.CENTER) buttonX -= slot.width / 2f;
+        else if (anchor.tx == Anchor.TypeX.RIGHT) buttonX -= slot.width;
+
+        if (anchor.ty == Anchor.TypeY.CENTER) buttonY -= slot.height / 2f;
+        else if (anchor.ty == Anchor.TypeY.BOTTOM) buttonY -= slot.height;
+
+        return new Rect(buttonX, buttonY, slot.width, slot.height);
     }
 
     private Rect resolveRect(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float w, float h) {
