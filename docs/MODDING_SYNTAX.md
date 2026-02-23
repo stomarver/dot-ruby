@@ -1,26 +1,37 @@
-# Modding Syntax Guide
+# `.ruby` Modding Syntax Reference
 
-Практический справочник по синтаксису контента и UI для моддеров.
-
----
-
-## 1. Базовая идея
-
-Во всём проекте используется единый стиль деклараций через `Syn`:
-
-- блоки: `Syn.blk(...)`
-- изображения: `Syn.img(...)`
-- модели: `Syn.mdl(...)`
-
-Старайтесь придерживаться формата: **описали -> зарегистрировали -> используем через id/path**.
+Документ описывает **весь текущий модульный/декларативный синтаксис** проекта: что можно добавлять без переписывания ядра и через какие API это делается.
 
 ---
 
-## 2. Регистрация блоков
+## 1) Базовый принцип
 
-Файл: `SwordsGame.client.blocks.BlockRegistry`.
+Проект использует декларативный стиль через fluent-строители:
+- `Syn.*` для клиентских ассетов/блоков.
+- `GameplaySyn.*` для серверного gameplay-контента.
+- `Dialog.*` для модульного UI-контента (слоты текста/кнопок).
 
-### 2.1 Один texture-слой
+Идея: сначала описываете сущность, потом `register()` / `build()`.
+
+---
+
+## 2) Что можно модульно добавлять прямо сейчас
+
+### Клиентская часть
+- Блоки мира (визуал и физ-свойства).
+- Текстуры/UI-спрайты.
+- glTF/glb модели.
+- HUD/Overlay-диалоги (текст и кнопки, якори, блокировка выделения).
+
+### Gameplay часть
+- Юниты.
+- Здания.
+- Ресурсные ноды.
+- Мировые объекты.
+
+---
+
+## 3) Синтаксис блоков (`Syn.blk` + `BlockRegistry`)
 
 ```java
 BlockRegistry.reg(Type.COBBLE,
@@ -28,8 +39,6 @@ BlockRegistry.reg(Type.COBBLE,
                 .tex(Paths.BLOCK_COBBLE)
                 .build());
 ```
-
-### 2.2 Top/Bottom/Side текстуры + свойства
 
 ```java
 BlockRegistry.reg(Type.GRASS,
@@ -42,8 +51,7 @@ BlockRegistry.reg(Type.GRASS,
                 .build());
 ```
 
-### 2.3 Поддерживаемые свойства `BlockProps`
-
+Поддерживаемые `BlockProps`:
 - `randomRotation()`
 - `randomColor()`
 - `emission()`
@@ -54,19 +62,11 @@ BlockRegistry.reg(Type.GRASS,
 
 ---
 
-## 3. Регистрация изображений
-
-Используйте `ImgReg` + `Syn.img`.
+## 4) Синтаксис изображений (`Syn.img` + `ImgReg`)
 
 ```java
-TexLoad.Texture t = ImgReg.reg(Syn.img(Paths.UI_CURSOR).alphaKey());
+TexLoad.Texture cursor = ImgReg.reg(Syn.img(Paths.UI_CURSOR).alphaKey());
 ```
-
-Где:
-- `alphaKey()` включает удаление чёрного фона в альфу.
-- Путь обычно берётся из `Paths`, либо строкой ресурса внутри `src/main/resources`.
-
-Пример без alpha key:
 
 ```java
 TexLoad.Texture raw = ImgReg.reg(Syn.img("ui/icon.png"));
@@ -74,106 +74,126 @@ TexLoad.Texture raw = ImgReg.reg(Syn.img("ui/icon.png"));
 
 ---
 
-## 4. Регистрация glTF/GLB моделей
-
-Используйте `MdlReg` + `Syn.mdl`.
+## 5) Синтаксис моделей (`Syn.mdl` + `MdlReg`)
 
 ```java
 MdlReg.reg(Syn.mdl("house", "assets/models/house.glb").scale(1.0f));
 MdlReg.Ent house = MdlReg.get("house");
 ```
 
-`Ent` содержит:
-- `mdl` — `GltfModel`
-- `scale` — масштаб модели
-
-### 4.1 Что поддерживает `GltfModel`
-
-- `.glb` и `.gltf`
+Поддержка `GltfModel`:
+- `.glb` / `.gltf`
 - `POSITION` (обязательно)
 - `NORMAL`, `TEXCOORD_0` (опционально)
 - индексы `UNSIGNED_BYTE/SHORT/INT`
-- только TRIANGLES primitives
-
-Если нужны скины/анимации/расширения — это отдельный этап.
+- primitives: `TRIANGLES`
 
 ---
 
-## 5. Пути ресурсов
+## 6) Синтаксис gameplay (`GameplaySyn`)
 
-`Paths` содержит базовые константы:
-
-- `BLOCK_COBBLE`, `BLOCK_GRASS`, `BLOCK_STONE`
-- `FONT_MAIN`
-- `UI_CURSOR`, `UI_CHAR_FRAME`, `UI_SEPARATOR`
-
-Рекомендация: для стабильности добавляйте новые пути в `Paths` вместо raw-строк по проекту.
-
----
-
-## 6. Синтаксис текста (HUD / UI)
-
-Текст рисуется через `Text.draw(...)`.
-
-Пример:
-
+### 6.1 Юнит
 ```java
-text.draw("unit.name", Anchor.LEFT, Anchor.TOP, 10, 2, 1);
+GameplaySyn.unit("myth_hoplite", "Hoplite", FactionType.HUMANS)
+        .age(Age.LEGENDS)
+        .cost(ResourceBundle.of(ResourceType.FOOD, 60, ResourceType.MINERALS, 30))
+        .roles(EnumSet.of(UnitRole.INFANTRY))
+        .combat(CombatType.MELEE)
+        .stats(new UnitStats(...))
+        .model("assets/models/units/hoplite.gltf")
+        .tag("unit")
+        .register();
 ```
 
-### 6.1 Цвет-коды в строке
-
-Поддержка `^N`:
-
-- `^1` красный
-- `^2` зелёный
-- `^3` синий
-- `^4` жёлтый
-- `^5` магента
-- остальное -> белый
-
-Пример:
-
+### 6.2 Здание
 ```java
-"^2Gold^0: 300\n^1Alert^0: under attack"
+GameplaySyn.building("myth_temple", "Temple", FactionType.HUMANS)
+        .age(Age.HISTORIES)
+        .cost(ResourceBundle.of(ResourceType.WOOD, 150, ResourceType.STONE, 100))
+        .roles(EnumSet.of(BuildingRole.WORKSHOP, BuildingRole.TRAINING))
+        .model("assets/models/buildings/temple.gltf")
+        .register();
 ```
 
-### 6.2 Выравнивание/anchor
-
-Используйте `Anchor` (`LEFT/CENTER/RIGHT`, `TOP/CENTER/BOTTOM`) и офсеты.
-
----
-
-## 7. Кнопки и UI элементы
-
-`Button.draw(...)` принимает anchor, размеры и текущий курсор:
-
+### 6.3 Ресурс
 ```java
-primaryButton.draw(label, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, cursorX, cursorY);
+GameplaySyn.resource("res_gold_mine", "Gold Mine", ResourceType.MINERALS)
+        .amount(2200)
+        .difficulty(120)
+        .model("assets/models/resources/gold_mine.gltf")
+        .register();
 ```
 
-Клик обрабатывается через hit-test (`contains`) + состояние кнопки в HUD.
+### 6.4 Мировой объект
+```java
+GameplaySyn.object("obj_relic_sun", "Relic of the Sun")
+        .roles(EnumSet.of(ObjectRole.RELIC, ObjectRole.INTERACTIVE))
+        .hp(250)
+        .interactable(true)
+        .model("assets/models/objects/relic_sun.gltf")
+        .register();
+```
+
+Все записи попадают в `GameplayRegistry` с защитой от дубликатов id.
 
 ---
 
-## 8. Как добавить новый мод-контент (чеклист)
+## 7) Синтаксис UI-диалогов (модульно)
 
-1. Добавить изображения/модели в ресурсы/asset-папку.
-2. Добавить путь в `Paths` (желательно).
-3. Зарегистрировать:
-   - блок -> `BlockRegistry.reg(... Syn.blk ...)`
-   - текстуру -> `ImgReg.reg(Syn.img(...))`
-   - модель -> `MdlReg.reg(Syn.mdl(...))`
-4. Использовать id/type/path в рендер- или gameplay-логике.
-5. Проверить сборку `./gradlew compileJava`.
+`Dialog` поддерживает:
+- позиционирование через `Anchor`.
+- режимы блокировки выделения (`NONE`, `DIALOG_AREA`, `FULL_SCREEN`).
+- слоты текста и кнопок.
+- кнопки с `id` и флагом `active`.
+
+### 7.1 Открытие
+```java
+hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330,
+        Dialog.SelectionBlockMode.DIALOG_AREA);
+```
+
+### 7.2 Контент (рекомендуемый краткий синтаксис)
+```java
+List<Dialog.TextSlot> textSlots = List.of(
+        Dialog.text("^3title", Anchor.LEFT, Anchor.TOP, 18, 40)
+);
+
+List<Dialog.ButtonSlot> buttons = List.of(
+        Dialog.button("toggle-rendering", "rendering", Anchor.LEFT, Anchor.TOP, 18, 34, 210, 30, true),
+        Dialog.button("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -18, -16, 140, 30)
+);
+
+hud.setDialogContent(textSlots, buttons);
+```
+
+### 7.3 Визуальный state кнопки
+`active=false` затемняет кнопку (off-состояние).
 
 ---
 
-## 9. Стиль моддерского кода
+## 8) HUD / Text синтаксис
 
-Чтобы код был однородным:
+Текст:
+```java
+text.draw("unit.name", Anchor.LEFT, Anchor.TOP, 10, 2, 1.0f);
+```
 
-- Делайте декларативно (через `Syn`), а не ad-hoc-конструкторы по месту.
-- Старайтесь выносить числа/пути в константы.
-- Для ресурсоёмких штук держите отдельный registry/class.
-- Не миксуйте разные стили регистрации в одном файле.
+Цвет-коды:
+- `^1` red
+- `^2` green
+- `^3` blue
+- `^4` yellow
+- `^5` magenta
+- иное -> white
+
+Секции в Info-панелях можно задавать через `# Header` в первой строке блока.
+
+---
+
+## 9) Мини-чеклист добавления нового модуля
+
+1. Добавить ресурс (текстура/модель).
+2. Добавить путь в `Paths` (рекомендуется).
+3. Зарегистрировать через `Syn`/`GameplaySyn`.
+4. Привязать к UI/HUD при необходимости.
+5. Проверить `./gradlew compileJava`.

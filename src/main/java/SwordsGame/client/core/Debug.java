@@ -136,7 +136,7 @@ public class Debug {
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     rebuildDebugDialogContent();
                     hud.setDialogOpacity(1.0f, 1.0f);
-                    hud.toggleDialog("^4Debug Overlay Controls", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330,
+                    hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330,
                             Dialog.SelectionBlockMode.DIALOG_AREA);
                 }
 

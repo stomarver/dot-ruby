@@ -7,9 +7,9 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Dialog {
     private static final float BORDER_THICKNESS = 2.0f;
-    private static final float BORDER_R = 0.1f;
-    private static final float BORDER_G = 0.1f;
-    private static final float BORDER_B = 0.25f;
+    private static final float BORDER_R = 0.5f;
+    private static final float BORDER_G = 0.5f;
+    private static final float BORDER_B = 1.0f;
     private static final float BORDER_A = 0.75f;
     private static final float FILL_R = 0.1f;
     private static final float FILL_G = 0.1f;

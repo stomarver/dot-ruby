@@ -84,7 +84,7 @@ public class Info {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glColor4f(0f, 0f, 0f, 0.85f);
+        glColor4f(0f, 0f, 0f, 0.25f);
         glBegin(GL_QUADS);
         glVertex2f(x, y);
         glVertex2f(x + w, y);
@@ -92,7 +92,7 @@ public class Info {
         glVertex2f(x, y + h);
         glEnd();
 
-        glColor4f(0f, 0f, 0f, 1f);
+        glColor4f(0f, 0f, 0f, 0.5f);
         glBegin(GL_QUADS);
         glVertex2f(x, y);
         glVertex2f(x + w, y);

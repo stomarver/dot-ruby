@@ -31,3 +31,19 @@ MdlReg.Ent house = MdlReg.get("house");
 ```
 
 This keeps block/image/model registration consistent and compact.
+
+
+## Dialog UI modules
+
+```java
+List<Dialog.ButtonSlot> buttons = List.of(
+        Dialog.button("toggle-rendering", "rendering", Anchor.LEFT, Anchor.TOP, 18, 34, 210, 30, true),
+        Dialog.button("toggle-client", "client", Anchor.LEFT, Anchor.TOP, 18, 70, 210, 30, false),
+        Dialog.button("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -18, -16, 140, 30)
+);
+
+hud.setDialogContent(List.of(), buttons);
+hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330, Dialog.SelectionBlockMode.DIALOG_AREA);
+```
+
+This keeps dialog content declarative and mod-friendly (id + active flag + anchor offsets).
