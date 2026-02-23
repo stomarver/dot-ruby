@@ -18,7 +18,7 @@ public class SessionStateManager {
             return;
         }
         if (current != null) {
-            current.onExit();
+            current.onExit(pending);
         }
         current = pending;
         pending = null;
@@ -44,7 +44,7 @@ public class SessionStateManager {
         pending = null;
         if (current != null) {
             current.requestClose();
-            current.onExit();
+            current.onExit(null);
             current = null;
         }
     }

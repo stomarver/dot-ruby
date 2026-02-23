@@ -103,7 +103,7 @@ public class Hud {
 
         if (loadingVisible) {
             drawTextAtPivot(loadingText == null ? "loading" : loadingText,
-                    "screen.center", Anchor.CENTER, Anchor.BOTTOM, 0, -14, 1.0f);
+                    "screen.center", Anchor.CENTER, Anchor.BOTTOM, 0, -10, 1.0f);
         }
     }
 

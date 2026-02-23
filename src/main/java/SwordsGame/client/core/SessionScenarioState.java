@@ -93,13 +93,15 @@ public class SessionScenarioState implements SessionState {
     }
 
     @Override
-    public void onExit() {
+    public void onExit(SessionState nextState) {
         Discord.shutdown();
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
         BlockRegistry.destroy();
-        TexLoad.finishCleanup();
+        if (nextState == null) {
+            TexLoad.finishCleanup();
+        }
     }
 
     @Override
@@ -140,7 +142,7 @@ public class SessionScenarioState implements SessionState {
         if (hud != null) {
             hud.setVirtualCursor(mouseX, mouseY);
             if (hud.consumeBaseButtonClick("primary-button", leftMouseHeld)) {
-                hud.applyDialogLayout("session.pause");
+                hud.applyDialogLayout(HudLayoutRegistry.DIALOG_SESSION_PAUSE);
                 hud.setDialogOpacity(1.0f, 1.0f);
                 hud.toggleDialogAtPivot("", "screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 200,
                         Dialog.SelectionBlockMode.NONE);
