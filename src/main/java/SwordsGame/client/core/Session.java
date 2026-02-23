@@ -30,11 +30,7 @@ public class Session {
 
         stateManager.init(new SessionContext(window, debugProfile, commands));
 
-        if (debugProfile) {
-            stateManager.changeState(new SessionScenarioState(true));
-        } else {
-            stateManager.changeState(new MainMenuState());
-        }
+        stateManager.changeState(new MainMenuState());
 
         while (!window.shouldClose()) {
             stateManager.update();

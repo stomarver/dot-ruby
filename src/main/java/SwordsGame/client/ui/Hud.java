@@ -30,7 +30,7 @@ public class Hud {
     private String primaryButtonText = "Butt...on";
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
-    private boolean primaryButtonHeld = false;
+    private final Map<String, Boolean> baseButtonHeld = new HashMap<>();
     private boolean dialogButtonHeld = false;
     private final Map<String, Anchor> pivots = new HashMap<>();
     private final Map<String, Object> uiState = new HashMap<>();
@@ -131,6 +131,7 @@ public class Hud {
         Map<String, Object> context = uiContext();
         HudScriptRunner.BaseFrame frame = uiScript.evaluateBase(context);
         baseButtons.clear();
+        baseButtonHeld.keySet().retainAll(frame.buttons().stream().map(HudScriptRunner.ButtonDef::id).toList());
 
         for (HudScriptRunner.SpriteDef spriteDef : frame.sprites()) {
             TexLoad.Texture texture = texturesByAlias.get(spriteDef.texture());
@@ -213,19 +214,24 @@ public class Hud {
         this.virtualCursorY = y;
     }
 
-    public boolean consumePrimaryButtonClick(boolean mouseDown) {
-        UiButtonBounds primary = baseButtons.get("primary-button");
-        if (primary == null || !primary.active) {
-            primaryButtonHeld = mouseDown;
+    public boolean consumeBaseButtonClick(String buttonId, boolean mouseDown) {
+        UiButtonBounds slot = baseButtons.get(buttonId);
+        if (slot == null || !slot.active) {
+            baseButtonHeld.put(buttonId, mouseDown);
             return false;
         }
-        boolean hovered = button.containsAbsolute(primary.x, primary.y, primary.width, primary.height, virtualCursorX, virtualCursorY);
-        boolean clicked = hovered && mouseDown && !primaryButtonHeld;
-        primaryButtonHeld = mouseDown;
+        boolean held = baseButtonHeld.getOrDefault(buttonId, false);
+        boolean hovered = button.containsAbsolute(slot.x, slot.y, slot.width, slot.height, virtualCursorX, virtualCursorY);
+        boolean clicked = hovered && mouseDown && !held;
+        baseButtonHeld.put(buttonId, mouseDown);
         if (clicked) {
-            dispatchUiEvent(primary.id);
+            dispatchUiEvent(slot.id);
         }
         return clicked;
+    }
+
+    public boolean consumePrimaryButtonClick(boolean mouseDown) {
+        return consumeBaseButtonClick("primary-button", mouseDown);
     }
 
     public String pollDialogButtonClick(boolean mouseDown) {
