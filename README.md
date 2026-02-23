@@ -44,7 +44,7 @@ java -jar build/libs/dot-ruby-*/dot-ruby-*.jar --debug
 - `Esc` — close application
 - `Arrow Keys` or edge-scroll — camera movement
 - `Q / E` or mouse wheel — camera rotation
-- `=` / `-` (or zoom wheel behavior) — zoom
+- `+` / `-` (or zoom wheel behavior) — zoom
 - `R` — reset camera
 
 ### Debug
