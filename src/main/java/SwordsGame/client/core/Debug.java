@@ -18,8 +18,6 @@ import SwordsGame.client.ui.SelectionBox;
 import SwordsGame.client.ui.SelectionArea;
 import SwordsGame.client.ui.Anchor;
 import SwordsGame.client.utils.Discord;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -80,6 +78,7 @@ public class Debug {
         hud = new Hud(font, 960, 540);
         hud.setPrimaryButtonText("deb...ug");
         hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
+        syncDebugDialogState();
 
         cursor = new Cursor();
         selection = new SelectionBox();
@@ -135,7 +134,8 @@ public class Debug {
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
-                    rebuildDebugDialogContent();
+                    syncDebugDialogState();
+                    hud.applyDialogLayout("debug.info");
                     hud.setDialogOpacity(1.0f, 1.0f);
                     hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
                             Dialog.SelectionBlockMode.NONE);
@@ -283,27 +283,18 @@ public class Debug {
                 return;
             }
         }
-        rebuildDebugDialogContent();
+        syncDebugDialogState();
+        hud.applyDialogLayout("debug.info");
     }
 
-    private void rebuildDebugDialogContent() {
+    private void syncDebugDialogState() {
         if (hud == null) {
             return;
         }
-
-        List<Dialog.TextSlot> textSlots = new ArrayList<>();
-
-        List<Dialog.ButtonSlot> buttons = new ArrayList<>();
-        buttons.add(Dialog.button("toggle-rendering", "rendering", Anchor.CENTER, Anchor.TOP, 0, 14, 180, 24, showRenderingBlock));
-        buttons.add(Dialog.button("toggle-camera", "camera", Anchor.CENTER, Anchor.TOP, 0, 42, 180, 24, showCameraBlock));
-        buttons.add(Dialog.button("toggle-time", "time", Anchor.CENTER, Anchor.TOP, 0, 70, 180, 24, showTimeBlock));
-        buttons.add(Dialog.button("toggle-client", "client", Anchor.CENTER, Anchor.TOP, 0, 98, 180, 24, showClientBlock));
-
-        boolean allEnabled = showRenderingBlock && showCameraBlock && showTimeBlock && showClientBlock;
-        buttons.add(Dialog.button("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 12, -10, 84, 22, allEnabled));
-        buttons.add(Dialog.button("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -12, -10, 96, 22));
-
-        hud.setDialogContent(textSlots, buttons);
+        hud.putUiState("showCamera", showCameraBlock);
+        hud.putUiState("showTime", showTimeBlock);
+        hud.putUiState("showRendering", showRenderingBlock);
+        hud.putUiState("showClient", showClientBlock);
     }
 
     private void updateFpsCounter(double nowSeconds) {
