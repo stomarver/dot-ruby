@@ -161,6 +161,15 @@ public class Hud {
         dialog.hide();
     }
 
+
+    public void setDialogOpacity(float fillAlpha, float borderAlpha) {
+        dialog.setOpacity(fillAlpha, borderAlpha);
+    }
+
+    public void resetDialogOpacity() {
+        dialog.resetOpacity();
+    }
+
     public void toggleDialog(String body,
                              Anchor.TypeX ax,
                              Anchor.TypeY ay,

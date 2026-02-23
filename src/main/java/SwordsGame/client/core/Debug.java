@@ -11,9 +11,6 @@ import SwordsGame.server.ChunkManager;
 import SwordsGame.server.DayNightCycle;
 import SwordsGame.server.gameplay.MythicCorePack;
 import SwordsGame.server.gameplay.MythicFactionPack;
-import SwordsGame.server.ui.ServerUiComposer;
-import SwordsGame.shared.protocol.ui.UiFrameState;
-import SwordsGame.shared.protocol.ui.UiPanelState;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.Hud;
 import SwordsGame.client.ui.Dialog;
@@ -43,7 +40,6 @@ public class Debug {
     private boolean showDebugInfo = true;
     private boolean showCameraBlock = true;
     private boolean showTimeBlock = true;
-    private boolean showServerBlock = true;
     private boolean showRenderingBlock = true;
     private boolean showClientBlock = true;
     private boolean toggleDebugHeld = false;
@@ -54,7 +50,6 @@ public class Debug {
     private static final float FOG_DISTANCE_MIN = 0.4f;
     private static final float FOG_DISTANCE_MAX = 2.5f;
     private float fogDistanceMultiplier = 1.0f;
-    private ServerUiComposer serverUiComposer;
     private int fps = 0;
     private int fpsCounter = 0;
     private double fpsLastSampleSec = 0.0;
@@ -74,7 +69,6 @@ public class Debug {
         camera = new Camera();
         dayNightCycle = new DayNightCycle();
         lastCycleTickSeconds = (float) glfwGetTime();
-        serverUiComposer = new ServerUiComposer();
         fpsLastSampleSec = glfwGetTime();
 
         Discord.init();
@@ -141,7 +135,8 @@ public class Debug {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     rebuildDebugDialogContent();
-                    hud.toggleDialog("^4Debug Info Panel", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 560, 340,
+                    hud.setDialogOpacity(1.0f, 1.0f);
+                    hud.toggleDialog("^4Debug Overlay Controls", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330,
                             Dialog.SelectionBlockMode.DIALOG_AREA);
                 }
 
@@ -217,33 +212,11 @@ public class Debug {
         }
         String cameraAndRendering = (showRenderingBlock ? buildRenderingInfo() + "\n" : "") + (showCameraBlock ? buildCameraInfo() : "");
         String timeBlock = showTimeBlock ? buildTimeInfo() : "";
-
-        UiFrameState frame = serverUiComposer.compose(chunkManager, null);
-        String serverAndClient = (showServerBlock ? extractServerInfo(frame) + "\n" : "") + (showClientBlock ? buildClientInfo() : "");
+        String clientBlock = showClientBlock ? buildClientInfo() : "";
 
         hud.setCameraInfo(cameraAndRendering.trim());
         hud.setTimeInfo(timeBlock);
-        hud.setServerInfo(serverAndClient.trim());
-    }
-
-    private String extractServerInfo(UiFrameState frame) {
-        if (frame == null) {
-            return "";
-        }
-
-        StringBuilder builder = new StringBuilder("# Server\n");
-        int panelIndex = 1;
-        for (UiPanelState panel : frame.getPanels()) {
-            if (panel == null || panel.getText() == null || panel.getText().isBlank()) {
-                continue;
-            }
-            builder.append(String.format("^3Panel %d:^0 %s", panelIndex++, panel.getText().replace("\n", " | "))).append("\n");
-        }
-
-        if (panelIndex == 1) {
-            builder.append("^1No server panels available^0");
-        }
-        return builder.toString();
+        hud.setServerInfo(clientBlock.trim());
     }
 
     private String buildTimeInfo() {
@@ -295,18 +268,16 @@ public class Debug {
         switch (buttonId) {
             case "toggle-camera" -> showCameraBlock = !showCameraBlock;
             case "toggle-time" -> showTimeBlock = !showTimeBlock;
-            case "toggle-server" -> showServerBlock = !showServerBlock;
             case "toggle-rendering" -> showRenderingBlock = !showRenderingBlock;
             case "toggle-client" -> showClientBlock = !showClientBlock;
             case "toggle-all" -> {
-                boolean enableAll = !(showCameraBlock && showTimeBlock && showServerBlock && showRenderingBlock && showClientBlock);
+                boolean enableAll = !(showCameraBlock && showTimeBlock && showRenderingBlock && showClientBlock);
                 showCameraBlock = enableAll;
                 showTimeBlock = enableAll;
-                showServerBlock = enableAll;
                 showRenderingBlock = enableAll;
                 showClientBlock = enableAll;
             }
-            case "close" -> hud.hideDialog();
+            case "close" -> { hud.hideDialog(); hud.resetDialogOpacity(); }
             default -> {
                 return;
             }
@@ -320,27 +291,30 @@ public class Debug {
         }
 
         List<Dialog.TextSlot> textSlots = new ArrayList<>();
-        textSlots.add(new Dialog.TextSlot("^3Configure visible debug overlays", Anchor.LEFT, Anchor.TOP, 14, 38, 1.0f));
-        textSlots.add(new Dialog.TextSlot(statusLine("camera", showCameraBlock), Anchor.LEFT, Anchor.TOP, 14, 72, 1.0f));
-        textSlots.add(new Dialog.TextSlot(statusLine("time", showTimeBlock), Anchor.LEFT, Anchor.TOP, 14, 104, 1.0f));
-        textSlots.add(new Dialog.TextSlot(statusLine("server", showServerBlock), Anchor.LEFT, Anchor.TOP, 14, 136, 1.0f));
-        textSlots.add(new Dialog.TextSlot(statusLine("rendering", showRenderingBlock), Anchor.LEFT, Anchor.TOP, 14, 168, 1.0f));
-        textSlots.add(new Dialog.TextSlot(statusLine("client", showClientBlock), Anchor.LEFT, Anchor.TOP, 14, 200, 1.0f));
+        textSlots.add(Dialog.text("^1DEBUG OVERLAY LAYOUT", Anchor.LEFT, Anchor.TOP, 18, 44));
+        textSlots.add(Dialog.text("Left column: status / Right column: toggles", Anchor.LEFT, Anchor.TOP, 18, 72));
+        textSlots.add(Dialog.text(statusLine("rendering", showRenderingBlock), Anchor.LEFT, Anchor.TOP, 24, 114));
+        textSlots.add(Dialog.text(statusLine("camera", showCameraBlock), Anchor.LEFT, Anchor.TOP, 24, 148));
+        textSlots.add(Dialog.text(statusLine("time", showTimeBlock), Anchor.LEFT, Anchor.TOP, 24, 182));
+        textSlots.add(Dialog.text(statusLine("client", showClientBlock), Anchor.LEFT, Anchor.TOP, 24, 216));
 
         List<Dialog.ButtonSlot> buttons = new ArrayList<>();
-        buttons.add(new Dialog.ButtonSlot("toggle-camera", "camera", Anchor.RIGHT, Anchor.TOP, -14, 66, 110, 24, 1.0f));
-        buttons.add(new Dialog.ButtonSlot("toggle-time", "time", Anchor.RIGHT, Anchor.TOP, -14, 98, 110, 24, 1.0f));
-        buttons.add(new Dialog.ButtonSlot("toggle-server", "server", Anchor.RIGHT, Anchor.TOP, -14, 130, 110, 24, 1.0f));
-        buttons.add(new Dialog.ButtonSlot("toggle-rendering", "rendering", Anchor.RIGHT, Anchor.TOP, -14, 162, 140, 24, 1.0f));
-        buttons.add(new Dialog.ButtonSlot("toggle-client", "client", Anchor.RIGHT, Anchor.TOP, -14, 194, 140, 24, 1.0f));
-        buttons.add(new Dialog.ButtonSlot("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 14, -12, 90, 24, 1.0f));
-        buttons.add(new Dialog.ButtonSlot("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -14, -12, 90, 24, 1.0f));
+        buttons.add(Dialog.button("toggle-rendering", actionLabel("rendering", showRenderingBlock), Anchor.RIGHT, Anchor.TOP, -24, 108, 250, 28));
+        buttons.add(Dialog.button("toggle-camera", actionLabel("camera", showCameraBlock), Anchor.RIGHT, Anchor.TOP, -24, 142, 250, 28));
+        buttons.add(Dialog.button("toggle-time", actionLabel("time", showTimeBlock), Anchor.RIGHT, Anchor.TOP, -24, 176, 250, 28));
+        buttons.add(Dialog.button("toggle-client", actionLabel("client", showClientBlock), Anchor.RIGHT, Anchor.TOP, -24, 210, 250, 28));
+        buttons.add(Dialog.button("toggle-all", "toggle all", Anchor.LEFT, Anchor.BOTTOM, 18, -16, 130, 30));
+        buttons.add(Dialog.button("close", "apply && close", Anchor.RIGHT, Anchor.BOTTOM, -18, -16, 170, 30));
 
         hud.setDialogContent(textSlots, buttons);
     }
 
     private String statusLine(String name, boolean enabled) {
         return String.format("^2%s:^0 %s", name, enabled ? "enabled" : "disabled");
+    }
+
+    private String actionLabel(String name, boolean enabled) {
+        return String.format("%s : %s", name, enabled ? "ON" : "OFF");
     }
 
     private void updateFpsCounter(double nowSeconds) {

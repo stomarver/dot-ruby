@@ -16,6 +16,9 @@ public class Dialog {
     private static final float FILL_B = 0.5f;
     private static final float FILL_A = 0.5f;
 
+    private float fillAlpha = FILL_A;
+    private float borderAlpha = BORDER_A;
+
     public enum SelectionBlockMode {
         NONE,
         DIALOG_AREA,
@@ -126,6 +129,17 @@ public class Dialog {
         }
     }
 
+
+    public void setOpacity(float fillAlpha, float borderAlpha) {
+        this.fillAlpha = Math.max(0f, Math.min(1f, fillAlpha));
+        this.borderAlpha = Math.max(0f, Math.min(1f, borderAlpha));
+    }
+
+    public void resetOpacity() {
+        this.fillAlpha = FILL_A;
+        this.borderAlpha = BORDER_A;
+    }
+
     public String findHoveredButtonId(Button buttonRenderer, float cursorX, float cursorY) {
         if (!visible || buttonRenderer == null) {
             return null;
@@ -148,7 +162,7 @@ public class Dialog {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glColor4f(FILL_R, FILL_G, FILL_B, FILL_A);
+        glColor4f(FILL_R, FILL_G, FILL_B, fillAlpha);
         glBegin(GL_QUADS);
         glVertex2f(r.x, r.y);
         glVertex2f(r.x + r.w, r.y);
@@ -156,7 +170,7 @@ public class Dialog {
         glVertex2f(r.x, r.y + r.h);
         glEnd();
 
-        glColor4f(BORDER_R, BORDER_G, BORDER_B, BORDER_A);
+        glColor4f(BORDER_R, BORDER_G, BORDER_B, borderAlpha);
         drawBorderInside(r.x, r.y, r.w, r.h, BORDER_THICKNESS);
 
         glColor4f(1f, 1f, 1f, 1f);
