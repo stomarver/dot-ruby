@@ -1,67 +1,67 @@
 # Modding Guide (UI / Dialogs / Blocks / Session States)
 
-Короткий и практичный гайд по **актуальному** синтаксису DotRuby.
+This guide describes the **current** `.ruby` syntax and integration flow.
 
 ---
 
-## 1) Где что редактировать
+## 1) Where to edit what
 
 ### UI / HUD
-- Скрипт интерфейса: `src/main/resources/shared/ui/hud/hud-ui.groovy`
-- Исполнитель скрипта: `src/main/java/SwordsGame/client/ui/HudScriptRunner.java`
-- Рендер/интеракция HUD: `src/main/java/SwordsGame/client/ui/Hud.java`
-- Диалоговый контейнер: `src/main/java/SwordsGame/client/ui/Dialog.java`
-- Реестр стандартных pivot-точек: `src/main/java/SwordsGame/client/ui/HudLayoutRegistry.java`
+- HUD script: `src/main/resources/shared/ui/hud/hud-ui.groovy`
+- Script evaluator: `src/main/java/SwordsGame/client/ui/HudScriptRunner.java`
+- HUD runtime/render/input: `src/main/java/SwordsGame/client/ui/Hud.java`
+- Dialog container/runtime: `src/main/java/SwordsGame/client/ui/Dialog.java`
+- Default pivots registry: `src/main/java/SwordsGame/client/ui/HudLayoutRegistry.java`
 
-### Сцены / состояния
-- Точка входа и запуск с `--debug`: `src/main/java/SwordsGame/client/core/Session.java`
-- Контракт состояния: `src/main/java/SwordsGame/client/core/SessionState.java`
-- Менеджер переходов: `src/main/java/SwordsGame/client/core/SessionStateManager.java`
-- Главное меню: `src/main/java/SwordsGame/client/core/MainMenuState.java`
-- Игровая сессия: `src/main/java/SwordsGame/client/core/SessionScenarioState.java`
+### Session / scenes
+- Entrypoint and `--debug` parsing: `src/main/java/SwordsGame/client/core/Session.java`
+- Scene contract: `src/main/java/SwordsGame/client/core/SessionState.java`
+- Transition manager: `src/main/java/SwordsGame/client/core/SessionStateManager.java`
+- Main menu scene: `src/main/java/SwordsGame/client/core/MainMenuState.java`
+- Scenario scene: `src/main/java/SwordsGame/client/core/SessionScenarioState.java`
 
-### Блоки
-- Скрипт блоков: `src/main/resources/shared/blocks/blocks.groovy`
-- Загрузка скрипта блоков: `src/main/java/SwordsGame/client/blocks/BlockScriptLoader.java`
-- Регистрация блоков: `src/main/java/SwordsGame/client/blocks/BlockRegistry.java`
-- Сборка Block DSL: `src/main/java/SwordsGame/client/assets/Syn.java`
+### Blocks
+- Block script definitions: `src/main/resources/shared/blocks/blocks.groovy`
+- Block script loader: `src/main/java/SwordsGame/client/blocks/BlockScriptLoader.java`
+- Block registry/fallback: `src/main/java/SwordsGame/client/blocks/BlockRegistry.java`
+- Block DSL builder: `src/main/java/SwordsGame/client/assets/Syn.java`
 
 ---
 
-## 2) Запуск debug-профиля
+## 2) Debug profile launch
 
-Отдельный debug fat-jar больше не нужен.
+A separate debug fat-jar is no longer required.
 
-Debug-профиль включается аргументом:
+Use either argument:
 - `--debug`
-- или `debug`
+- `debug`
 
-Пример:
+Example:
 ```bash
 java -jar dot-ruby-xxxx.jar --debug
 ```
 
 ---
 
-## 3) Система сцен (Session / State)
+## 3) Session state model
 
-### Как устроены переходы
-1. `Session` создает `SessionStateManager`.
-2. Начальное состояние: `new MainMenuState()`.
-3. Переходы делаются через `SessionCommands`:
+### Transition lifecycle
+1. `Session` creates `SessionStateManager`.
+2. Initial scene is `MainMenuState`.
+3. Scene changes are requested through `SessionCommands`:
    - `openMainMenu()`
    - `startScenario(boolean debugProfile)`
    - `exitApplication()`
-4. `SessionStateManager` вызывает:
-   - у старой сцены: `onExit(nextState)`
-   - у новой сцены: `onEnter(context)`
+4. Manager applies transition in this order:
+   - current scene: `onExit(nextState)`
+   - next scene: `onEnter(context)`
 
-### Где регистрировать свою сцену
-- Добавьте новый класс, реализующий `SessionState`.
-- Добавьте путь перехода в реализацию `SessionCommands` в `Session.java`.
-- Вызывайте переход из текущей сцены (обычно в `update()`).
+### Adding a new scene
+- Create a class implementing `SessionState`.
+- Add a transition route in `Session` (inside `SessionCommands` implementation).
+- Trigger it from your active scene (`update()` in most cases).
 
-Шаблон:
+Template:
 ```java
 public class MyState implements SessionState {
     @Override public void onEnter(SessionContext context) {}
@@ -73,9 +73,9 @@ public class MyState implements SessionState {
 
 ---
 
-## 4) HUD Groovy: полный формат
+## 4) HUD Groovy root schema
 
-Корень `hud-ui.groovy` — это `Map`:
+`hud-ui.groovy` must return a root `Map`:
 
 ```groovy
 [
@@ -86,76 +86,76 @@ public class MyState implements SessionState {
 ]
 ```
 
-### Контекст `ctx`
-Из Java в скрипт приходят:
+### Runtime context (`ctx`)
+Fields currently exposed from Java:
 - `ctx.primaryButtonText`
-- `ctx.state` (данные из `hud.putUiState(key, value)`)
+- `ctx.state` (data written by `hud.putUiState(key, value)`)
 
-Удобный helper:
+Common helper:
 ```groovy
 def S = { ctx -> (ctx?.state ?: [:]) as Map }
 ```
 
 ---
 
-## 5) Синтаксис элементов UI
+## 5) UI element syntax
 
-> Парсинг делает `HudScriptRunner`, поэтому ниже — реальные ключи и дефолты.
+> Parsed by `HudScriptRunner`, so keys/defaults below match the runtime parser.
 
 ### 5.1 `base.sprites`
 
-Пример:
+Example:
 ```groovy
 [texture: 'char-frame', pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 0, y: 18, scale: 2.0]
 ```
 
-Параметры:
-- `texture` (String) — alias текстуры, загруженный в `Hud`.
-- `pivot` (String) — id pivot-точки.
-- `alignX` (String) — `LEFT | CENTER | RIGHT` (дефолт: `LEFT`).
-- `alignY` (String) — `TOP | CENTER | BOTTOM | CENTER_Y` (`CENTER_Y` нормализуется в `CENTER`; дефолт: `TOP`).
-- `x` (Number) — offset X (дефолт: `0`).
-- `y` (Number) — offset Y (дефолт: `0`).
-- `scale` (Number) — масштаб (дефолт: `1.0`).
+Parameters:
+- `texture` (String): texture alias loaded in `Hud`.
+- `pivot` (String): pivot id.
+- `alignX` (String): `LEFT | CENTER | RIGHT` (default `LEFT`).
+- `alignY` (String): `TOP | CENTER | BOTTOM | CENTER_Y` (`CENTER_Y` is normalized to `CENTER`; default `TOP`).
+- `x` (Number): X offset (default `0`).
+- `y` (Number): Y offset (default `0`).
+- `scale` (Number): draw scale (default `1.0`).
 
-### 5.2 `base.texts` и `dialogs.<id>.texts`
+### 5.2 `base.texts` and `dialogs.<id>.texts`
 
-Пример:
+Example:
 ```groovy
 [text: '^2Hello', pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 2, scale: 1.0]
 ```
 
-Параметры:
-- `text` (String) — строка (поддерживает цветовые коды формата проекта).
-- `pivot`, `alignX`, `alignY`, `x`, `y`, `scale` — как у спрайтов.
+Parameters:
+- `text` (String): display string (project color-codes supported).
+- `pivot`, `alignX`, `alignY`, `x`, `y`, `scale`: same behavior as sprites.
 
-### 5.3 `base.buttons` и `dialogs.<id>.buttons`
+### 5.3 `base.buttons` and `dialogs.<id>.buttons`
 
-Пример:
+Example:
 ```groovy
 [id:'start-session', label:'start', alignX:'CENTER', alignY:'TOP', x:0, y:108, width:200, height:28, scale:1.0, active:true]
 ```
 
-Параметры:
-- `id` (String) — event id кнопки (обязательно обработать в Java).
-- `label` (String) — текст кнопки.
-- `pivot` (String) — pivot-id (если не задан, используется диалог/anchor-контекст).
-- `alignX` / `alignY` — выравнивание точки привязки.
-- `x`, `y` — смещение.
-- `width`, `height` — размер (дефолт `100x28`).
-- `scale` — масштаб текста (дефолт `1.0`).
-- `active` (Boolean) — активность кнопки (дефолт `true`).
+Parameters:
+- `id` (String): button event id (must be handled in Java scene logic).
+- `label` (String): button label.
+- `pivot` (String): pivot id (optional; uses dialog/anchor context when absent).
+- `alignX` / `alignY`: local anchor alignment.
+- `x`, `y`: offsets.
+- `width`, `height`: size (defaults `100x28`).
+- `scale`: text scale (default `1.0`).
+- `active` (Boolean): enabled state (default `true`).
 
 ---
 
-## 6) Pivot-точки и привязка
+## 6) Pivots and anchoring
 
-Стандартные pivots регистрируются через:
+Default pivots are registered through:
 ```java
 HudLayoutRegistry.registerDefaultPivots(hud);
 ```
 
-По умолчанию есть:
+Built-in pivot ids:
 - `screen.left.top`
 - `screen.center`
 - `screen.bottom.center`
@@ -163,21 +163,21 @@ HudLayoutRegistry.registerDefaultPivots(hud);
 - `debug.info.dialog`
 - `menu.dialog`
 
-Добавить свой pivot:
+Register custom pivot:
 ```java
 hud.setPivot("my.pivot", Anchor.CENTER, Anchor.BOTTOM, 0, -12);
 ```
 
 ---
 
-## 7) Диалоги: где открывать и как настраивать
+## 7) Dialogs: open/close and parameters
 
-### Открыть/закрыть через layout-id
-1. Подготовить контент:
+### Open a dialog from layout id
+1. Apply layout:
 ```java
 hud.applyDialogLayout("my.dialog.id");
 ```
-2. Показать/скрыть:
+2. Toggle dialog visibility:
 ```java
 hud.toggleDialogAtPivot(
     "", "screen.center",
@@ -187,35 +187,34 @@ hud.toggleDialogAtPivot(
 );
 ```
 
-### Параметры `toggleDialogAtPivot(...)`
-- `body` — fallback-текст в диалоге.
-- `pivotId` — точка привязки.
-- `alignX`, `alignY` — как позиционировать rect диалога относительно pivot.
-- `x`, `y` — смещение.
-- `width`, `height` — размер.
+### `toggleDialogAtPivot(...)` arguments
+- `body`: fallback plain text.
+- `pivotId`: pivot reference.
+- `alignX`, `alignY`: dialog rectangle anchor mode.
+- `x`, `y`: offsets.
+- `width`, `height`: rectangle size.
 - `blockMode`:
-  - `NONE` — диалог не блокирует selection.
-  - `FULL_SCREEN` — selection блокируется, пока диалог видим.
+  - `NONE`: dialog does not block selection.
+  - `FULL_SCREEN`: selection is blocked while dialog is visible.
 
-### Прозрачность диалога
+### Dialog opacity
 ```java
-hud.setDialogOpacity(fillAlpha, borderAlpha); // 0..1
+hud.setDialogOpacity(fillAlpha, borderAlpha); // range: 0..1
 hud.resetDialogOpacity();
 ```
 
 ---
 
-## 8) Кнопки: обработка событий в сценах
+## 8) Button handling in scenes
 
-### Base-кнопки
-Для базового HUD-слоя:
+### Base HUD buttons
 ```java
 if (hud.consumeBaseButtonClick("primary-button", mouseDown)) {
     // action
 }
 ```
 
-### Кнопки диалога
+### Dialog buttons
 ```java
 String action = hud.pollDialogButtonClick(mouseDown);
 if (action != null) {
@@ -226,36 +225,39 @@ if (action != null) {
 }
 ```
 
-> Любой `id` из Groovy должен быть обработан в `update()` соответствующей сцены.
+Every `id` declared in Groovy should be handled in the owning scene `update()` logic.
 
 ---
 
-## 9) Глобальная надпись загрузки
+## 9) Global loading text
 
-Управление:
+Control API:
 ```java
 hud.setGlobalLoadingText("loading");
 hud.setGlobalLoadingVisible(true);
 ```
 
-Сейчас рисуется у `screen.bottom.center` с нижним отступом `10`.
+Current placement: `screen.bottom.center` with a 10px bottom offset.
 
 ---
 
-## 10) Как добавить новый спрайт-алиас
+## 10) Adding a sprite alias
 
-В `Hud` добавьте загрузку:
+In `Hud`, register texture alias:
 ```java
 loadAliased("my-icon", "ui/my-icon.png");
 ```
 
-После этого в Groovy можно писать `texture: 'my-icon'`.
+Then use it in Groovy:
+```groovy
+[texture: 'my-icon', ...]
+```
 
 ---
 
-## 11) Блоки: актуальный script-first синтаксис
+## 11) Blocks: current script-first format
 
-Файл: `shared/blocks/blocks.groovy` — это список блоков:
+`shared/blocks/blocks.groovy` returns a list:
 
 ```groovy
 [
@@ -267,19 +269,19 @@ loadAliased("my-icon", "ui/my-icon.png");
 ]
 ```
 
-### Параметры блока
-- `type` (String, обязателен)
-  - должен совпадать с `Type` enum (`COBBLE`, `GRASS`, `STONE`, ...)
-  - `AIR` игнорируется загрузчиком
+### Block keys
+- `type` (String, required)
+  - Must match `Type` enum (`COBBLE`, `GRASS`, `STONE`, ...)
+  - `AIR` is ignored by loader
 
 - `tex` (Map)
-  - вариант 1: `one: 'path'`
-  - вариант 2: `top`, `bottom`, `side`
+  - Option A: `one: 'path'`
+  - Option B: `top`, `bottom`, `side`
 
-- `props` (Map, опционально)
+- `props` (Map, optional)
   - `randomRotation: true`
   - `randomColor: true`
-  - `randomColorShift: <Number>` (используется вместе с `randomColor`)
+  - `randomColorShift: <Number>` (used with `randomColor`)
   - `emission: true`
   - `transparent: true`
   - `nonSolid: true`
@@ -288,35 +290,26 @@ loadAliased("my-icon", "ui/my-icon.png");
   - `surfaceOnly: true`
   - `hardness: <Number>`
 
-### Что происходит при ошибках
-- Невалидный `type` пропускается.
-- Если скрипт не загрузился/пустой, `BlockRegistry` применит встроенный fallback (COBBLE/GRASS/STONE).
+### Failure behavior
+- Invalid `type` rows are skipped.
+- If the script is missing/invalid/empty, `BlockRegistry` falls back to built-in defaults (COBBLE/GRASS/STONE).
 
 ---
 
-## 12) Где регистрировать что именно
+## 12) Where to register new things
 
-- **Новые HUD элементы/диалоги/кнопки/надписи/спрайты**:
-  - описывать в `hud-ui.groovy`
-  - обработку `id` кнопок — в `update()` конкретной сцены (`MainMenuState` / `SessionScenarioState` / ваша сцена)
+- **HUD elements / dialogs / buttons / text / sprites**
+  - Define in `hud-ui.groovy`
+  - Handle button ids in scene `update()` (`MainMenuState`, `SessionScenarioState`, or your custom scene)
 
-- **Новые pivots и стиль открытия диалогов**:
-  - в коде сцены при `onEnter(...)` (или в `HudLayoutRegistry` для глобальных точек)
+- **New pivots and dialog opening presets**
+  - Register in scene `onEnter(...)`
+  - Or centralize global pivots in `HudLayoutRegistry`
 
-- **Новые блоки**:
-  - в `shared/blocks/blocks.groovy`
-  - и обязательно соответствующий `Type` в клиентском enum/протоколе
+- **New blocks**
+  - Define in `shared/blocks/blocks.groovy`
+  - Ensure matching `Type` enum/protocol id exists
 
-- **Новая сцена/сценарий**:
-  - новый класс `SessionState`
-  - новый переход через `SessionCommands`/`SessionStateManager`
-
----
-
-## 13) Мини-чеклист перед релизом
-
-- Все новые `button.id` обрабатываются в state `update()`.
-- Все `pivot` id, используемые в Groovy, реально зарегистрированы.
-- Для новых блоков есть текстуры в `src/main/resources/blocks/`.
-- `./gradlew compileJava` проходит.
-- `./gradlew shadowJar` проходит.
+- **New scene/scenario state**
+  - Implement `SessionState`
+  - Wire transition through `SessionCommands` and `SessionStateManager`
