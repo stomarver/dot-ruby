@@ -101,4 +101,4 @@ Economy is built around 4 resources:
 
 ---
 
-If you work with Java/LWJGL and want to help build an RTS from first principles, contributions are welcome.
+...project urgently needs REAL Java developers who understand LWJGL, OpenGL, Groovy (for writing extensible modding syntax), and how the overall structure and logic of Multiplayer RTS should look. Currently, the project is being written by an incompetent vibe coder who only knows how to create textures and models, can set the basic concept of the game, and... that's about it... (pls help us)
