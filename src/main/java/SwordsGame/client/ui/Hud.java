@@ -72,6 +72,7 @@ public class Hud {
                     }
                 }
             } catch (Exception e) {
+                System.err.println("[Hud] Terminal message reader stopped: " + e.getMessage());
             }
         });
         term.setDaemon(true);
@@ -103,7 +104,7 @@ public class Hud {
 
         if (loadingVisible) {
             drawTextAtPivot(loadingText == null ? "loading" : loadingText,
-                    "screen.center", Anchor.CENTER, Anchor.BOTTOM, 0, -10, 1.0f);
+                    "screen.bottom.center", Anchor.CENTER, Anchor.BOTTOM, 0, -10, 1.0f);
         }
     }
 

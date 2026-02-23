@@ -117,6 +117,14 @@ public class TexLoad {
         cache.clear();
     }
 
+
+    public static void evictCacheByPrefix(String prefix) {
+        if (prefix == null || prefix.isBlank()) {
+            return;
+        }
+        cache.keySet().removeIf(path -> path != null && path.startsWith(prefix));
+    }
+
     private static boolean is2DTexturePath(String path) {
         return path.startsWith("ui/") || path.startsWith("fonts/");
     }

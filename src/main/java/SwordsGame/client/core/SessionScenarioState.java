@@ -96,10 +96,13 @@ public class SessionScenarioState implements SessionState {
     public void onExit(SessionState nextState) {
         Discord.shutdown();
         if (cursor != null) cursor.destroy();
-        if (hud != null) hud.cleanup();
-        if (font != null) font.destroy();
+
         BlockRegistry.destroy();
+        TexLoad.evictCacheByPrefix("blocks/");
+
         if (nextState == null) {
+            if (hud != null) hud.cleanup();
+            if (font != null) font.destroy();
             TexLoad.finishCleanup();
         }
     }
