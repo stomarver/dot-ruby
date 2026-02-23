@@ -1,5 +1,7 @@
 package SwordsGame.client.core;
 
+import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
+
 public class Session {
     public static void main(String[] args) {
         boolean debugProfile = hasArg(args, "--debug") || hasArg(args, "debug");
@@ -8,10 +10,31 @@ public class Session {
         window.create();
 
         SessionStateManager stateManager = new SessionStateManager();
-        stateManager.init(new SessionContext(window, debugProfile));
 
-        // Текущая сессия — это игровой сценарий. Позже сюда можно добавить состояние главного меню.
-        stateManager.changeState(new SessionScenarioState());
+        SessionCommands commands = new SessionCommands() {
+            @Override
+            public void openMainMenu() {
+                stateManager.changeState(new MainMenuState());
+            }
+
+            @Override
+            public void startScenario(boolean debugMode) {
+                stateManager.changeState(new SessionScenarioState(debugMode));
+            }
+
+            @Override
+            public void exitApplication() {
+                glfwSetWindowShouldClose(window.getHandle(), true);
+            }
+        };
+
+        stateManager.init(new SessionContext(window, debugProfile, commands));
+
+        if (debugProfile) {
+            stateManager.changeState(new SessionScenarioState(true));
+        } else {
+            stateManager.changeState(new MainMenuState());
+        }
 
         while (!window.shouldClose()) {
             stateManager.update();

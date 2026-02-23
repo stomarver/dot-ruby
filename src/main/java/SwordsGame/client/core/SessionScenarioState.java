@@ -23,6 +23,11 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class SessionScenarioState implements SessionState {
+    private final boolean forcedDebugProfile;
+
+    public SessionScenarioState(boolean forcedDebugProfile) {
+        this.forcedDebugProfile = forcedDebugProfile;
+    }
     private static final float FOG_DISTANCE_STEP = 0.1f;
     private static final float FOG_DISTANCE_MIN = 0.4f;
     private static final float FOG_DISTANCE_MAX = 2.5f;
@@ -61,7 +66,7 @@ public class SessionScenarioState implements SessionState {
     public void onEnter(SessionContext context) {
         this.context = context;
         this.window = context.getWindow();
-        this.debugProfile = context.isDebugProfile();
+        this.debugProfile = forcedDebugProfile;
 
         renderer = new Renderer();
         chunkManager = new ChunkManager();
@@ -78,7 +83,7 @@ public class SessionScenarioState implements SessionState {
 
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
-        hud.setPrimaryButtonText(debugProfile ? "deb...ug" : "butt...on");
+        hud.setPrimaryButtonText(debugProfile ? "deb...ug" : "menu");
         hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
         syncDebugDialogState();
 
@@ -142,15 +147,15 @@ public class SessionScenarioState implements SessionState {
                     hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
                             Dialog.SelectionBlockMode.NONE);
                 } else {
-                    hud.toggleDialog("^3dialog\ntech wiki overlay", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 420, 220,
+                    hud.applyDialogLayout("session.pause");
+                    hud.setDialogOpacity(1.0f, 1.0f);
+                    hud.toggleDialogAtPivot("", "screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 200,
                             Dialog.SelectionBlockMode.NONE);
                 }
             }
 
             String dialogButton = hud.pollDialogButtonClick(leftMouseHeld);
-            if (debugProfile) {
-                handleDialogButton(dialogButton);
-            }
+            handleDialogButton(dialogButton);
         }
 
         window.setVirtualMouseClamp(leftMouseHeld && selection.isActive(), selArea.minX(), selArea.minY(), selArea.maxX(), selArea.maxY());
@@ -309,12 +314,15 @@ public class SessionScenarioState implements SessionState {
                 hud.hideDialog();
                 hud.resetDialogOpacity();
             }
+            case "to-main-menu" -> context.getCommands().openMainMenu();
             default -> {
                 return;
             }
         }
-        syncDebugDialogState();
-        hud.applyDialogLayout("debug.info");
+        if (debugProfile) {
+            syncDebugDialogState();
+            hud.applyDialogLayout("debug.info");
+        }
     }
 
     private void syncDebugDialogState() {

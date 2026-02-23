@@ -6,6 +6,10 @@ package SwordsGame.client.core;
  */
 @Deprecated
 public class Debug {
+    public static void main(String[] args) {
+        Session.main(new String[] {"--debug"});
+    }
+
     public void start() {
         Session.main(new String[] {"--debug"});
     }
