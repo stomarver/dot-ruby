@@ -1,8 +1,9 @@
 package SwordsGame.client.graphics;
 
-import SwordsGame.client.TopFaceSmoothing;
 import SwordsGame.client.World;
 import SwordsGame.client.blocks.BlockRegistry;
+
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -123,12 +124,10 @@ public class MeshBuilder {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[2];
         float[][] verts = FACE_VERTS[2];
-        TopFaceSmoothing smoothing = new TopFaceSmoothing(faces);
+        FaceSmoothing smoothing = new FaceSmoothing(faces);
 
-        float[] yOffsets = new float[4];
-        for (int i = 0; i < 4; i++) {
-            yOffsets[i] = smoothing.shouldLowerTopVertex(i) ? -World.BLOCK_SCALE : 0.0f;
-        }
+        float[] yOffsets = smoothing.buildTopVertexOffsets(World.BLOCK_SCALE);
+        Vector3f[] vertexNormals = smoothing.buildTopVertexNormals(yOffsets);
 
         float centerX = (verts[0][0] + verts[1][0] + verts[2][0] + verts[3][0]) * 0.25f;
         float centerZ = (verts[0][2] + verts[1][2] + verts[2][2] + verts[3][2]) * 0.25f;
@@ -137,39 +136,53 @@ public class MeshBuilder {
         float centerU = (uv[0] + uv[2] + uv[4] + uv[6]) * 0.25f;
         float centerV = (uv[1] + uv[3] + uv[5] + uv[7]) * 0.25f;
 
-        addSmoothedTriangleWithCenter(collector, verts[0], yOffsets[0], uv[0], uv[1],
-                verts[1], yOffsets[1], uv[2], uv[3],
-                centerX, centerYOffset, centerZ, centerU, centerV,
-                baseX, baseY, baseZ, normal, color);
+        float[] c0 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[0]));
+        float[] c1 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[1]));
+        float[] c2 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[2]));
+        float[] c3 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[3]));
+        float[] cc = scaledColor(color, smoothing.shadeFromNormal(new Vector3f(vertexNormals[0]).add(vertexNormals[1]).add(vertexNormals[2]).add(vertexNormals[3]).normalize()));
 
-        addSmoothedTriangleWithCenter(collector, verts[1], yOffsets[1], uv[2], uv[3],
-                verts[2], yOffsets[2], uv[4], uv[5],
-                centerX, centerYOffset, centerZ, centerU, centerV,
-                baseX, baseY, baseZ, normal, color);
+        addSmoothedTriangleWithCenter(collector, verts[0], yOffsets[0], uv[0], uv[1], c0,
+                verts[1], yOffsets[1], uv[2], uv[3], c1,
+                centerX, centerYOffset, centerZ, centerU, centerV, cc,
+                baseX, baseY, baseZ, normal);
 
-        addSmoothedTriangleWithCenter(collector, verts[2], yOffsets[2], uv[4], uv[5],
-                verts[3], yOffsets[3], uv[6], uv[7],
-                centerX, centerYOffset, centerZ, centerU, centerV,
-                baseX, baseY, baseZ, normal, color);
+        addSmoothedTriangleWithCenter(collector, verts[1], yOffsets[1], uv[2], uv[3], c1,
+                verts[2], yOffsets[2], uv[4], uv[5], c2,
+                centerX, centerYOffset, centerZ, centerU, centerV, cc,
+                baseX, baseY, baseZ, normal);
 
-        addSmoothedTriangleWithCenter(collector, verts[3], yOffsets[3], uv[6], uv[7],
-                verts[0], yOffsets[0], uv[0], uv[1],
-                centerX, centerYOffset, centerZ, centerU, centerV,
-                baseX, baseY, baseZ, normal, color);
+        addSmoothedTriangleWithCenter(collector, verts[2], yOffsets[2], uv[4], uv[5], c2,
+                verts[3], yOffsets[3], uv[6], uv[7], c3,
+                centerX, centerYOffset, centerZ, centerU, centerV, cc,
+                baseX, baseY, baseZ, normal);
+
+        addSmoothedTriangleWithCenter(collector, verts[3], yOffsets[3], uv[6], uv[7], c3,
+                verts[0], yOffsets[0], uv[0], uv[1], c0,
+                centerX, centerYOffset, centerZ, centerU, centerV, cc,
+                baseX, baseY, baseZ, normal);
     }
 
     private void addSmoothedTriangleWithCenter(FloatCollector collector,
-                                               float[] a, float ayOffset, float au, float av,
-                                               float[] b, float byOffset, float bu, float bv,
-                                               float centerX, float centerYOffset, float centerZ, float centerU, float centerV,
+                                               float[] a, float ayOffset, float au, float av, float[] colorA,
+                                               float[] b, float byOffset, float bu, float bv, float[] colorB,
+                                               float centerX, float centerYOffset, float centerZ, float centerU, float centerV, float[] colorCenter,
                                                float baseX, float baseY, float baseZ,
-                                               float[] normal, float[] color) {
-        addSmoothedVertexWithYOffset(collector, a, ayOffset, baseX, baseY, baseZ, normal, au, av, color);
-        addSmoothedVertexWithYOffset(collector, b, byOffset, baseX, baseY, baseZ, normal, bu, bv, color);
+                                               float[] normal) {
+        addSmoothedVertexWithYOffset(collector, a, ayOffset, baseX, baseY, baseZ, normal, au, av, colorA);
+        addSmoothedVertexWithYOffset(collector, b, byOffset, baseX, baseY, baseZ, normal, bu, bv, colorB);
         addSmoothedVertexWithYOffset(collector,
                 new float[] {centerX, 1.0f, centerZ},
                 centerYOffset,
-                baseX, baseY, baseZ, normal, centerU, centerV, color);
+                baseX, baseY, baseZ, normal, centerU, centerV, colorCenter);
+    }
+
+    private float[] scaledColor(float[] base, float shade) {
+        return new float[] {
+                base[0] * shade,
+                base[1] * shade,
+                base[2] * shade
+        };
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
