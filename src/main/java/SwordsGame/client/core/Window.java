@@ -403,19 +403,8 @@ public class Window {
         virtualMouseX += (float) (dx * mouseSensitivity);
         virtualMouseY += (float) (dy * mouseSensitivity);
 
-
-        if (virtualMouseX < 0) virtualMouseX = 0;
-        if (virtualMouseY < 0) virtualMouseY = 0;
-
-        float maxMouseX = VIRTUAL_WIDTH - 1f;
-        float maxMouseY = VIRTUAL_HEIGHT;
-        if (virtualMouseX > maxMouseX) virtualMouseX = maxMouseX;
-        if (virtualMouseY > maxMouseY) virtualMouseY = maxMouseY;
-
-        if (virtualMouseClampEnabled) {
-            virtualMouseX = Math.max(clampMinX, Math.min(virtualMouseX, clampMaxX));
-            virtualMouseY = Math.max(clampMinY, Math.min(virtualMouseY, clampMaxY));
-        }
+        virtualMouseX = WindowMouseMath.clampMouseX(virtualMouseX, clampMinX, clampMaxX, virtualMouseClampEnabled, VIRTUAL_WIDTH);
+        virtualMouseY = WindowMouseMath.clampMouseY(virtualMouseY, clampMinY, clampMaxY, virtualMouseClampEnabled, VIRTUAL_HEIGHT);
     }
 
 

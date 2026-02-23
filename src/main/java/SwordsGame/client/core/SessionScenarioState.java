@@ -11,6 +11,7 @@ import SwordsGame.client.ui.Anchor;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.Dialog;
 import SwordsGame.client.ui.Hud;
+import SwordsGame.client.ui.HudLayoutRegistry;
 import SwordsGame.client.ui.SelectionArea;
 import SwordsGame.client.ui.SelectionBox;
 import SwordsGame.client.utils.Discord;
@@ -48,14 +49,11 @@ public class SessionScenarioState implements SessionState {
 
     private boolean debugProfile;
     private boolean showChunkBounds = false;
-    private boolean toggleBoundsHeld = false;
     private boolean showDebugInfo = true;
     private boolean showCameraBlock = true;
     private boolean showTimeBlock = true;
     private boolean showRenderingBlock = true;
     private boolean showClientBlock = true;
-    private boolean toggleDebugHeld = false;
-    private boolean toggleVirtualResHeld = false;
     private float fogDistanceMultiplier = 1.0f;
     private int fps = 0;
     private int fpsCounter = 0;
@@ -86,7 +84,6 @@ public class SessionScenarioState implements SessionState {
         hud.setPrimaryButtonText(debugProfile ? "deb...ug" : "menu");
         hud.setGlobalLoadingText("loading");
         hud.setGlobalLoadingVisible(false);
-        hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
         hud.putUiState("debugMode", debugProfile);
         syncDebugDialogState();
 
@@ -151,7 +148,7 @@ public class SessionScenarioState implements SessionState {
 
             if (hud.consumeBaseButtonClick("debug-button", leftMouseHeld)) {
                 syncDebugDialogState();
-                hud.applyDialogLayout("debug.info");
+                hud.applyDialogLayout(HudLayoutRegistry.DIALOG_DEBUG_INFO);
                 hud.setDialogOpacity(1.0f, 1.0f);
                 hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
                         Dialog.SelectionBlockMode.NONE);
@@ -167,32 +164,9 @@ public class SessionScenarioState implements SessionState {
     @Override
     public void render() {
         window.beginRenderToFBO();
-        renderer.setup3D(window);
 
-        glPushMatrix();
-        camera.applyTransformations();
-        renderer.applySunLight();
-
-        world.render(chunkManager, camera);
-        if (debugProfile && showChunkBounds) {
-            world.renderChunkBounds(chunkManager, camera);
-        }
-
-        glPopMatrix();
-
-        renderer.applyScreenSpaceFog(window);
-        renderer.setup2D(window);
-
-        if (hud != null) {
-            hud.renderBaseInterface();
-        }
-
-        float selectionThickness = window.getVirtualUnitsForPhysicalPixels(2f);
-        selection.render(selectionThickness);
-
-        if (hud != null) {
-            hud.renderDialogOverlay();
-        }
+        ScenarioRender3D.render(window, renderer, camera, world, chunkManager, debugProfile && showChunkBounds);
+        ScenarioRenderUi.render(window, hud, selection, true);
 
         window.endRenderToFBO();
         window.drawFBO();
@@ -203,36 +177,31 @@ public class SessionScenarioState implements SessionState {
     }
 
     private void updateFogDistanceControls(long windowHandle) {
-        if (glfwGetKey(windowHandle, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
+        HotkeyManager hotkeys = context.getHotkeys();
+        if (hotkeys.isDown(windowHandle, HotkeyAction.FOG_PLUS)) {
             fogDistanceMultiplier = clamp(fogDistanceMultiplier + FOG_DISTANCE_STEP, FOG_DISTANCE_MIN, FOG_DISTANCE_MAX);
         }
-        if (glfwGetKey(windowHandle, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
+        if (hotkeys.isDown(windowHandle, HotkeyAction.FOG_MINUS)) {
             fogDistanceMultiplier = clamp(fogDistanceMultiplier - FOG_DISTANCE_STEP, FOG_DISTANCE_MIN, FOG_DISTANCE_MAX);
         }
     }
 
     private void updateBoundsToggle(long windowHandle) {
-        boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_B) == GLFW_PRESS;
-        if (togglePressed && !toggleBoundsHeld) {
+        if (context.getHotkeys().consumePress(windowHandle, HotkeyAction.TOGGLE_CHUNK_BOUNDS)) {
             showChunkBounds = !showChunkBounds;
         }
-        toggleBoundsHeld = togglePressed;
     }
 
     private void updateDebugToggle(long windowHandle) {
-        boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_F8) == GLFW_PRESS;
-        if (togglePressed && !toggleDebugHeld) {
+        if (context.getHotkeys().consumePress(windowHandle, HotkeyAction.TOGGLE_DEBUG_INFO)) {
             showDebugInfo = !showDebugInfo;
         }
-        toggleDebugHeld = togglePressed;
     }
 
     private void updateVirtualResolutionToggle(long windowHandle) {
-        boolean togglePressed = glfwGetKey(windowHandle, GLFW_KEY_F7) == GLFW_PRESS;
-        if (togglePressed && !toggleVirtualResHeld) {
+        if (context.getHotkeys().consumePress(windowHandle, HotkeyAction.TOGGLE_VIRTUAL_RES)) {
             window.toggleVirtualResolution();
         }
-        toggleVirtualResHeld = togglePressed;
     }
 
     private void updateHudInfo() {
@@ -328,7 +297,7 @@ public class SessionScenarioState implements SessionState {
         }
         if (debugProfile) {
             syncDebugDialogState();
-            hud.applyDialogLayout("debug.info");
+            hud.applyDialogLayout(HudLayoutRegistry.DIALOG_DEBUG_INFO);
         }
     }
 

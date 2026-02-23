@@ -10,6 +10,7 @@ public class Session {
         window.create();
 
         SessionStateManager stateManager = new SessionStateManager();
+        HotkeyManager hotkeys = new HotkeyManager();
 
         SessionCommands commands = new SessionCommands() {
             @Override
@@ -28,7 +29,7 @@ public class Session {
             }
         };
 
-        stateManager.init(new SessionContext(window, debugProfile, commands));
+        stateManager.init(new SessionContext(window, debugProfile, commands, hotkeys));
 
         stateManager.changeState(new MainMenuState());
 
