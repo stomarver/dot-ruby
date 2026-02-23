@@ -3,8 +3,6 @@ package SwordsGame.client.graphics;
 import SwordsGame.client.World;
 import SwordsGame.client.blocks.BlockRegistry;
 
-import org.joml.Vector3f;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -127,8 +125,6 @@ public class MeshBuilder {
         FaceSmoothing smoothing = new FaceSmoothing(faces);
 
         float[] yOffsets = smoothing.buildTopVertexOffsets(World.BLOCK_SCALE);
-        Vector3f[] vertexNormals = smoothing.buildTopVertexNormals(yOffsets);
-
         float centerX = (verts[0][0] + verts[1][0] + verts[2][0] + verts[3][0]) * 0.25f;
         float centerZ = (verts[0][2] + verts[1][2] + verts[2][2] + verts[3][2]) * 0.25f;
         float centerYOffset = (yOffsets[0] + yOffsets[1] + yOffsets[2] + yOffsets[3]) * 0.25f;
@@ -136,33 +132,24 @@ public class MeshBuilder {
         float centerU = (uv[0] + uv[2] + uv[4] + uv[6]) * 0.25f;
         float centerV = (uv[1] + uv[3] + uv[5] + uv[7]) * 0.25f;
 
-        float[] c0 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[0]));
-        float[] c1 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[1]));
-        float[] c2 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[2]));
-        float[] c3 = scaledColor(color, smoothing.shadeFromNormal(vertexNormals[3]));
-        float[] cc01 = darkerColor(c0, c1);
-        float[] cc12 = darkerColor(c1, c2);
-        float[] cc23 = darkerColor(c2, c3);
-        float[] cc30 = darkerColor(c3, c0);
-
-        addSmoothedTriangleWithCenter(collector, verts[0], yOffsets[0], uv[0], uv[1], c0,
-                verts[1], yOffsets[1], uv[2], uv[3], c1,
-                centerX, centerYOffset, centerZ, centerU, centerV, cc01,
+        addSmoothedTriangleWithCenter(collector, verts[0], yOffsets[0], uv[0], uv[1], color,
+                verts[1], yOffsets[1], uv[2], uv[3], color,
+                centerX, centerYOffset, centerZ, centerU, centerV, color,
                 baseX, baseY, baseZ, normal);
 
-        addSmoothedTriangleWithCenter(collector, verts[1], yOffsets[1], uv[2], uv[3], c1,
-                verts[2], yOffsets[2], uv[4], uv[5], c2,
-                centerX, centerYOffset, centerZ, centerU, centerV, cc12,
+        addSmoothedTriangleWithCenter(collector, verts[1], yOffsets[1], uv[2], uv[3], color,
+                verts[2], yOffsets[2], uv[4], uv[5], color,
+                centerX, centerYOffset, centerZ, centerU, centerV, color,
                 baseX, baseY, baseZ, normal);
 
-        addSmoothedTriangleWithCenter(collector, verts[2], yOffsets[2], uv[4], uv[5], c2,
-                verts[3], yOffsets[3], uv[6], uv[7], c3,
-                centerX, centerYOffset, centerZ, centerU, centerV, cc23,
+        addSmoothedTriangleWithCenter(collector, verts[2], yOffsets[2], uv[4], uv[5], color,
+                verts[3], yOffsets[3], uv[6], uv[7], color,
+                centerX, centerYOffset, centerZ, centerU, centerV, color,
                 baseX, baseY, baseZ, normal);
 
-        addSmoothedTriangleWithCenter(collector, verts[3], yOffsets[3], uv[6], uv[7], c3,
-                verts[0], yOffsets[0], uv[0], uv[1], c0,
-                centerX, centerYOffset, centerZ, centerU, centerV, cc30,
+        addSmoothedTriangleWithCenter(collector, verts[3], yOffsets[3], uv[6], uv[7], color,
+                verts[0], yOffsets[0], uv[0], uv[1], color,
+                centerX, centerYOffset, centerZ, centerU, centerV, color,
                 baseX, baseY, baseZ, normal);
     }
 
@@ -179,21 +166,6 @@ public class MeshBuilder {
                 centerYOffset,
                 baseX, baseY, baseZ, normal, centerU, centerV, colorCenter);
     }
-
-    private float[] scaledColor(float[] base, float shade) {
-        return new float[] {
-                base[0] * shade,
-                base[1] * shade,
-                base[2] * shade
-        };
-    }
-
-    private float[] darkerColor(float[] a, float[] b) {
-        float lumA = (a[0] + a[1] + a[2]) / 3.0f;
-        float lumB = (b[0] + b[1] + b[2]) / 3.0f;
-        return lumA <= lumB ? a : b;
-    }
-
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
                            float[] normal, float u, float vTex, float[] color) {
         float x = baseX + (v[0] * World.BLOCK_SIZE);
