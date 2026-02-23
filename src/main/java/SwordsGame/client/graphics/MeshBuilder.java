@@ -28,6 +28,7 @@ public class MeshBuilder {
     private final Map<Integer, FloatCollector> opaque = new HashMap<>();
     private final Map<Integer, FloatCollector> transparent = new HashMap<>();
     private final Map<Integer, FloatCollector> emissive = new HashMap<>();
+    private final Map<Long, Float> reconciledTopOffsets = new HashMap<>();
     private final boolean topOnly;
     private final boolean useVertexColor;
 
@@ -63,7 +64,7 @@ public class MeshBuilder {
             float shade = getFaceShade(face);
             float[] shadedColor = new float[] {baseTint[0] * shade, baseTint[1] * shade, baseTint[2] * shade};
             if (props.hasSmoothing() && face == 2) {
-                appendSmoothedTopFace(collector, block, rot, baseX, baseY, baseZ, shadedColor, faces);
+                appendSmoothedTopFace(collector, block, rot, baseX, baseY, baseZ, shadedColor, faces, wx, wy, wz);
             } else {
                 appendFace(collector, face, block, rot, baseX, baseY, baseZ, shadedColor);
             }
@@ -118,13 +119,19 @@ public class MeshBuilder {
     }
 
     private void appendSmoothedTopFace(FloatCollector collector, Block block, int rot,
-                                       float baseX, float baseY, float baseZ, float[] color, boolean[] faces) {
+                                       float baseX, float baseY, float baseZ, float[] color, boolean[] faces,
+                                       int wx, int wy, int wz) {
         float[] uv = block.getUv(rot);
         float[] normal = FACE_NORMALS[2];
         float[][] verts = FACE_VERTS[2];
         FaceSmoothing smoothing = new FaceSmoothing(faces);
 
-        float[] yOffsets = smoothing.buildTopVertexOffsets(World.BLOCK_SCALE);
+        float[] rawOffsets = smoothing.buildTopVertexOffsets(World.BLOCK_SCALE);
+        float[] yOffsets = new float[4];
+        for (int i = 0; i < 4; i++) {
+            yOffsets[i] = reconcileTopCornerOffset(wx, wy, wz, i, verts[i], rawOffsets[i]);
+        }
+
         float centerX = (verts[0][0] + verts[1][0] + verts[2][0] + verts[3][0]) * 0.25f;
         float centerZ = (verts[0][2] + verts[1][2] + verts[2][2] + verts[3][2]) * 0.25f;
         float centerYOffset = (yOffsets[0] + yOffsets[1] + yOffsets[2] + yOffsets[3]) * 0.25f;
@@ -166,6 +173,31 @@ public class MeshBuilder {
                 centerYOffset,
                 baseX, baseY, baseZ, normal, centerU, centerV, colorCenter);
     }
+    private float reconcileTopCornerOffset(int wx, int wy, int wz, int cornerIndex, float[] corner, float proposedOffset) {
+        int vx = wx + (corner[0] > 0f ? 1 : 0);
+        int vz = wz + (corner[2] > 0f ? 1 : 0);
+        long key = topVertexKey(vx, wy, vz);
+
+        Float existing = reconciledTopOffsets.get(key);
+        if (existing == null) {
+            reconciledTopOffsets.put(key, proposedOffset);
+            return proposedOffset;
+        }
+
+        float reconciled = Math.min(existing, proposedOffset);
+        if (reconciled != existing) {
+            reconciledTopOffsets.put(key, reconciled);
+        }
+        return reconciled;
+    }
+
+    private long topVertexKey(int vx, int vy, int vz) {
+        long x = ((long) vx & 0x1FFFFFL);
+        long y = ((long) vy & 0x1FFFL);
+        long z = ((long) vz & 0x1FFFFFL);
+        return (x << 34) | (y << 21) | z;
+    }
+
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,
                            float[] normal, float u, float vTex, float[] color) {
         float x = baseX + (v[0] * World.BLOCK_SIZE);
