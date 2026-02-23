@@ -104,6 +104,7 @@ public class TexLoad {
                 System.out.println("[Sys] Textures Releasing:");
                 isReleasing = true;
             }
+            cache.entrySet().removeIf(entry -> entry.getValue() != null && entry.getValue().id == id);
             glDeleteTextures(id);
             System.out.printf("[ID: %d]%n", id);
         }
@@ -115,6 +116,14 @@ public class TexLoad {
             isReleasing = false;
         }
         cache.clear();
+    }
+
+
+    public static void evictCacheByPrefix(String prefix) {
+        if (prefix == null || prefix.isBlank()) {
+            return;
+        }
+        cache.keySet().removeIf(path -> path != null && path.startsWith(prefix));
     }
 
     private static boolean is2DTexturePath(String path) {

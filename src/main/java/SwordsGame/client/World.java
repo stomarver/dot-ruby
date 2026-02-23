@@ -1,5 +1,6 @@
 package SwordsGame.client;
 
+import SwordsGame.client.FallingBlock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,7 +22,7 @@ public class World {
     private static final float RENDER_RADIUS_PADDING = 6.0f;
     private static final float LOD_DISTANCE_PADDING = 5.0f;
     private final Map<Chunk, ChunkRenderData> chunkCache = new HashMap<>();
-    private final ArrayList<FallBlk> fallingBlocks = new ArrayList<>();
+    private final ArrayList<FallingBlock> fallingBlocks = new ArrayList<>();
 
     public void render(ChunkManager chunkManager, Camera camera) {
         ViewCulling culling = buildCulling(chunkManager, camera);
@@ -132,9 +133,9 @@ public class World {
         float totalOffset = (worldSize * Chunk.SIZE) / 2f;
         float offset = BLOCK_SCALE;
 
-        Iterator<FallBlk> iterator = fallingBlocks.iterator();
+        Iterator<FallingBlock> iterator = fallingBlocks.iterator();
         while (iterator.hasNext()) {
-            FallBlk block = iterator.next();
+            FallingBlock block = iterator.next();
 
             if (currentTime - block.creationTime > 1.0) {
                 iterator.remove();
@@ -166,7 +167,7 @@ public class World {
 
     public void addFallingBlock(int wx, int wy, int wz, byte type) {
         int seed = (wx * 73856093) ^ (wy * 19349663) ^ (wz * 83492791);
-        fallingBlocks.add(new FallBlk(wx, wy, wz, type, seed, glfwGetTime()));
+        fallingBlocks.add(new FallingBlock(wx, wy, wz, type, seed, glfwGetTime()));
     }
 
 

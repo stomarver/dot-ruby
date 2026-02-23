@@ -2,6 +2,13 @@ package SwordsGame.server;
 
 import SwordsGame.server.Terrain;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 public class ChunkManager {
     private static final int WORLD_SIZE_BLOCKS = 2048;
     private static final int WORLD_SIZE_CHUNKS = WORLD_SIZE_BLOCKS / Chunk.SIZE;
@@ -16,13 +23,33 @@ public class ChunkManager {
 
     private void generateWorld() {
         System.out.println("[Server] Generating world " + WORLD_SIZE_BLOCKS + "x" + WORLD_SIZE_BLOCKS + "...");
-        for (int cx = 0; cx < worldSizeInChunks; cx++) {
-            for (int cz = 0; cz < worldSizeInChunks; cz++) {
-                Chunk chunk = new Chunk(cx, cz);
-                chunks[toChunkIndex(cx, cz)] = chunk;
-                Terrain.generate(chunk);
+
+        int threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        try {
+            List<Callable<Void>> tasks = new ArrayList<>();
+            for (int cx = 0; cx < worldSizeInChunks; cx++) {
+                final int fx = cx;
+                tasks.add(() -> {
+                    for (int cz = 0; cz < worldSizeInChunks; cz++) {
+                        Chunk chunk = new Chunk(fx, cz);
+                        Terrain.generate(chunk);
+                        chunks[toChunkIndex(fx, cz)] = chunk;
+                    }
+                    return null;
+                });
             }
+
+            List<Future<Void>> futures = pool.invokeAll(tasks);
+            for (Future<Void> future : futures) {
+                future.get();
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("World generation failed", e);
+        } finally {
+            pool.shutdown();
         }
+
         System.out.println("[Server] World generation finished.");
     }
 

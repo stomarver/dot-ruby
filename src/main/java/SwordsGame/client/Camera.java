@@ -40,7 +40,7 @@ public class Camera {
     public float getOrthoHeight() { return ORTHO_HEIGHT; }
 
 
-    public void update(Window window, ChunkManager chunkManager, Renderer renderer, boolean blockVerticalEdgeScroll) {
+    public void update(Window window, ChunkManager chunkManager, Renderer renderer, boolean blockVerticalEdgeScroll, boolean blockAllEdgeScroll) {
         long windowHandle = window.getHandle();
 
         Vector2f forward = forwardFromAngle(currentRotationY);
@@ -76,17 +76,19 @@ public class Camera {
         int virtualWidth = window.getVirtualWidth();
         int virtualHeight = window.getVirtualHeight();
 
-        if (mouseX < EDGE_SCROLL_ZONE) {
-            position.fma(EDGE_SCROLL_SPEED, right);
-        } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
-            position.fma(-EDGE_SCROLL_SPEED, right);
-        }
+        if (!blockAllEdgeScroll) {
+            if (mouseX < EDGE_SCROLL_ZONE) {
+                position.fma(EDGE_SCROLL_SPEED, right);
+            } else if (mouseX > virtualWidth - EDGE_SCROLL_ZONE) {
+                position.fma(-EDGE_SCROLL_SPEED, right);
+            }
 
-        if (!blockVerticalEdgeScroll) {
-            if (mouseY < EDGE_SCROLL_ZONE) {
-                position.fma(EDGE_SCROLL_SPEED, forward);
-            } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
-                position.fma(-EDGE_SCROLL_SPEED, forward);
+            if (!blockVerticalEdgeScroll) {
+                if (mouseY < EDGE_SCROLL_ZONE) {
+                    position.fma(EDGE_SCROLL_SPEED, forward);
+                } else if (mouseY > virtualHeight - EDGE_SCROLL_ZONE) {
+                    position.fma(-EDGE_SCROLL_SPEED, forward);
+                }
             }
         }
 
