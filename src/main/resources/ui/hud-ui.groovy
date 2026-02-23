@@ -15,6 +15,29 @@
             ]
         },
         dialogs: [
+                'main.menu' : { ctx ->
+                    [
+                            texts  : [
+                                    [text: '^2DotRuby^0\nMain Menu', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 20, scale: 1.0],
+                                    [text: 'Use buttons to start or exit', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 62, scale: 0.8]
+                            ],
+                            buttons: [
+                                    [id: 'start-session', label: 'start session', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 108, width: 200, height: 28, active: true],
+                                    [id: 'exit-app', label: 'exit', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 142, width: 200, height: 28, active: true]
+                            ]
+                    ]
+                },
+                'session.pause': { ctx ->
+                    [
+                            texts  : [
+                                    [text: '^3session paused', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 18, scale: 1.0]
+                            ],
+                            buttons: [
+                                    [id: 'to-main-menu', label: 'main menu', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 78, width: 210, height: 28, active: true],
+                                    [id: 'close', label: 'close', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 112, width: 210, height: 28, active: true]
+                            ]
+                    ]
+                },
                 'debug.info': { ctx ->
                     def state = (ctx?.state ?: [:]) as Map
                     [

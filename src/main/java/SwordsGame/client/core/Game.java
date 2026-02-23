@@ -6,6 +6,10 @@ package SwordsGame.client.core;
  */
 @Deprecated
 public class Game {
+    public static void main(String[] args) {
+        Session.main(new String[0]);
+    }
+
     public void start() {
         Session.main(new String[0]);
     }
