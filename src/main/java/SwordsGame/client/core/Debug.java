@@ -79,6 +79,7 @@ public class Debug {
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
         hud.setPrimaryButtonText("deb...ug");
+        hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
 
         cursor = new Cursor();
         selection = new SelectionBox();
@@ -136,7 +137,7 @@ public class Debug {
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     rebuildDebugDialogContent();
                     hud.setDialogOpacity(1.0f, 1.0f);
-                    hud.toggleDialog("", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0, 310, 165,
+                    hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
                             Dialog.SelectionBlockMode.NONE);
                 }
 

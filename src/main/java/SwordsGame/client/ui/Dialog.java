@@ -30,6 +30,7 @@ public class Dialog {
     private boolean visible;
     private Anchor.TypeX anchorX = Anchor.LEFT;
     private Anchor.TypeY anchorY = Anchor.TOP;
+    private Anchor pivot;
     private float offsetX;
     private float offsetY;
     private float width = 260;
@@ -59,6 +60,7 @@ public class Dialog {
                      SelectionBlockMode blockMode) {
         this.anchorX = ax == null ? Anchor.LEFT : ax;
         this.anchorY = ay == null ? Anchor.TOP : ay;
+        this.pivot = null;
         this.offsetX = x;
         this.offsetY = y;
         this.width = Math.max(1f, width);
@@ -66,6 +68,44 @@ public class Dialog {
         this.text = text == null ? "" : text;
         this.selectionBlockMode = blockMode == null ? SelectionBlockMode.NONE : blockMode;
         this.visible = true;
+    }
+
+
+    public void show(String text,
+                     Anchor pivot,
+                     Anchor.TypeX alignX,
+                     Anchor.TypeY alignY,
+                     float x,
+                     float y,
+                     float width,
+                     float height,
+                     SelectionBlockMode blockMode) {
+        this.anchorX = alignX == null ? Anchor.LEFT : alignX;
+        this.anchorY = alignY == null ? Anchor.TOP : alignY;
+        this.pivot = pivot;
+        this.offsetX = x;
+        this.offsetY = y;
+        this.width = Math.max(1f, width);
+        this.height = Math.max(1f, height);
+        this.text = text == null ? "" : text;
+        this.selectionBlockMode = blockMode == null ? SelectionBlockMode.NONE : blockMode;
+        this.visible = true;
+    }
+
+    public void toggle(String text,
+                       Anchor pivot,
+                       Anchor.TypeX alignX,
+                       Anchor.TypeY alignY,
+                       float x,
+                       float y,
+                       float width,
+                       float height,
+                       SelectionBlockMode blockMode) {
+        if (visible) {
+            visible = false;
+        } else {
+            show(text, pivot, alignX, alignY, x, y, width, height, blockMode);
+        }
     }
 
     public void toggle(String text,
@@ -207,8 +247,8 @@ public class Dialog {
     }
 
     private Rect resolveRect(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float w, float h) {
-        float baseX = (ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW);
-        float baseY = (ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH);
+        float baseX = pivot != null ? pivot.x : ((ax == Anchor.TypeX.LEFT) ? 0 : (ax == Anchor.TypeX.CENTER ? screenW / 2f : screenW));
+        float baseY = pivot != null ? pivot.y : ((ay == Anchor.TypeY.TOP) ? 0 : (ay == Anchor.TypeY.CENTER ? screenH / 2f : screenH));
 
         float left = baseX + x;
         float top = baseY + y;

@@ -12,6 +12,8 @@ import SwordsGame.client.graphics.TexLoad;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +32,7 @@ public class Hud {
     private float virtualCursorY = -1f;
     private boolean primaryButtonHeld = false;
     private boolean dialogButtonHeld = false;
+    private final Map<String, Anchor> pivots = new HashMap<>();
 
     private final TexLoad.Texture charFrameTex;
     private final TexLoad.Texture separatorTex;
@@ -50,6 +53,9 @@ public class Hud {
         this.separatorTex = load(Paths.UI_SEPARATOR);
 
         startTerminalThread();
+        setPivot("screen.left.top", Anchor.LEFT, Anchor.TOP, 0, 0);
+        setPivot("screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0);
+        setPivot("screen.right.center", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0);
     }
 
     private void startTerminalThread() {
@@ -183,6 +189,52 @@ public class Hud {
 
     public void setDialogContent(List<Dialog.TextSlot> textSlots, List<Dialog.ButtonSlot> buttonSlots) {
         dialog.setLayout(textSlots, buttonSlots);
+    }
+
+
+    public void setPivot(String id, Anchor pivot) {
+        if (id == null || id.isBlank() || pivot == null) {
+            return;
+        }
+        pivots.put(id, pivot);
+    }
+
+    public void setPivot(String id, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY) {
+        if (id == null || id.isBlank()) {
+            return;
+        }
+        pivots.put(id, Anchor.screenPoint(virtualWidth, virtualHeight, ax, ay, offsetX, offsetY));
+    }
+
+    public Anchor getPivot(String id) {
+        return pivots.get(id);
+    }
+
+    public Anchor anchorAtPivot(String pivotId, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY) {
+        return Anchor.pivotPoint(getPivot(pivotId), ax, ay, offsetX, offsetY);
+    }
+
+    public void drawTextAtPivot(String value, String pivotId, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY, float scale) {
+        text.draw(value == null ? "" : value, anchorAtPivot(pivotId, ax, ay, offsetX, offsetY), 0f, 0f, scale);
+    }
+
+    public void drawSpriteAtPivot(TexLoad.Texture texture, String pivotId, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY, float scale) {
+        if (texture == null) {
+            return;
+        }
+        sprite.draw(texture, anchorAtPivot(pivotId, ax, ay, offsetX, offsetY), 0f, 0f, scale);
+    }
+
+    public void toggleDialogAtPivot(String body,
+                                    String pivotId,
+                                    Anchor.TypeX alignX,
+                                    Anchor.TypeY alignY,
+                                    float x,
+                                    float y,
+                                    float width,
+                                    float height,
+                                    Dialog.SelectionBlockMode blockMode) {
+        dialog.toggle(body, getPivot(pivotId), alignX, alignY, x, y, width, height, blockMode);
     }
 
     public void cleanup() {
