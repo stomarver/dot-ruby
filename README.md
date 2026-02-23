@@ -1,35 +1,113 @@
-&nbsp;&nbsp;&nbsp;&nbsp;
-   <A HREF="http://theintraclinic.com">
-  <IMG SRC="https://github.com/stomarver/dot-ruby/blob/main/IntraClinic.png?raw=true">
-</A>
-&nbsp;&nbsp;&nbsp;&nbsp;
-   <A HREF="https://discord.gg/AQtjxJDatu">
-  <IMG SRC="https://github.com/stomarver/dot-ruby/blob/main/DotRuby.png?raw=true">
-</A>
+# .ruby
 
-***
- ### Controls
-| Base | Debug |
-|----------|-------|
-| <table><tr><th>Function</th><th>Keys</th></tr><tr><td>Fullscreen</td><td>F4 or Ctrl + Enter</td></tr><tr><td>Screenshot</td><td>F12 or Ctrl + P</td></tr><tr><td>Movement</td><td>Arrows or Edge-Scroll</td></tr><tr><td>Rotating</td><td>Q/E or Scroll</td></tr><tr><td>Reset</td><td>R</td></tr></table> | <table><tr><th>Function</th><th>Keys</th></tr><tr><td>Chunk Borders</td><td>B</td></tr><tr><td>Info</td><td>F8</td></tr><tr><td>Virtual/Real 3D</td><td>F7</td></tr></td></tr><tr><td>DNCycle</td><td>Y/U</td></tr></table></table> |
+`Genre: RTS` • `Status: pre-alpha (core foundation)`
 
-***
- ### Runtime
- - Target Java version: **17**
+Рубилэнд больше не держится на мире и подношениях Великому Рубину. Осколки силы разлетелись по «Рудникам», и расы вступили в борьбу за выживание, власть и будущее эпох.
 
-***
-  ### Features
- - ~~You can bomb up a cobble blocks by clicking near of it.~~ (implemented in future)
- - You can write a text from term**o**nal (when you launch game from it)
- - Screenshots saving in
-     - win [USER\Picures\SwordsGame\] 
-     - linux [~/Pictures/SwordsGame/]
- - Working Discord RPC!
- - Weird Graphics
+`.ruby` — это инди-RTS на Java/LWJGL с намеренно «сырой, живой» эстетикой ранних прототипов: пиксельная графика, минималистичный UI, атмосфера незавершённого, но настоящего мира.
 
-***
-  ### Known Issues
-- All...
+---
 
-_...project urgently needs REAL Java developers who understand LWJGL, OpenGL, Groovy (for writing extensible modding syntax), and how the overall structure and logic of Multiplayer RTS should look.
-Currently, the project is being written by an incompetent vibe coder who only knows how to create textures and models, can set the basic concept of the game, and... that's about it... (pls help us)_
+## Быстрый старт
+
+### Требования
+- Java 17
+
+### Сборка
+```bash
+./gradlew shadowJar
+```
+
+Готовый JAR появляется в `build/libs/dot-ruby-*/`.
+
+### Запуск
+```bash
+java -jar build/libs/dot-ruby-*/dot-ruby-*.jar
+```
+
+Debug-профиль:
+```bash
+java -jar build/libs/dot-ruby-*/dot-ruby-*.jar --debug
+```
+
+---
+
+## Что уже есть в игре
+
+- Сессионная архитектура сцен: главное меню + игровая сцена
+- 3D-мир на чанках (LWJGL/OpenGL)
+- Камера: стрелки, edge-scroll, вращение, zoom, reset
+- Day/Night цикл + туман и цветовой tint
+- HUD/Dialogs на Groovy-скриптах
+- Debug-панель с переключаемыми блоками
+- Discord RPC
+- Скриншоты в `~/Pictures/SwordsGame/`
+- Ввод текста из терминала в игровой HUD
+
+---
+
+## Управление
+
+### Базовые
+- `F4` или `Alt+Enter` — fullscreen
+- `F12` или `Ctrl+P` — screenshot
+- `Esc` — закрыть приложение
+- `Arrow Keys` или edge-scroll — движение камеры
+- `Q / E` или колесо мыши — вращение
+- `=` / `-` (или wheel zoom) — zoom
+- `R` — сброс камеры
+
+### Системные / Debug
+- `F7` — Virtual/Real render mode
+- `F8` — toggle debug info
+- `B` — toggle chunk bounds
+- `Numpad + / Numpad -` — debug fog distance
+- `Y / U` — управление временем day/night (ускорение / обратное смещение)
+
+---
+
+## Контент и моддинг (текущее состояние)
+
+- HUD, диалоги, кнопки, тексты, спрайты: `src/main/resources/shared/ui/hud/hud-ui.groovy`
+- Блоки: `src/main/resources/shared/blocks/blocks.groovy`
+- Полный гайд по актуальному синтаксису:
+  - [`docs/ModdingGuide.md`](docs/ModdingGuide.md)
+
+---
+
+## Фракции (концепт проекта)
+
+В дизайне заложены 3 фракции и 3 эпохи развития:
+- **Люди** — универсальный баланс + сильная пехота/элита
+- **Эльфы** — мобильность, дальний бой, гибкая экономика
+- **Дворфы** — осада, прочность, техно-апгрейды
+
+Экономика строится на 4 ресурсах:
+- древесина
+- минералы
+- сырьё
+- камень
+
+Сейчас это активный дизайн-вектор, а не полностью реализованный gameplay-слой.
+
+---
+
+## Дорожная карта (кратко)
+
+1. Базовые RTS-механики: selection, orders, pathfinding
+2. Рабочие циклы: добыча → доставка → строительство
+3. Юниты/здания и боевой loop
+4. Переходы эпох и апгрейды
+5. AI-оппонент и дальнейший сетевой слой
+
+---
+
+## Ссылки
+
+- Discord: https://discord.gg/yXJgtqAfWe
+- GitHub: https://github.com/stomarver/dot-ruby
+- Screenshots: https://imgur.com/a/Bweq7sZ
+
+---
+
+Если ты Java/LWJGL разработчик и тебе близок «old-school indie RTS» вайб — проекту очень нужен соавтор.
