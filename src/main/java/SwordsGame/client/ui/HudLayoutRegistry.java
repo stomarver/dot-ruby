@@ -11,6 +11,7 @@ public final class HudLayoutRegistry {
     public static void registerDefaultPivots(Hud hud) {
         hud.setPivot("screen.left.top", Anchor.LEFT, Anchor.TOP, 0, 0);
         hud.setPivot("screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0);
+        hud.setPivot("screen.bottom.center", Anchor.CENTER, Anchor.BOTTOM, 0, 0);
         hud.setPivot("screen.right.center", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0);
         hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
         hud.setPivot("menu.dialog", Anchor.CENTER, Anchor.CENTER_Y, 0, 0);
