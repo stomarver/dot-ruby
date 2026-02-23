@@ -93,14 +93,29 @@ public class Button {
                              float textScale,
                              float cursorX,
                              float cursorY) {
+        drawAbsolute(label, x, y, width, height, textScale, cursorX, cursorY, false);
+    }
+
+    public void drawAbsolute(String label,
+                             float x,
+                             float y,
+                             float width,
+                             float height,
+                             float textScale,
+                             float cursorX,
+                             float cursorY,
+                             boolean dimmed) {
         boolean hovered = contains(x, y, width, height, cursorX, cursorY);
         float rgb = hovered ? HOVER_RGB : NORMAL_RGB;
+        if (dimmed) {
+            rgb *= 0.55f;
+        }
 
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glColor4f(rgb, rgb, rgb, ALPHA);
+        glColor4f(rgb, rgb, rgb, dimmed ? ALPHA * 0.85f : ALPHA);
         glBegin(GL_QUADS);
         glVertex2f(x, y);
         glVertex2f(x + width, y);

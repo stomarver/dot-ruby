@@ -291,30 +291,18 @@ public class Debug {
         }
 
         List<Dialog.TextSlot> textSlots = new ArrayList<>();
-        textSlots.add(Dialog.text("^1DEBUG OVERLAY LAYOUT", Anchor.LEFT, Anchor.TOP, 18, 44));
-        textSlots.add(Dialog.text("Left column: status / Right column: toggles", Anchor.LEFT, Anchor.TOP, 18, 72));
-        textSlots.add(Dialog.text(statusLine("rendering", showRenderingBlock), Anchor.LEFT, Anchor.TOP, 24, 114));
-        textSlots.add(Dialog.text(statusLine("camera", showCameraBlock), Anchor.LEFT, Anchor.TOP, 24, 148));
-        textSlots.add(Dialog.text(statusLine("time", showTimeBlock), Anchor.LEFT, Anchor.TOP, 24, 182));
-        textSlots.add(Dialog.text(statusLine("client", showClientBlock), Anchor.LEFT, Anchor.TOP, 24, 216));
 
         List<Dialog.ButtonSlot> buttons = new ArrayList<>();
-        buttons.add(Dialog.button("toggle-rendering", actionLabel("rendering", showRenderingBlock), Anchor.RIGHT, Anchor.TOP, -24, 108, 250, 28));
-        buttons.add(Dialog.button("toggle-camera", actionLabel("camera", showCameraBlock), Anchor.RIGHT, Anchor.TOP, -24, 142, 250, 28));
-        buttons.add(Dialog.button("toggle-time", actionLabel("time", showTimeBlock), Anchor.RIGHT, Anchor.TOP, -24, 176, 250, 28));
-        buttons.add(Dialog.button("toggle-client", actionLabel("client", showClientBlock), Anchor.RIGHT, Anchor.TOP, -24, 210, 250, 28));
-        buttons.add(Dialog.button("toggle-all", "toggle all", Anchor.LEFT, Anchor.BOTTOM, 18, -16, 130, 30));
-        buttons.add(Dialog.button("close", "apply && close", Anchor.RIGHT, Anchor.BOTTOM, -18, -16, 170, 30));
+        buttons.add(Dialog.button("toggle-rendering", "rendering", Anchor.LEFT, Anchor.TOP, 18, 34, 210, 30, showRenderingBlock));
+        buttons.add(Dialog.button("toggle-camera", "camera", Anchor.LEFT, Anchor.TOP, 18, 70, 210, 30, showCameraBlock));
+        buttons.add(Dialog.button("toggle-time", "time", Anchor.LEFT, Anchor.TOP, 18, 106, 210, 30, showTimeBlock));
+        buttons.add(Dialog.button("toggle-client", "client", Anchor.LEFT, Anchor.TOP, 18, 142, 210, 30, showClientBlock));
+
+        boolean allEnabled = showRenderingBlock && showCameraBlock && showTimeBlock && showClientBlock;
+        buttons.add(Dialog.button("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 18, -16, 110, 30, allEnabled));
+        buttons.add(Dialog.button("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -18, -16, 140, 30));
 
         hud.setDialogContent(textSlots, buttons);
-    }
-
-    private String statusLine(String name, boolean enabled) {
-        return String.format("^2%s:^0 %s", name, enabled ? "enabled" : "disabled");
-    }
-
-    private String actionLabel(String name, boolean enabled) {
-        return String.format("%s : %s", name, enabled ? "ON" : "OFF");
     }
 
     private void updateFpsCounter(double nowSeconds) {

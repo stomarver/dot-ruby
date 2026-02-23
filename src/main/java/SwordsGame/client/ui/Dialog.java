@@ -194,7 +194,7 @@ public class Dialog {
         if (buttonRenderer != null) {
             for (ButtonSlot slot : buttonSlots) {
                 Rect rect = resolveButtonRect(slot);
-                buttonRenderer.drawAbsolute(slot.label, rect.x, rect.y, rect.w, rect.h, slot.scale, cursorX, cursorY);
+                buttonRenderer.drawAbsolute(slot.label, rect.x, rect.y, rect.w, rect.h, slot.scale, cursorX, cursorY, !slot.active);
             }
         }
     }
@@ -248,7 +248,12 @@ public class Dialog {
 
     public static ButtonSlot button(String id, String label, Anchor.TypeX anchorX, Anchor.TypeY anchorY,
                                     float offsetX, float offsetY, float width, float height) {
-        return new ButtonSlot(id, label, anchorX, anchorY, offsetX, offsetY, width, height, 1.0f);
+        return new ButtonSlot(id, label, anchorX, anchorY, offsetX, offsetY, width, height, 1.0f, true);
+    }
+
+    public static ButtonSlot button(String id, String label, Anchor.TypeX anchorX, Anchor.TypeY anchorY,
+                                    float offsetX, float offsetY, float width, float height, boolean active) {
+        return new ButtonSlot(id, label, anchorX, anchorY, offsetX, offsetY, width, height, 1.0f, active);
     }
 
     public record TextSlot(String value,
@@ -267,7 +272,8 @@ public class Dialog {
                              float offsetY,
                              float width,
                              float height,
-                             float scale) {
+                             float scale,
+                             boolean active) {
     }
 
     private record Rect(float x, float y, float w, float h) {
