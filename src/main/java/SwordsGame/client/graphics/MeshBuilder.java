@@ -28,7 +28,6 @@ public class MeshBuilder {
     private final Map<Integer, FloatCollector> opaque = new HashMap<>();
     private final Map<Integer, FloatCollector> transparent = new HashMap<>();
     private final Map<Integer, FloatCollector> emissive = new HashMap<>();
-    private final Map<Long, Float> reconciledTopOffsets = new HashMap<>();
     private final boolean topOnly;
     private final boolean useVertexColor;
 
@@ -129,9 +128,7 @@ public class MeshBuilder {
         float[][] topVerts = FACE_VERTS[2];
         float[] yOffsets = new float[4];
         float[] proposed = topology.proposedOffsets();
-        for (int i = 0; i < 4; i++) {
-            yOffsets[i] = reconcileTopCornerOffset(wx, wy, wz, i, topVerts[i], proposed[i]);
-        }
+        System.arraycopy(proposed, 0, yOffsets, 0, 4);
 
         if (!topOnly) {
             appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 0, faces[0],
@@ -227,31 +224,6 @@ public class MeshBuilder {
                 new float[] {centerX, 1.0f, centerZ},
                 centerYOffset,
                 baseX, baseY, baseZ, normal, centerU, centerV, colorCenter);
-    }
-
-    private float reconcileTopCornerOffset(int wx, int wy, int wz, int cornerIndex, float[] corner, float proposedOffset) {
-        int vx = wx + (corner[0] > 0f ? 1 : 0);
-        int vz = wz + (corner[2] > 0f ? 1 : 0);
-        long key = topVertexKey(vx, wy, vz);
-
-        Float existing = reconciledTopOffsets.get(key);
-        if (existing == null) {
-            reconciledTopOffsets.put(key, proposedOffset);
-            return proposedOffset;
-        }
-
-        float reconciled = Math.min(existing, proposedOffset);
-        if (reconciled != existing) {
-            reconciledTopOffsets.put(key, reconciled);
-        }
-        return reconciled;
-    }
-
-    private long topVertexKey(int vx, int vy, int vz) {
-        long x = ((long) vx & 0x1FFFFFL);
-        long y = ((long) vy & 0x1FFFL);
-        long z = ((long) vz & 0x1FFFFFL);
-        return (x << 34) | (y << 21) | z;
     }
 
     private void addVertex(FloatCollector collector, float[] v, float baseX, float baseY, float baseZ,

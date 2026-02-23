@@ -43,6 +43,9 @@ public class FaceSmoothing {
         // Priority 4: single-face cases (one exposed side still forms a clean ramp).
         settleSingleFaceCases(n, s, e, w, proposed, loweredY);
 
+        // Priority 5: seal pass - any corner touching an exposed side cannot stay "floating".
+        sealExposedCorners(n, s, e, w, proposed, loweredY);
+
         // Final closure for any remaining lone gap.
         settleInnerCorners(proposed, loweredY);
 
@@ -68,6 +71,22 @@ public class FaceSmoothing {
             offsets[1] = loweredY;
         } else {
             offsets[2] = loweredY;
+            offsets[3] = loweredY;
+        }
+    }
+
+    private void sealExposedCorners(boolean n, boolean s, boolean e, boolean w,
+                                    float[] offsets, float loweredY) {
+        if (s || w) {
+            offsets[0] = loweredY;
+        }
+        if (n || w) {
+            offsets[1] = loweredY;
+        }
+        if (n || e) {
+            offsets[2] = loweredY;
+        }
+        if (s || e) {
             offsets[3] = loweredY;
         }
     }
