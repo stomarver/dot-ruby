@@ -36,10 +36,13 @@ public class MainMenuState implements SessionState {
         cursor = new Cursor();
         TexLoad.finishLoading();
 
+        hud.setGlobalLoadingVisible(true);
+        hud.setGlobalLoadingText("loading menu...");
         hud.applyDialogLayout("main.menu");
         hud.setDialogOpacity(1.0f, 1.0f);
         hud.toggleDialogAtPivot("", "menu.dialog", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 220,
                 Dialog.SelectionBlockMode.NONE);
+        hud.setGlobalLoadingText("menu ready");
     }
 
     @Override
