@@ -16,85 +16,37 @@ public class FaceSmoothing {
     }
 
     public float[] buildTopVertexOffsets(float amount) {
-        float step = Math.abs(amount);
-        float loweredY = -step;
-        float raisedY = step;
+        float loweredY = -Math.abs(amount);
+        float[] offsets = new float[] {0.0f, 0.0f, 0.0f, 0.0f};
 
-        int[] influence = new int[4];
+        // Vertex-to-lower-vertex magnetic rule:
+        // each corner snaps down if at least one adjacent side is exposed.
+        if (backExposed || leftExposed) offsets[0] = loweredY;   // back-left
+        if (frontExposed || leftExposed) offsets[1] = loweredY;  // front-left
+        if (frontExposed || rightExposed) offsets[2] = loweredY; // front-right
+        if (backExposed || rightExposed) offsets[3] = loweredY;  // back-right
 
-        // Forward slope axis
-        if (frontExposed && !backExposed) {
-            // front side changed: front vertices down, opposite up
-            influence[1] -= 1;
-            influence[2] -= 1;
-            influence[0] += 1;
-            influence[3] += 1;
-        }
-        if (backExposed && !frontExposed) {
-            influence[0] -= 1;
-            influence[3] -= 1;
-            influence[1] += 1;
-            influence[2] += 1;
-        }
-
-        // Lateral slope axis
-        if (leftExposed && !rightExposed) {
-            influence[0] -= 1;
-            influence[1] -= 1;
-            influence[2] += 1;
-            influence[3] += 1;
-        }
-        if (rightExposed && !leftExposed) {
-            influence[2] -= 1;
-            influence[3] -= 1;
-            influence[0] += 1;
-            influence[1] += 1;
-        }
-
-        // Corner bias: reinforce corners touched by two changed adjacent sides.
-        if (backExposed && leftExposed) influence[0] -= 1;
-        if (frontExposed && leftExposed) influence[1] -= 1;
-        if (frontExposed && rightExposed) influence[2] -= 1;
-        if (backExposed && rightExposed) influence[3] -= 1;
-
-        float[] offsets = new float[4];
-        for (int i = 0; i < 4; i++) {
-            if (influence[i] < 0) offsets[i] = loweredY;
-            else if (influence[i] > 0) offsets[i] = raisedY;
-            else offsets[i] = 0.0f;
-        }
-
-        // Magnetic pass (+/- with epsilon): edge vertices should share level on exposed edge.
-        propagateEdge(frontExposed, offsets, 1, 2, loweredY, raisedY);
-        propagateEdge(backExposed, offsets, 0, 3, loweredY, raisedY);
-        propagateEdge(leftExposed, offsets, 0, 1, loweredY, raisedY);
-        propagateEdge(rightExposed, offsets, 2, 3, loweredY, raisedY);
+        // Edge consistency: if one corner of an exposed edge is lowered,
+        // the second corner on that same edge is forced to the same lowered level.
+        propagateLoweredEdge(frontExposed, offsets, 1, 2, loweredY);
+        propagateLoweredEdge(backExposed, offsets, 0, 3, loweredY);
+        propagateLoweredEdge(leftExposed, offsets, 0, 1, loweredY);
+        propagateLoweredEdge(rightExposed, offsets, 2, 3, loweredY);
 
         return offsets;
     }
 
-    private void propagateEdge(boolean edgeExposed,
-                               float[] offsets,
-                               int a,
-                               int b,
-                               float loweredY,
-                               float raisedY) {
+    private void propagateLoweredEdge(boolean edgeExposed,
+                                      float[] offsets,
+                                      int a,
+                                      int b,
+                                      float loweredY) {
         if (!edgeExposed) {
             return;
         }
-        boolean aLower = isNear(offsets[a], loweredY);
-        boolean bLower = isNear(offsets[b], loweredY);
-        boolean aRaise = isNear(offsets[a], raisedY);
-        boolean bRaise = isNear(offsets[b], raisedY);
-
-        if (aLower || bLower) {
+        if (isNear(offsets[a], loweredY) || isNear(offsets[b], loweredY)) {
             offsets[a] = loweredY;
             offsets[b] = loweredY;
-            return;
-        }
-        if (aRaise || bRaise) {
-            offsets[a] = raisedY;
-            offsets[b] = raisedY;
         }
     }
 
