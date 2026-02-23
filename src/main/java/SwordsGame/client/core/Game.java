@@ -12,6 +12,7 @@ import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.SelectionBox;
 import SwordsGame.client.ui.SelectionArea;
 import SwordsGame.client.ui.Anchor;
+import SwordsGame.client.ui.Dialog;
 import SwordsGame.client.utils.Discord;
 import SwordsGame.server.ChunkManager;
 import SwordsGame.server.DayNightCycle;
@@ -69,7 +70,8 @@ public class Game {
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
             selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
-            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selArea);
+            boolean selectionBlockedByDialog = hud != null && hud.blocksSelectionAtCursor();
+            selectionRectangle.update(mouseX, mouseY, leftMouseHeld && !selectionBlockedByDialog, selArea);
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selectionRectangle.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
 
@@ -106,13 +108,18 @@ public class Game {
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
-                    hud.toggleDialog(Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 420, 220);
+                    hud.toggleDialog("^3dialog\ntech wiki overlay", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 420, 220,
+                            Dialog.SelectionBlockMode.DIALOG_AREA);
                 }
-                hud.render();
+                hud.renderBaseInterface();
             }
 
             float selectionThickness = window.getVirtualUnitsForPhysicalPixels(2f);
             selectionRectangle.render(selectionThickness);
+
+            if (hud != null) {
+                hud.renderDialogOverlay();
+            }
 
             window.endRenderToFBO();
 

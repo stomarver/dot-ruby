@@ -71,7 +71,29 @@ public class Button {
         if (anchor.ty == Anchor.TypeY.CENTER) ry -= height / 2f;
         else if (anchor.ty == Anchor.TypeY.BOTTOM) ry -= height;
 
-        boolean hovered = contains(rx, ry, width, height, cursorX, cursorY);
+        drawAbsolute(label, rx, ry, width, height, textScale, cursorX, cursorY);
+    }
+
+
+
+    public boolean containsAbsolute(float x,
+                                    float y,
+                                    float width,
+                                    float height,
+                                    float cursorX,
+                                    float cursorY) {
+        return contains(x, y, width, height, cursorX, cursorY);
+    }
+
+    public void drawAbsolute(String label,
+                             float x,
+                             float y,
+                             float width,
+                             float height,
+                             float textScale,
+                             float cursorX,
+                             float cursorY) {
+        boolean hovered = contains(x, y, width, height, cursorX, cursorY);
         float rgb = hovered ? HOVER_RGB : NORMAL_RGB;
 
         glDisable(GL_TEXTURE_2D);
@@ -80,19 +102,18 @@ public class Button {
 
         glColor4f(rgb, rgb, rgb, ALPHA);
         glBegin(GL_QUADS);
-        glVertex2f(rx, ry);
-        glVertex2f(rx + width, ry);
-        glVertex2f(rx + width, ry + height);
-        glVertex2f(rx, ry + height);
+        glVertex2f(x, y);
+        glVertex2f(x + width, y);
+        glVertex2f(x + width, y + height);
+        glVertex2f(x, y + height);
         glEnd();
 
         glColor4f(1f, 1f, 1f, 1f);
 
-        float centerX = rx + (width / 2f);
-        float centerY = ry + (height / 2f);
+        float centerX = x + (width / 2f);
+        float centerY = y + (height / 2f);
         text.draw(label == null ? "" : label, new Anchor(Anchor.CENTER, Anchor.CENTER_Y, centerX, centerY), 0f, 0f, textScale);
     }
-
     private boolean contains(float x, float y, float width, float height, float mouseX, float mouseY) {
         return mouseX >= x && mouseX <= (x + width)
                 && mouseY >= y && mouseY <= (y + height);

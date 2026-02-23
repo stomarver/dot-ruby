@@ -49,6 +49,7 @@ public class Hud {
         this.separatorTex = load(Paths.UI_SEPARATOR);
 
         startTerminalThread();
+        installDialogLayoutTemplate();
     }
 
     private void startTerminalThread() {
@@ -76,8 +77,18 @@ public class Hud {
     }
 
     public void render() {
+        renderBaseInterface();
+        renderDialogOverlay();
+    }
+
+    public void renderBaseInterface() {
         drawBorders();
         drawInterface();
+    }
+
+    public void renderDialogOverlay() {
+        dialog.renderBackground();
+        dialog.renderContent(text, primaryButton, virtualCursorX, virtualCursorY);
     }
 
     private void drawBorders() {
@@ -100,8 +111,6 @@ public class Hud {
         info.renderDebug(1.0f);
 
         primaryButton.draw(primaryButtonText, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
-
-        dialog.render();
         messageSystem.draw(text);
     }
 
@@ -135,9 +144,30 @@ public class Hud {
         return clicked;
     }
 
+    public boolean blocksSelectionAtCursor() {
+        return dialog.blocksSelection(virtualCursorX, virtualCursorY);
+    }
 
-    public void toggleDialog(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float width, float height) {
-        dialog.toggle(ax, ay, x, y, width, height);
+    public void toggleDialog(String body,
+                             Anchor.TypeX ax,
+                             Anchor.TypeY ay,
+                             float x,
+                             float y,
+                             float width,
+                             float height,
+                             Dialog.SelectionBlockMode blockMode) {
+        dialog.toggle(body, ax, ay, x, y, width, height, blockMode);
+    }
+
+    private void installDialogLayoutTemplate() {
+        List<Dialog.TextSlot> textSlots = new ArrayList<>();
+        textSlots.add(new Dialog.TextSlot("^3dialog.header", Anchor.LEFT, Anchor.TOP, 10, 34, 0.9f));
+        textSlots.add(new Dialog.TextSlot("anchor/local layout enabled", Anchor.LEFT, Anchor.TOP, 10, 54, 0.8f));
+
+        List<Dialog.ButtonSlot> buttonSlots = new ArrayList<>();
+        buttonSlots.add(new Dialog.ButtonSlot("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -10, -10, 78, 24, 0.8f));
+
+        dialog.setContent(textSlots, buttonSlots);
     }
 
     public void cleanup() {
