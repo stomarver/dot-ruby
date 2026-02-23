@@ -1,13 +1,13 @@
 package SwordsGame.client;
 
-public class FallBlk {
+public class FallingBlock {
     public float x, y, z;
     public float vy;
     public byte type;
     public double creationTime;
     public int seed;
 
-    public FallBlk(float x, float y, float z, byte type, int seed, double creationTime) {
+    public FallingBlock(float x, float y, float z, byte type, int seed, double creationTime) {
         this.x = x;
         this.y = y;
         this.z = z;

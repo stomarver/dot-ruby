@@ -1,12 +1,12 @@
 package SwordsGame.client;
 
-public class Smth {
+public class TopFaceSmoothing {
     private final boolean front;
     private final boolean back;
     private final boolean right;
     private final boolean left;
 
-    public Smth(boolean[] faces) {
+    public TopFaceSmoothing(boolean[] faces) {
         this.front = faces[0];
         this.back = faces[1];
         this.right = faces[4];

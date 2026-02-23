@@ -11,14 +11,16 @@ import SwordsGame.server.ChunkManager;
 import SwordsGame.server.DayNightCycle;
 import SwordsGame.server.gameplay.MythicCorePack;
 import SwordsGame.server.gameplay.MythicFactionPack;
-import SwordsGame.server.ui.ServerUiComposer;
-import SwordsGame.shared.protocol.ui.UiFrameState;
-import SwordsGame.shared.protocol.ui.UiPanelState;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.Hud;
+import SwordsGame.client.ui.Dialog;
 import SwordsGame.client.ui.SelectionBox;
 import SwordsGame.client.ui.SelectionArea;
+import SwordsGame.client.ui.Anchor;
 import SwordsGame.client.utils.Discord;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -36,6 +38,10 @@ public class Debug {
     private boolean showChunkBounds = false;
     private boolean toggleBoundsHeld = false;
     private boolean showDebugInfo = true;
+    private boolean showCameraBlock = true;
+    private boolean showTimeBlock = true;
+    private boolean showRenderingBlock = true;
+    private boolean showClientBlock = true;
     private boolean toggleDebugHeld = false;
     private boolean toggleVirtualResHeld = false;
     private DayNightCycle dayNightCycle;
@@ -44,7 +50,6 @@ public class Debug {
     private static final float FOG_DISTANCE_MIN = 0.4f;
     private static final float FOG_DISTANCE_MAX = 2.5f;
     private float fogDistanceMultiplier = 1.0f;
-    private ServerUiComposer serverUiComposer;
     private int fps = 0;
     private int fpsCounter = 0;
     private double fpsLastSampleSec = 0.0;
@@ -64,7 +69,6 @@ public class Debug {
         camera = new Camera();
         dayNightCycle = new DayNightCycle();
         lastCycleTickSeconds = (float) glfwGetTime();
-        serverUiComposer = new ServerUiComposer();
         fpsLastSampleSec = glfwGetTime();
 
         Discord.init();
@@ -75,6 +79,7 @@ public class Debug {
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
         hud.setPrimaryButtonText("deb...ug");
+        hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
 
         cursor = new Cursor();
         selection = new SelectionBox();
@@ -86,7 +91,8 @@ public class Debug {
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
             selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
-            selection.update(mouseX, mouseY, leftMouseHeld, selArea);
+            boolean selectionBlockedByDialog = hud != null && hud.isSelectionBlockedByDialog();
+            selection.update(mouseX, mouseY, leftMouseHeld, selectionBlockedByDialog, selArea);
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selection.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
 
@@ -129,13 +135,23 @@ public class Debug {
             if (hud != null) {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
-                    showDebugInfo = !showDebugInfo;
+                    rebuildDebugDialogContent();
+                    hud.setDialogOpacity(1.0f, 1.0f);
+                    hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
+                            Dialog.SelectionBlockMode.NONE);
                 }
-                hud.render();
+
+                String dialogButton = hud.pollDialogButtonClick(leftMouseHeld);
+                handleDialogButton(dialogButton);
+                hud.renderBaseInterface();
             }
 
             float selectionThickness = window.getVirtualUnitsForPhysicalPixels(2f);
             selection.render(selectionThickness);
+
+            if (hud != null) {
+                hud.renderDialogOverlay();
+            }
 
             window.endRenderToFBO();
 
@@ -195,38 +211,24 @@ public class Debug {
             hud.setServerInfo("");
             return;
         }
-        hud.setCameraInfo(buildCameraInfo());
-        hud.setTimeInfo(buildTimeInfo());
+        String cameraAndRendering = (showRenderingBlock ? buildRenderingInfo() + "\n" : "") + (showCameraBlock ? buildCameraInfo() : "");
+        String timeBlock = showTimeBlock ? buildTimeInfo() : "";
+        String clientBlock = showClientBlock ? buildClientInfo() : "";
 
-        UiFrameState frame = serverUiComposer.compose(chunkManager, null);
-        hud.setServerInfo(extractServerInfo(frame));
-    }
-
-    private String extractServerInfo(UiFrameState frame) {
-        if (frame == null) {
-            return "";
-        }
-        StringBuilder builder = new StringBuilder();
-        for (UiPanelState panel : frame.getPanels()) {
-            if (builder.length() > 0) {
-                builder.append("\n\n");
-            }
-            builder.append(panel.getText());
-        }
-        return builder.toString();
+        hud.setCameraInfo(cameraAndRendering.trim());
+        hud.setTimeInfo(timeBlock);
+        hud.setServerInfo(clientBlock.trim());
     }
 
     private String buildTimeInfo() {
         return String.format(
-                "^4Time^0\n^3day^0 %d\n^2clock^0 %s / 38:00\n^5phase^0 %s",
+                "# Time\n^3Day:^0 %d\n^2Clock:^0 %s / 38:00\n^5Phase:^0 %s",
                 dayNightCycle.getUiDay(),
                 dayNightCycle.getTimeLabel(),
                 dayNightCycle.getPhaseLabel());
     }
 
     private String buildCameraInfo() {
-
-
         float totalOffsetBlocks = chunkManager.getWorldSizeInBlocks() / 2.0f;
         int worldBlockX = (int) Math.floor((-camera.getX() / World.BLOCK_SCALE) + totalOffsetBlocks);
         int worldBlockZ = (int) Math.floor((-camera.getZ() / World.BLOCK_SCALE) + totalOffsetBlocks);
@@ -238,16 +240,70 @@ public class Debug {
         int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
         int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
 
+        return String.format(
+                "# Camera\n^3Position:^0 (%.1f, %.1f)\n^4Chunk:^0 (%d, %d)\n^1Local:^0 (%d, %d)",
+                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
+    }
+
+    private String buildRenderingInfo() {
+        return String.format(
+                "# Rendering\n^5Fog:^0 x%.2f [%.0f..%.0f]\n^6FPS:^0 %d",
+                fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance(), fps);
+    }
+
+    private String buildClientInfo() {
         Runtime rt = Runtime.getRuntime();
         long usedMb = (rt.totalMemory() - rt.freeMemory()) / (1024L * 1024L);
         long totalMb = rt.totalMemory() / (1024L * 1024L);
         long maxMb = rt.maxMemory() / (1024L * 1024L);
 
         return String.format(
-                "^2Camera^0\n^3pos^0 (%.1f, %.1f)\n^4chunk^0 (%d, %d)\n^1local^0 (%d, %d)\n----\n^5fog^0 x%.2f [%.0f..%.0f]\n^6fps^0 %d\n----\n^2mem^0 used %d MB | alloc %d MB | max %d MB",
-                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ,
-                fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance(),
-                fps, usedMb, totalMb, maxMb);
+                "# Client\n^2Memory:^0 %dMB used / %dMB alloc\n^2Max Memory:^0 %dMB",
+                usedMb, totalMb, maxMb);
+    }
+
+    private void handleDialogButton(String buttonId) {
+        if (buttonId == null) {
+            return;
+        }
+        switch (buttonId) {
+            case "toggle-camera" -> showCameraBlock = !showCameraBlock;
+            case "toggle-time" -> showTimeBlock = !showTimeBlock;
+            case "toggle-rendering" -> showRenderingBlock = !showRenderingBlock;
+            case "toggle-client" -> showClientBlock = !showClientBlock;
+            case "toggle-all" -> {
+                boolean enableAll = !(showCameraBlock && showTimeBlock && showRenderingBlock && showClientBlock);
+                showCameraBlock = enableAll;
+                showTimeBlock = enableAll;
+                showRenderingBlock = enableAll;
+                showClientBlock = enableAll;
+            }
+            case "close" -> { hud.hideDialog(); hud.resetDialogOpacity(); }
+            default -> {
+                return;
+            }
+        }
+        rebuildDebugDialogContent();
+    }
+
+    private void rebuildDebugDialogContent() {
+        if (hud == null) {
+            return;
+        }
+
+        List<Dialog.TextSlot> textSlots = new ArrayList<>();
+
+        List<Dialog.ButtonSlot> buttons = new ArrayList<>();
+        buttons.add(Dialog.button("toggle-rendering", "rendering", Anchor.CENTER, Anchor.TOP, 0, 14, 180, 24, showRenderingBlock));
+        buttons.add(Dialog.button("toggle-camera", "camera", Anchor.CENTER, Anchor.TOP, 0, 42, 180, 24, showCameraBlock));
+        buttons.add(Dialog.button("toggle-time", "time", Anchor.CENTER, Anchor.TOP, 0, 70, 180, 24, showTimeBlock));
+        buttons.add(Dialog.button("toggle-client", "client", Anchor.CENTER, Anchor.TOP, 0, 98, 180, 24, showClientBlock));
+
+        boolean allEnabled = showRenderingBlock && showCameraBlock && showTimeBlock && showClientBlock;
+        buttons.add(Dialog.button("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 12, -10, 84, 22, allEnabled));
+        buttons.add(Dialog.button("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -12, -10, 96, 22));
+
+        hud.setDialogContent(textSlots, buttons);
     }
 
     private void updateFpsCounter(double nowSeconds) {

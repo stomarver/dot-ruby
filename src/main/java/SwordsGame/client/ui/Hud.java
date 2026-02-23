@@ -12,6 +12,8 @@ import SwordsGame.client.graphics.TexLoad;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +31,8 @@ public class Hud {
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
     private boolean primaryButtonHeld = false;
+    private boolean dialogButtonHeld = false;
+    private final Map<String, Anchor> pivots = new HashMap<>();
 
     private final TexLoad.Texture charFrameTex;
     private final TexLoad.Texture separatorTex;
@@ -49,6 +53,9 @@ public class Hud {
         this.separatorTex = load(Paths.UI_SEPARATOR);
 
         startTerminalThread();
+        setPivot("screen.left.top", Anchor.LEFT, Anchor.TOP, 0, 0);
+        setPivot("screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0);
+        setPivot("screen.right.center", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0);
     }
 
     private void startTerminalThread() {
@@ -76,8 +83,18 @@ public class Hud {
     }
 
     public void render() {
+        renderBaseInterface();
+        renderDialogOverlay();
+    }
+
+    public void renderBaseInterface() {
         drawBorders();
         drawInterface();
+    }
+
+    public void renderDialogOverlay() {
+        dialog.renderBackground();
+        dialog.renderContent(text, primaryButton, virtualCursorX, virtualCursorY);
     }
 
     private void drawBorders() {
@@ -100,11 +117,8 @@ public class Hud {
         info.renderDebug(1.0f);
 
         primaryButton.draw(primaryButtonText, Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, 1.0f, virtualCursorX, virtualCursorY);
-
-        dialog.render();
         messageSystem.draw(text);
     }
-
 
     public void setCameraInfo(String info) {
         this.info.setCameraInfo(info);
@@ -127,7 +141,6 @@ public class Hud {
         this.virtualCursorY = y;
     }
 
-
     public boolean consumePrimaryButtonClick(boolean mouseDown) {
         boolean hovered = primaryButton.contains(Anchor.LEFT, Anchor.TOP, 10, 170, 100, 28, virtualCursorX, virtualCursorY);
         boolean clicked = hovered && mouseDown && !primaryButtonHeld;
@@ -135,9 +148,93 @@ public class Hud {
         return clicked;
     }
 
+    public String pollDialogButtonClick(boolean mouseDown) {
+        String hoveredId = dialog.getHoveredButtonId(primaryButton, virtualCursorX, virtualCursorY);
+        boolean clicked = hoveredId != null && mouseDown && !dialogButtonHeld;
+        dialogButtonHeld = mouseDown;
+        return clicked ? hoveredId : null;
+    }
 
-    public void toggleDialog(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float width, float height) {
-        dialog.toggle(ax, ay, x, y, width, height);
+    public boolean isSelectionBlockedByDialog() {
+        return dialog.blocksSelection(virtualCursorX, virtualCursorY);
+    }
+
+    public boolean isDialogVisible() {
+        return dialog.isVisible();
+    }
+
+    public void hideDialog() {
+        dialog.hide();
+    }
+
+
+    public void setDialogOpacity(float fillAlpha, float borderAlpha) {
+        dialog.setOpacity(fillAlpha, borderAlpha);
+    }
+
+    public void resetDialogOpacity() {
+        dialog.resetOpacity();
+    }
+
+    public void toggleDialog(String body,
+                             Anchor.TypeX ax,
+                             Anchor.TypeY ay,
+                             float x,
+                             float y,
+                             float width,
+                             float height,
+                             Dialog.SelectionBlockMode blockMode) {
+        dialog.toggle(body, ax, ay, x, y, width, height, blockMode);
+    }
+
+    public void setDialogContent(List<Dialog.TextSlot> textSlots, List<Dialog.ButtonSlot> buttonSlots) {
+        dialog.setLayout(textSlots, buttonSlots);
+    }
+
+
+    public void setPivot(String id, Anchor pivot) {
+        if (id == null || id.isBlank() || pivot == null) {
+            return;
+        }
+        pivots.put(id, pivot);
+    }
+
+    public void setPivot(String id, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY) {
+        if (id == null || id.isBlank()) {
+            return;
+        }
+        pivots.put(id, Anchor.screenPoint(virtualWidth, virtualHeight, ax, ay, offsetX, offsetY));
+    }
+
+    public Anchor getPivot(String id) {
+        return pivots.get(id);
+    }
+
+    public Anchor anchorAtPivot(String pivotId, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY) {
+        return Anchor.pivotPoint(getPivot(pivotId), ax, ay, offsetX, offsetY);
+    }
+
+    public void drawTextAtPivot(String value, String pivotId, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY, float scale) {
+        text.draw(value == null ? "" : value, anchorAtPivot(pivotId, ax, ay, offsetX, offsetY), 0f, 0f, scale);
+    }
+
+    public void drawSpriteAtPivot(TexLoad.Texture texture, String pivotId, Anchor.TypeX ax, Anchor.TypeY ay, float offsetX, float offsetY, float scale) {
+        if (texture == null) {
+            return;
+        }
+        sprite.draw(texture, anchorAtPivot(pivotId, ax, ay, offsetX, offsetY), 0f, 0f, scale);
+    }
+
+    public void toggleDialogAtPivot(String body,
+                                    String pivotId,
+                                    Anchor.TypeX alignX,
+                                    Anchor.TypeY alignY,
+                                    float x,
+                                    float y,
+                                    float width,
+                                    float height,
+                                    Dialog.SelectionBlockMode blockMode) {
+        dialog.toggle(body, getPivot(pivotId), alignX, alignY, x, y, width, height, blockMode);
     }
 
     public void cleanup() {
