@@ -1,13 +1,3 @@
-# .ruby
-
-`Genre: RTS` • `Status: pre-alpha (core foundation)`
-
-Rubiland no longer lives in peace around the Great Ruby. Its shards are now scattered across the Mines, and every faction is forced into conflict for territory, survival, and progression.
-
-`.ruby` is an indie RTS built with Java and LWJGL, focused on a raw prototype-era visual language: pixel art, minimal UI, and a world-first atmosphere.
-
----
-
 ## Quick Start
 
 ### Requirements
@@ -86,11 +76,11 @@ The design target includes 3 factions across 3 ages:
 
 Economy is built around 4 resources:
 - wood
-- minerals
-- food/raw supplies
 - stone
+- food
+- gems
 
-This faction layer is a design target and not fully implemented gameplay yet.
+(This faction layer is a design target and not fully implemented gameplay yet.)
 
 ---
 
@@ -107,7 +97,6 @@ This faction layer is a design target and not fully implemented gameplay yet.
 ## Links
 
 - Discord: https://discord.gg/yXJgtqAfWe
-- GitHub: https://github.com/stomarver/dot-ruby
 - Screenshots: https://imgur.com/a/Bweq7sZ
 
 ---
