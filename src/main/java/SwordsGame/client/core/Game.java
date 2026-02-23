@@ -71,7 +71,7 @@ public class Game {
 
             selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
             boolean selectionBlockedByDialog = hud != null && hud.blocksSelectionAtCursor();
-            selectionRectangle.update(mouseX, mouseY, leftMouseHeld && !selectionBlockedByDialog, selArea);
+            selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selectionBlockedByDialog, selArea);
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selectionRectangle.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
 

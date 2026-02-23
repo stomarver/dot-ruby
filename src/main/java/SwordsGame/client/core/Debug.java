@@ -44,6 +44,8 @@ public class Debug {
     private boolean showCameraBlock = true;
     private boolean showTimeBlock = true;
     private boolean showServerBlock = true;
+    private boolean showRenderingBlock = true;
+    private boolean showClientBlock = true;
     private boolean toggleDebugHeld = false;
     private boolean toggleVirtualResHeld = false;
     private DayNightCycle dayNightCycle;
@@ -95,7 +97,7 @@ public class Debug {
 
             selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
             boolean selectionBlockedByDialog = hud != null && hud.blocksSelectionAtCursor();
-            selection.update(mouseX, mouseY, leftMouseHeld && !selectionBlockedByDialog, selArea);
+            selection.update(mouseX, mouseY, leftMouseHeld, selectionBlockedByDialog, selArea);
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selection.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
 
@@ -139,7 +141,7 @@ public class Debug {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     rebuildDebugDialogContent();
-                    hud.toggleDialog("^4Debug Info Panel", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 520, 260,
+                    hud.toggleDialog("^4Debug Info Panel", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 560, 340,
                             Dialog.SelectionBlockMode.DIALOG_AREA);
                 }
 
@@ -213,11 +215,15 @@ public class Debug {
             hud.setServerInfo("");
             return;
         }
-        hud.setCameraInfo(showCameraBlock ? buildCameraInfo() : "");
-        hud.setTimeInfo(showTimeBlock ? buildTimeInfo() : "");
+        String cameraAndRendering = (showRenderingBlock ? buildRenderingInfo() + "\n" : "") + (showCameraBlock ? buildCameraInfo() : "");
+        String timeBlock = showTimeBlock ? buildTimeInfo() : "";
 
         UiFrameState frame = serverUiComposer.compose(chunkManager, null);
-        hud.setServerInfo(showServerBlock ? extractServerInfo(frame) : "");
+        String serverAndClient = (showServerBlock ? extractServerInfo(frame) + "\n" : "") + (showClientBlock ? buildClientInfo() : "");
+
+        hud.setCameraInfo(cameraAndRendering.trim());
+        hud.setTimeInfo(timeBlock);
+        hud.setServerInfo(serverAndClient.trim());
     }
 
     private String extractServerInfo(UiFrameState frame) {
@@ -260,18 +266,27 @@ public class Debug {
         int localX = worldBlockX % SwordsGame.server.Chunk.SIZE;
         int localZ = worldBlockZ % SwordsGame.server.Chunk.SIZE;
 
+        return String.format(
+                "# Camera\n^3Position:^0 (%.1f, %.1f)\n^4Chunk:^0 (%d, %d)\n^1Local:^0 (%d, %d)",
+                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ);
+    }
+
+    private String buildRenderingInfo() {
+        return String.format(
+                "# Rendering\n^5Fog:^0 x%.2f [%.0f..%.0f]\n^6FPS:^0 %d",
+                fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance(), fps);
+    }
+
+    private String buildClientInfo() {
         Runtime rt = Runtime.getRuntime();
         long usedMb = (rt.totalMemory() - rt.freeMemory()) / (1024L * 1024L);
         long totalMb = rt.totalMemory() / (1024L * 1024L);
         long maxMb = rt.maxMemory() / (1024L * 1024L);
 
         return String.format(
-                "# Camera\n^3Position:^0 (%.1f, %.1f)\n^4Chunk:^0 (%d, %d)  ^1Local:^0 (%d, %d)\n^5Fog:^0 x%.2f [%.0f..%.0f]\n^6FPS:^0 %d\n^2Memory:^0 %dMB used / %dMB alloc / %dMB max",
-                camera.getX(), camera.getZ(), chunkX, chunkZ, localX, localZ,
-                fogDistanceMultiplier, renderer.getFogStartDistance(), renderer.getFogEndDistance(),
-                fps, usedMb, totalMb, maxMb);
+                "# Client\n^2Memory:^0 %dMB used / %dMB alloc\n^2Max Memory:^0 %dMB",
+                usedMb, totalMb, maxMb);
     }
-
 
     private void handleDialogButton(String buttonId) {
         if (buttonId == null) {
@@ -281,11 +296,15 @@ public class Debug {
             case "toggle-camera" -> showCameraBlock = !showCameraBlock;
             case "toggle-time" -> showTimeBlock = !showTimeBlock;
             case "toggle-server" -> showServerBlock = !showServerBlock;
+            case "toggle-rendering" -> showRenderingBlock = !showRenderingBlock;
+            case "toggle-client" -> showClientBlock = !showClientBlock;
             case "toggle-all" -> {
-                boolean enableAll = !(showCameraBlock && showTimeBlock && showServerBlock);
+                boolean enableAll = !(showCameraBlock && showTimeBlock && showServerBlock && showRenderingBlock && showClientBlock);
                 showCameraBlock = enableAll;
                 showTimeBlock = enableAll;
                 showServerBlock = enableAll;
+                showRenderingBlock = enableAll;
+                showClientBlock = enableAll;
             }
             case "close" -> hud.hideDialog();
             default -> {
@@ -301,17 +320,21 @@ public class Debug {
         }
 
         List<Dialog.TextSlot> textSlots = new ArrayList<>();
-        textSlots.add(new Dialog.TextSlot("^3Configure visible debug panels", Anchor.LEFT, Anchor.TOP, 14, 38, 0.9f));
-        textSlots.add(new Dialog.TextSlot(statusLine("camera", showCameraBlock), Anchor.LEFT, Anchor.TOP, 14, 72, 0.8f));
-        textSlots.add(new Dialog.TextSlot(statusLine("time", showTimeBlock), Anchor.LEFT, Anchor.TOP, 14, 104, 0.8f));
-        textSlots.add(new Dialog.TextSlot(statusLine("server", showServerBlock), Anchor.LEFT, Anchor.TOP, 14, 136, 0.8f));
+        textSlots.add(new Dialog.TextSlot("^3Configure visible debug overlays", Anchor.LEFT, Anchor.TOP, 14, 38, 1.0f));
+        textSlots.add(new Dialog.TextSlot(statusLine("camera", showCameraBlock), Anchor.LEFT, Anchor.TOP, 14, 72, 1.0f));
+        textSlots.add(new Dialog.TextSlot(statusLine("time", showTimeBlock), Anchor.LEFT, Anchor.TOP, 14, 104, 1.0f));
+        textSlots.add(new Dialog.TextSlot(statusLine("server", showServerBlock), Anchor.LEFT, Anchor.TOP, 14, 136, 1.0f));
+        textSlots.add(new Dialog.TextSlot(statusLine("rendering", showRenderingBlock), Anchor.LEFT, Anchor.TOP, 14, 168, 1.0f));
+        textSlots.add(new Dialog.TextSlot(statusLine("client", showClientBlock), Anchor.LEFT, Anchor.TOP, 14, 200, 1.0f));
 
         List<Dialog.ButtonSlot> buttons = new ArrayList<>();
-        buttons.add(new Dialog.ButtonSlot("toggle-camera", "camera", Anchor.RIGHT, Anchor.TOP, -14, 66, 110, 24, 0.8f));
-        buttons.add(new Dialog.ButtonSlot("toggle-time", "time", Anchor.RIGHT, Anchor.TOP, -14, 98, 110, 24, 0.8f));
-        buttons.add(new Dialog.ButtonSlot("toggle-server", "server", Anchor.RIGHT, Anchor.TOP, -14, 130, 110, 24, 0.8f));
-        buttons.add(new Dialog.ButtonSlot("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 14, -12, 90, 24, 0.8f));
-        buttons.add(new Dialog.ButtonSlot("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -14, -12, 90, 24, 0.8f));
+        buttons.add(new Dialog.ButtonSlot("toggle-camera", "camera", Anchor.RIGHT, Anchor.TOP, -14, 66, 110, 24, 1.0f));
+        buttons.add(new Dialog.ButtonSlot("toggle-time", "time", Anchor.RIGHT, Anchor.TOP, -14, 98, 110, 24, 1.0f));
+        buttons.add(new Dialog.ButtonSlot("toggle-server", "server", Anchor.RIGHT, Anchor.TOP, -14, 130, 110, 24, 1.0f));
+        buttons.add(new Dialog.ButtonSlot("toggle-rendering", "rendering", Anchor.RIGHT, Anchor.TOP, -14, 162, 140, 24, 1.0f));
+        buttons.add(new Dialog.ButtonSlot("toggle-client", "client", Anchor.RIGHT, Anchor.TOP, -14, 194, 140, 24, 1.0f));
+        buttons.add(new Dialog.ButtonSlot("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 14, -12, 90, 24, 1.0f));
+        buttons.add(new Dialog.ButtonSlot("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -14, -12, 90, 24, 1.0f));
 
         hud.setDialogContent(textSlots, buttons);
     }

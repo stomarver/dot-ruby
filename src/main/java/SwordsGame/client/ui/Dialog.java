@@ -227,6 +227,16 @@ public class Dialog {
         glEnd();
     }
 
+
+    public static TextSlot text(String value, Anchor.TypeX anchorX, Anchor.TypeY anchorY, float offsetX, float offsetY) {
+        return new TextSlot(value, anchorX, anchorY, offsetX, offsetY, 1.0f);
+    }
+
+    public static ButtonSlot button(String id, String label, Anchor.TypeX anchorX, Anchor.TypeY anchorY,
+                                    float offsetX, float offsetY, float width, float height) {
+        return new ButtonSlot(id, label, anchorX, anchorY, offsetX, offsetY, width, height, 1.0f);
+    }
+
     public record TextSlot(String value,
                            Anchor.TypeX anchorX,
                            Anchor.TypeY anchorY,

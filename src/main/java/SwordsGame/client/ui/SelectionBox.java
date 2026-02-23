@@ -10,20 +10,26 @@ public class SelectionBox {
     private float endY;
 
     public void update(float mouseX, float mouseY, boolean mouseHeld, SelectionArea area) {
+        update(mouseX, mouseY, mouseHeld, false, area);
+    }
+
+    public void update(float mouseX, float mouseY, boolean mouseHeld, boolean pointerBlocked, SelectionArea area) {
         float clampedX = area.clampX(mouseX);
         float clampedY = area.clampY(mouseY);
 
         if (mouseHeld) {
             if (!active) {
-                if (!area.contains(mouseX, mouseY)) {
+                if (!area.contains(mouseX, mouseY) || pointerBlocked) {
                     return;
                 }
                 active = true;
                 startX = clampedX;
                 startY = clampedY;
             }
-            endX = clampedX;
-            endY = clampedY;
+            if (!pointerBlocked) {
+                endX = clampedX;
+                endY = clampedY;
+            }
         } else {
             active = false;
         }
