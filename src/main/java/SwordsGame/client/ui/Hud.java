@@ -58,10 +58,6 @@ public class Hud {
         loadAliased("separator", Paths.UI_SEPARATOR);
 
         startTerminalThread();
-        setPivot("screen.left.top", Anchor.LEFT, Anchor.TOP, 0, 0);
-        setPivot("screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0);
-        setPivot("screen.right.center", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0);
-
     }
 
     private void startTerminalThread() {

@@ -8,7 +8,7 @@ public final class Paths {
     public static final String UI_CURSOR = "ui/cursor.png";
     public static final String UI_CHAR_FRAME = "ui/char-frame.png";
     public static final String UI_SEPARATOR = "ui/separator.png";
-    public static final String UI_HUD_SCRIPT = "ui/hud-ui.groovy";
+    public static final String UI_HUD_SCRIPT = "shared/ui/hud/hud-ui.groovy";
 
     private Paths() {
     }

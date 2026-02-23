@@ -1,6 +1,5 @@
 package SwordsGame.client.blocks;
 
-import SwordsGame.client.assets.Paths;
 import SwordsGame.client.assets.Syn;
 import SwordsGame.client.graphics.Block;
 import SwordsGame.client.graphics.BlockRenderer;
@@ -18,23 +17,31 @@ public class BlockRegistry {
 
         reg(Type.AIR, null);
 
-        reg(Type.COBBLE,
-                Syn.blk(Type.COBBLE)
-                        .tex(Paths.BLOCK_COBBLE)
-                        .props(p -> p.randomColor(0.4f).destructible().hardness(1.0f))
-                        .build());
+        boolean loadedAny = false;
+        for (BlockScriptLoader.RegisteredBlock row : BlockScriptLoader.loadBlocks()) {
+            reg(row.type(), row.block());
+            loadedAny = true;
+        }
 
-        reg(Type.GRASS,
-                Syn.blk(Type.GRASS)
-                        .tex(Paths.BLOCK_GRASS, Paths.BLOCK_GRASS, Paths.BLOCK_GRASS)
-                        .props(p -> p.randomColor().surfaceOnly().smoothing().hardness(0.7f))
-                        .build());
+        if (!loadedAny) {
+            reg(Type.COBBLE,
+                    Syn.blk(Type.COBBLE)
+                            .tex("blocks/cobble.png")
+                            .props(p -> p.randomColor(0.4f).destructible().hardness(1.0f))
+                            .build());
 
-        reg(Type.STONE,
-                Syn.blk(Type.STONE)
-                        .tex(Paths.BLOCK_STONE)
-                        .props(p -> p.surfaceOnly().hardness(1.5f))
-                        .build());
+            reg(Type.GRASS,
+                    Syn.blk(Type.GRASS)
+                            .tex("blocks/grass.png", "blocks/grass.png", "blocks/grass.png")
+                            .props(p -> p.randomColor().surfaceOnly().smoothing().hardness(0.7f))
+                            .build());
+
+            reg(Type.STONE,
+                    Syn.blk(Type.STONE)
+                            .tex("blocks/stone.png")
+                            .props(p -> p.surfaceOnly().hardness(1.5f))
+                            .build());
+        }
     }
 
     public static void reg(Type type, Block block) {

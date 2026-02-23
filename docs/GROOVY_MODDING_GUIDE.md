@@ -7,7 +7,7 @@
 ## 1) Где что находится
 
 - UI-скрипт (декларативный):
-  - `src/main/resources/ui/hud-ui.groovy`
+  - `src/main/resources/shared/ui/hud/hud-ui.groovy`
 - Исполнитель Groovy UI-скрипта:
   - `src/main/java/SwordsGame/client/ui/HudScriptRunner.java`
 - Универсальный HUD-слой и рендер:
@@ -23,7 +23,7 @@
 
 ---
 
-## 2) Формат `hud-ui.groovy`
+## 2) Формат `shared/ui/hud/hud-ui.groovy`
 
 Корень скрипта — это `Map`:
 

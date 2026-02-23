@@ -8,6 +8,7 @@ import SwordsGame.client.ui.Anchor;
 import SwordsGame.client.ui.Cursor;
 import SwordsGame.client.ui.Dialog;
 import SwordsGame.client.ui.Hud;
+import SwordsGame.client.ui.HudLayoutRegistry;
 
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
@@ -31,14 +32,14 @@ public class MainMenuState implements SessionState {
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
         hud.setPrimaryButtonText("menu");
-        hud.setPivot("menu.dialog", Anchor.CENTER, Anchor.CENTER_Y, 0, 0);
+        HudLayoutRegistry.registerDefaultPivots(hud);
 
         cursor = new Cursor();
         TexLoad.finishLoading();
 
         hud.setGlobalLoadingVisible(false);
         hud.setGlobalLoadingText("loading");
-        hud.applyDialogLayout("main.menu");
+        hud.applyDialogLayout(HudLayoutRegistry.DIALOG_MAIN_MENU);
         hud.setDialogOpacity(1.0f, 1.0f);
         hud.toggleDialogAtPivot("", "menu.dialog", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 220,
                 Dialog.SelectionBlockMode.NONE);
