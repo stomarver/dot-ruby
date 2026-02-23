@@ -50,7 +50,11 @@ public class FaceSmoothing {
 
     public float shadeFromNormal(Vector3f normal) {
         float diffuse = Math.max(0f, normal.dot(SUN_DIR));
-        return 0.35f + (0.65f * diffuse);
+        float rawShade = 0.35f + (0.65f * diffuse);
+
+        // Keep transitions crisp between light levels (no smooth gradient bands).
+        float levels = 4.0f;
+        return Math.round(rawShade * levels) / levels;
     }
 
     private Vector3f edgeVector(int from, int to, float[] yOffsets) {
@@ -85,6 +89,27 @@ public class FaceSmoothing {
         lowered[1] = !back && !right && (front || left);
         lowered[2] = !back && !left && (front || right);
         lowered[3] = !front && !left && (back || right);
+
+        // Special case for grass corner shaping:
+        // if two adjacent sides are changed and the opposite two stay unchanged,
+        // the corner between changed sides must be lowered one full block.
+        boolean changedFront = !front;
+        boolean changedBack = !back;
+        boolean changedRight = !right;
+        boolean changedLeft = !left;
+
+        if (changedFront && changedRight && !changedBack && !changedLeft) {
+            lowered[0] = true;
+        }
+        if (changedBack && changedRight && !changedFront && !changedLeft) {
+            lowered[1] = true;
+        }
+        if (changedBack && changedLeft && !changedFront && !changedRight) {
+            lowered[2] = true;
+        }
+        if (changedFront && changedLeft && !changedBack && !changedRight) {
+            lowered[3] = true;
+        }
 
         int loweredCount = 0;
         int loweredIndex = -1;
