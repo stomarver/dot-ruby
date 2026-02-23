@@ -136,7 +136,7 @@ public class Debug {
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     rebuildDebugDialogContent();
                     hud.setDialogOpacity(1.0f, 1.0f);
-                    hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330,
+                    hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 310, 165,
                             Dialog.SelectionBlockMode.DIALOG_AREA);
                 }
 
@@ -293,14 +293,14 @@ public class Debug {
         List<Dialog.TextSlot> textSlots = new ArrayList<>();
 
         List<Dialog.ButtonSlot> buttons = new ArrayList<>();
-        buttons.add(Dialog.button("toggle-rendering", "rendering", Anchor.LEFT, Anchor.TOP, 18, 34, 210, 30, showRenderingBlock));
-        buttons.add(Dialog.button("toggle-camera", "camera", Anchor.LEFT, Anchor.TOP, 18, 70, 210, 30, showCameraBlock));
-        buttons.add(Dialog.button("toggle-time", "time", Anchor.LEFT, Anchor.TOP, 18, 106, 210, 30, showTimeBlock));
-        buttons.add(Dialog.button("toggle-client", "client", Anchor.LEFT, Anchor.TOP, 18, 142, 210, 30, showClientBlock));
+        buttons.add(Dialog.button("toggle-rendering", "rendering", Anchor.CENTER, Anchor.TOP, 0, 14, 180, 24, showRenderingBlock));
+        buttons.add(Dialog.button("toggle-camera", "camera", Anchor.CENTER, Anchor.TOP, 0, 42, 180, 24, showCameraBlock));
+        buttons.add(Dialog.button("toggle-time", "time", Anchor.CENTER, Anchor.TOP, 0, 70, 180, 24, showTimeBlock));
+        buttons.add(Dialog.button("toggle-client", "client", Anchor.CENTER, Anchor.TOP, 0, 98, 180, 24, showClientBlock));
 
         boolean allEnabled = showRenderingBlock && showCameraBlock && showTimeBlock && showClientBlock;
-        buttons.add(Dialog.button("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 18, -16, 110, 30, allEnabled));
-        buttons.add(Dialog.button("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -18, -16, 140, 30));
+        buttons.add(Dialog.button("toggle-all", "all", Anchor.LEFT, Anchor.BOTTOM, 12, -10, 84, 22, allEnabled));
+        buttons.add(Dialog.button("close", "close", Anchor.RIGHT, Anchor.BOTTOM, -12, -10, 96, 22));
 
         hud.setDialogContent(textSlots, buttons);
     }

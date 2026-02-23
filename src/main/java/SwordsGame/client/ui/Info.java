@@ -92,7 +92,7 @@ public class Info {
         glVertex2f(x, y + h);
         glEnd();
 
-        glColor4f(0f, 0f, 0f, 0.5f);
+        glColor4f(0f, 0f, 0f, 0.25f);
         glBegin(GL_QUADS);
         glVertex2f(x, y);
         glVertex2f(x + w, y);
