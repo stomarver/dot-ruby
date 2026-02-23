@@ -1,165 +1,289 @@
-# DotRuby Class Overview
+# DotRuby Class Overview (Full Map)
 
-Этот документ описывает ключевые классы проекта и их ответственность.
+Документ описывает **все ключевые классы** по слоям: за что отвечают, где находятся и как связаны.
 
-## 1) Core loop / запуск
+> Примечание по неймингу: в коде уже есть частичный переход к более однородному стилю (особенно в UI Dialog/HUD API), но полная унификация имён по **всему** проекту — это большой отдельный этап, который требует пакетного переименования файлов/классов + миграции импортов.
 
-- `SwordsGame.client.core.Game`
-  - Основной runtime-клиент (release entrypoint).
-  - Создаёт окно, рендер, мир, камеру, HUD, курсор.
-  - Держит главный цикл: input -> update -> world render -> UI render.
+---
 
-- `SwordsGame.client.core.Debug`
-  - Debug-entrypoint.
-  - Поверх обычного цикла добавляет debug overlays/переключатели.
+## 1. Client Entrypoints / Runtime
 
-- `SwordsGame.client.core.Window`
-  - GLFW-окно, FBO, input, виртуальное разрешение, мышь, clamp.
-  - Отдаёт mouse coords/scroll, управляет fullscreen и кадром.
+### `SwordsGame.client.core.Game`
+Release runtime-клиент.
+- Инициализация окна, рендера, мира, камеры, HUD.
+- Главный цикл кадра: input → update → world render → UI render.
+- Поддержка диалога, selection box и курсора.
 
-## 2) World / camera
+### `SwordsGame.client.core.Debug`
+Debug runtime-клиент.
+- Наследует общий цикл от архитектуры `Game`.
+- Добавляет debug-панели, debug-dialog toggles, отладочные метрики (FPS/fog/memory/time).
 
-- `SwordsGame.client.Camera`
-  - Камера RTS: edge-scroll, zoom, rotation, clamp внутри world bounds.
+### `SwordsGame.client.core.Window`
+Низкоуровневый слой GLFW/OpenGL окна.
+- Создание/уничтожение контекста.
+- FBO/виртуальное разрешение.
+- Screen/UI координаты мыши, clamp.
+- Fullscreen, frame update, swap.
 
-- `SwordsGame.client.World`
-  - Клиентский рендер мира по чанкам, LOD/culling, bounds/debug draw.
+---
 
-- `SwordsGame.server.ChunkManager`
-  - Серверный/симуляционный менеджер чанков мира.
+## 2. Client World / Camera
 
-- `SwordsGame.server.Chunk`
-  - Данные конкретного чанка (блоки и операции доступа).
+### `SwordsGame.client.Camera`
+RTS-камера.
+- Pan/edge-scroll/zoom/rotation.
+- Ограничение по world bounds.
+- Преобразования для 3D сцены.
 
-- `SwordsGame.server.Terrain`
-  - Генерация террейна (наполнение чанков).
+### `SwordsGame.client.World`
+Клиентский рендер мира.
+- Подготовка/кэш чанковых мешей.
+- Culling, LOD-подобный отбор чанков.
+- Рендер границ чанков (debug).
 
-## 3) Graphics / rendering pipeline
+### `SwordsGame.client.FallBlk`
+Вспомогательный клиентский класс, исторически связанный с block-логикой/экспериментами.
 
-- `SwordsGame.client.graphics.Renderer`
-  - Общий рендер-контекст: viewport, setup 3D/2D, lighting, fog delegation.
+### `SwordsGame.client.Smth`
+Технический/временный класс-заглушка.
 
-- `SwordsGame.client.graphics.FogFx`
-  - Screen-space fog шейдер и математика fog depth range.
-  - Реагирует на zoom через `setZoom(...)`.
+---
 
-- `SwordsGame.client.graphics.MeshBuilder`
-  - Строит геометрию чанка в CPU-буферы (`FloatCollector`) с учётом face visibility.
+## 3. Server World / Simulation
 
-- `SwordsGame.client.graphics.MeshBuffer`
-  - VBO-обёртка: upload и draw массива вершин.
+### `SwordsGame.server.Chunk`
+Данные одного чанка (блоки, доступ/обновление).
 
-- `SwordsGame.client.graphics.ChunkMesh`
-  - Набор меш-буферов чанка (opaque/transparent/emissive).
+### `SwordsGame.server.ChunkManager`
+Менеджер сетки чанков.
+- Создание/поиск чанков.
+- Размер мира, границы, генерация через `Terrain`.
 
-- `SwordsGame.client.graphics.BlockRenderer`
-  - Непосредственный рендер одиночного блока (immediate/render helper).
+### `SwordsGame.server.Terrain`
+Генерация террейна для чанков.
 
-- `SwordsGame.client.graphics.Sprite`
-  - 2D sprite helper для UI.
+### `SwordsGame.server.DayNightCycle`
+Симуляция времени суток.
+- Day/clock/phase.
+- Параметры для fog/tint UI.
 
-- `SwordsGame.client.graphics.Font`
-  - Шрифт-атлас, метрики символов/диакритики.
+### `SwordsGame.server.ui.ServerUiComposer`
+Формирование server-side UI frame (панели/текст) в shared protocol.
 
-- `SwordsGame.client.graphics.FloatCollector`
-  - Динамический float-коллектор вершинных данных.
+---
 
-## 4) Blocks / block data
+## 4. Graphics Pipeline
 
-- `SwordsGame.client.blocks.Type`
-  - Enum типов блоков (id + display/meta).
+### `SwordsGame.client.graphics.Renderer`
+Оркестратор рендера.
+- setup 3D/2D.
+- Свет/солнце/tint.
+- Fog интеграция через `FogFx`.
 
-- `SwordsGame.client.blocks.BlockRegistry`
-  - Реестр блоков и их регистрация в `init()`.
-  - Доступ к блоку по id/type, destroy lifecycle.
+### `SwordsGame.client.graphics.FogFx`
+Screen-space fog pass (shader + uniforms).
 
-- `SwordsGame.client.graphics.Block`
-  - Базовый класс block definition: текстуры, uv, свойства, draw/destroy.
+### `SwordsGame.client.graphics.MeshBuilder`
+CPU-сборка геометрии чанков.
+- Формирует буферы вершин/uv/normal.
 
-- `SwordsGame.client.graphics.BlockProps`
-  - Fluent-параметры блока: transparent, random rotation/color, hardness, smoothing.
+### `SwordsGame.client.graphics.FloatCollector`
+Динамический массив float для сборки меша.
 
-- `SwordsGame.client.blocks.Cobble`, `Grass`, `Stone`
-  - Конкретные типы/пресеты блоков.
+### `SwordsGame.client.graphics.MeshBuffer`
+GPU-буфер (VBO/VAO lifecycle).
 
-## 5) UI layer
+### `SwordsGame.client.graphics.ChunkMesh`
+Контейнер чанковых буферов (opaque/transparent/etc).
 
-- `SwordsGame.client.ui.Hud`
-  - UI-контейнер кадра: рамки, панели, кнопки, server/camera info.
+### `SwordsGame.client.graphics.BlockRenderer`
+Рендер helper для одиночных блоков.
 
-- `SwordsGame.client.ui.Text`
-  - Рисование текста (цветовые коды, wave/shake/crit эффекты, выравнивание).
+### `SwordsGame.client.graphics.BlockColorPipeline`
+Логика варьирования/tint цвета блоков.
 
-- `SwordsGame.client.ui.Button`
-  - Примитивные UI-кнопки, hover/click hit test.
+### `SwordsGame.client.graphics.Block`
+Дефиниция блока (текстуры/props/draw helpers).
 
-- `SwordsGame.client.ui.Cursor`
-  - Спрайтовый курсор.
+### `SwordsGame.client.graphics.BlockProps`
+Параметры поведения/визуала блока (fluent style).
 
-- `SwordsGame.client.ui.SelectionBox`
-  - Прямоугольник выделения (drag selection).
+### `SwordsGame.client.graphics.Sprite`
+2D sprite draw helper.
 
-- `SwordsGame.client.ui.SelectionArea`
-  - Геометрия допустимой зоны выделения/кламп мыши.
+### `SwordsGame.client.graphics.Font`
+Bitmap-font атлас + glyph metadata.
 
-- `SwordsGame.client.ui.Anchor`
-  - Anchoring enum/value для позиционирования UI.
+### `SwordsGame.client.graphics.TexLoad`
+Загрузка/кэш текстур (STB/OpenGL).
+- `TexLoad.Texture` — metadata texture handle.
 
-- `SwordsGame.client.ui.Info`, `Message`
-  - Блоки информации и сообщений HUD.
+### `SwordsGame.client.graphics.ImgReg`
+Registry изображений.
 
-## 6) Assets / content DSL / resources
+### `SwordsGame.client.graphics.GltfModel`
+Минимальный glTF/glb loader.
+- `Primitive` и внутренний `Json` parser.
 
-- `SwordsGame.client.assets.Paths`
-  - Константы путей к встроенным ресурсам (блоки, UI, шрифт).
+### `SwordsGame.client.graphics.MdlReg`
+Registry моделей.
+- `MdlReg.Ent` — зарегистрированная сущность модели + scale.
 
-- `SwordsGame.client.assets.Syn`
-  - Единый DSL для деклараций контента:
-    - `Syn.blk(...)`
-    - `Syn.img(...)`
-    - `Syn.mdl(...)`
+---
 
-- `SwordsGame.client.graphics.TexLoad`
-  - Загрузка текстур через STB, cache, mipmaps/anisotropy, cleanup.
+## 5. Blocks Layer
 
-- `SwordsGame.client.graphics.ImgReg`
-  - Регистрация/доступ изображений из `Syn.img(...)`.
+### `SwordsGame.client.blocks.Type`
+Enum идентификаторов блока.
 
-- `SwordsGame.client.graphics.GltfModel`
-  - Минимальный glTF/GLB loader (без доп. зависимостей).
+### `SwordsGame.client.blocks.BlockRegistry`
+Registry блоков клиента.
+- `init()/destroy()` lifecycle.
+- lookup по id/type.
 
-- `SwordsGame.client.graphics.MdlReg`
-  - Реестр моделей: регистрация glTF/GLB из `Syn.mdl(...)`.
+---
 
-## 7) Server gameplay templates
+## 6. Assets / Declarative Syntax
 
-- `SwordsGame.server.gameplay.RtsTemplates`
-  - Наборы шаблонов юнитов/строений/технологий по фракциям.
+### `SwordsGame.client.assets.Paths`
+Константы путей ресурсов.
 
-- `SwordsGame.server.gameplay.FactionTechTree`
-  - Tech-tree фракции (units/buildings/tech).
+### `SwordsGame.client.assets.Syn`
+Unified DSL для декларации:
+- `Syn.img(...)`
+- `Syn.mdl(...)`
+- `Syn.blk(...)`
 
-- `SwordsGame.server.gameplay.UnitTemplate`, `BuildingTemplate`, `TechnologyTemplate`
-  - Шаблоны юнитов, зданий и технологий.
+Вложенные классы:
+- `Syn.Img`
+- `Syn.Mdl`
+- `Syn.BlkDef`
 
-- `SwordsGame.server.gameplay.UnitStats`, `ResourceBundle`
-  - Статы юнитов, ресурсные bundles/стоимости.
+---
 
-- Enums: `FactionType`, `Age`, `UnitRole`, `BuildingRole`, `ResourceType`, `CombatType`
-  - Базовые типы RTS-домена.
+## 7. UI Layer
 
-## 8) Shared UI protocol
+### `SwordsGame.client.ui.Hud`
+Главный UI-композитор кадра.
+- Базовый HUD.
+- Overlay dialog pass.
+- Кнопки, info-панели, сообщения.
 
-- `SwordsGame.shared.protocol.ui.UiFrameState`
-  - Состояние UI-кадра (набор панелей).
+### `SwordsGame.client.ui.Dialog`
+Система диалогов/оверлеев.
+- Anchor-based layout.
+- Selection block modes.
+- Text/Button slots.
+- Active/dimmed кнопки.
+- fill/border opacity.
 
-- `SwordsGame.shared.protocol.ui.UiPanelState`
-  - Состояние одной панели (id/text и т.п.).
+### `SwordsGame.client.ui.Button`
+UI button primitive.
+- Hit-test.
+- Absolute draw.
+- Dimmed state draw.
 
-## 9) Utils
+### `SwordsGame.client.ui.Text`
+Текстовый рендер.
+- Цвет-коды `^N`.
+- Анимации: `Shake`, `Wave`, `Crit`.
+- Выравнивание/anchor.
 
-- `SwordsGame.client.utils.Discord`
-  - Discord Rich Presence bootstrap/update.
+### `SwordsGame.client.ui.Info`
+Debug info панели (card-style).
 
-- `SwordsGame.client.utils.Screenshot`
-  - Скриншоты в локальную папку пользователя.
+### `SwordsGame.client.ui.Message`
+Временные сообщения поверх HUD.
+- `Message.Entry` внутренний тип сообщения.
+
+### `SwordsGame.client.ui.Cursor`
+Спрайтовый курсор.
+
+### `SwordsGame.client.ui.SelectionBox`
+Прямоугольник выделения drag-select.
+
+### `SwordsGame.client.ui.SelectionArea`
+Геометрия разрешённой зоны выделения.
+
+### `SwordsGame.client.ui.Anchor`
+Anchor enums + anchor point data.
+
+---
+
+## 8. Utilities
+
+### `SwordsGame.client.utils.Discord`
+Discord Rich Presence integration.
+
+### `SwordsGame.client.utils.Screenshot`
+Скриншоты из фреймбуфера.
+
+---
+
+## 9. Gameplay Domain (Server)
+
+### Core containers
+- `TemplateBase`
+- `WorldObjectTemplate`
+
+### Definitions
+- `UnitTemplate`
+- `BuildingTemplate`
+- `TechnologyTemplate`
+- `ResourceNodeTemplate`
+
+### Stats / costs
+- `UnitStats`
+- `ResourceBundle`
+
+### Trees / packs / registry
+- `FactionTechTree`
+- `RtsTemplates`
+- `MythicCorePack`
+- `MythicFactionPack`
+- `GameplayRegistry`
+- `GameplaySyn` (DSL)
+
+### Enums
+- `Age`
+- `FactionType`
+- `CombatType`
+- `ResourceType`
+- `UnitRole`
+- `BuildingRole`
+- `ObjectRole`
+
+### GameplaySyn nested defs
+- `DefBase<T>`
+- `UnitDef`
+- `BuildingDef`
+- `TechDef`
+- `ResourceDef`
+- `ObjectDef`
+
+---
+
+## 10. Shared Protocol
+
+### `SwordsGame.shared.protocol.ui.UiFrameState`
+Shared frame DTO для UI-панелей.
+
+### `SwordsGame.shared.protocol.ui.UiPanelState`
+Одна UI-панель (text payload).
+
+### `SwordsGame.shared.world.BlockId`
+Shared block id constants.
+
+---
+
+## 11. Что ещё нужно для «полной» унификации имен во всём проекте
+
+Для действительно полного rename-прохода (всех классов/методов/полей) нужен отдельный migration этап:
+1. Словарь целевых имён (old → new) по всем пакетам.
+2. Массовое переименование файлов/классов/методов (IDE-safe refactor).
+3. Compatibility layer (deprecated wrappers) на переходный период.
+4. Обновление документации/примеров/мод-синтаксиса.
+5. Полная проверка сборки + smoke runtime.
+
+Этот этап должен идти отдельной серией PR, чтобы не получить массивный unreviewable diff.
