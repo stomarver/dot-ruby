@@ -118,7 +118,7 @@ shadowJar {
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.client.core.Game'
+        attributes 'Main-Class': 'SwordsGame.client.core.Session'
     }
 
     doFirst {
@@ -142,7 +142,7 @@ tasks.register('shadowJarDebug', shadowJar.getClass()) {
     commonShadowConfig()
 
     manifest {
-        attributes 'Main-Class': 'SwordsGame.client.core.Debug'  // Поправьте, если путь к классу другой
+        attributes 'Main-Class': 'SwordsGame.client.core.Session'
     }
 
     doFirst {
