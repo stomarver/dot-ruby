@@ -1,6 +1,33 @@
+// HUD script (declarative + reusable helpers)
+// Context passed from Java:
+// - ctx.primaryButtonText
+// - ctx.state (Map<String, Object>)
+
+
+def S = { ctx -> (ctx?.state ?: [:]) as Map }
+
+def btn = { String id, String label, String alignX, String alignY,
+            Number x, Number y, Number w, Number h,
+            boolean active = true, String pivot = null ->
+    def row = [
+            id    : id,
+            label : label,
+            alignX: alignX,
+            alignY: alignY,
+            x     : x,
+            y     : y,
+            width : w,
+            height: h,
+            scale : 1.0,
+            active: active
+    ]
+    if (pivot != null) row.pivot = pivot
+    row
+}
+
 [
-        base: { ctx ->
-            def state = (ctx?.state ?: [:]) as Map
+        base   : { ctx ->
+            def state = S(ctx)
             [
                     sprites: [
                             [texture: 'char-frame', pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 0, y: 18, scale: 2.0],
@@ -10,21 +37,21 @@
                             [text: 'unit.name', pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 2, scale: 1.0]
                     ],
                     buttons: [
-                            [id: 'primary-button', label: (ctx?.primaryButtonText ?: ''), pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 170, width: 100, height: 28, scale: 1.0, active: true],
-                            [id: 'debug-button', label: 'deb...ug', pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 204, width: 100, height: 28, scale: 1.0, active: (state.debugMode == true)]
+                            btn('primary-button', (ctx?.primaryButtonText ?: ''), 'LEFT', 'TOP', 10, 170, 100, 28, true, 'screen.left.top'),
+                            btn('debug-button', 'deb...ug', 'LEFT', 'TOP', 10, 204, 100, 28, state.debugMode == true, 'screen.left.top')
                     ]
             ]
         },
         dialogs: [
-                'main.menu' : { ctx ->
+                'main.menu'   : { ctx ->
                     [
                             texts  : [
                                     [text: '^2DotRuby^0\nMain Menu', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 20, scale: 1.0],
                                     [text: 'Use buttons to start or exit', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 62, scale: 1.0]
                             ],
                             buttons: [
-                                    [id: 'start-session', label: 'start session', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 108, width: 200, height: 28, active: true],
-                                    [id: 'exit-app', label: 'exit', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 142, width: 200, height: 28, active: true]
+                                    btn('start-session', 'start session', 'CENTER', 'TOP', 0, 108, 200, 28),
+                                    btn('exit-app', 'exit', 'CENTER', 'TOP', 0, 142, 200, 28)
                             ]
                     ]
                 },
@@ -34,23 +61,23 @@
                                     [text: '^3session paused', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 18, scale: 1.0]
                             ],
                             buttons: [
-                                    [id: 'to-main-menu', label: 'main menu', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 78, width: 210, height: 28, active: true],
-                                    [id: 'close', label: 'close', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 112, width: 210, height: 28, active: true]
+                                    btn('to-main-menu', 'main menu', 'CENTER', 'TOP', 0, 78, 210, 28),
+                                    btn('close', 'close', 'CENTER', 'TOP', 0, 112, 210, 28)
                             ]
                     ]
                 },
-                'debug.info': { ctx ->
-                    def state = (ctx?.state ?: [:]) as Map
+                'debug.info'  : { ctx ->
+                    def state = S(ctx)
                     [
                             texts  : [],
                             buttons: [
-                                    [id: 'toggle-rendering', label: 'rendering', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 14, width: 180, height: 24, active: state.showRendering != false],
-                                    [id: 'toggle-camera', label: 'camera', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 42, width: 180, height: 24, active: state.showCamera != false],
-                                    [id: 'toggle-time', label: 'time', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 70, width: 180, height: 24, active: state.showTime != false],
-                                    [id: 'toggle-client', label: 'client', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 98, width: 180, height: 24, active: state.showClient != false],
-                                    [id: 'toggle-all', label: 'all', alignX: 'LEFT', alignY: 'BOTTOM', x: 12, y: -10, width: 84, height: 22,
-                                     active: (state.showRendering != false && state.showCamera != false && state.showTime != false && state.showClient != false)],
-                                    [id: 'close', label: 'close', alignX: 'RIGHT', alignY: 'BOTTOM', x: -12, y: -10, width: 96, height: 22, active: true]
+                                    btn('toggle-rendering', 'rendering', 'CENTER', 'TOP', 0, 14, 180, 24, state.showRendering != false),
+                                    btn('toggle-camera', 'camera', 'CENTER', 'TOP', 0, 42, 180, 24, state.showCamera != false),
+                                    btn('toggle-time', 'time', 'CENTER', 'TOP', 0, 70, 180, 24, state.showTime != false),
+                                    btn('toggle-client', 'client', 'CENTER', 'TOP', 0, 98, 180, 24, state.showClient != false),
+                                    btn('toggle-all', 'all', 'LEFT', 'BOTTOM', 12, -10, 84, 22,
+                                            (state.showRendering != false && state.showCamera != false && state.showTime != false && state.showClient != false)),
+                                    btn('close', 'close', 'RIGHT', 'BOTTOM', -12, -10, 96, 22)
                             ]
                     ]
                 }
