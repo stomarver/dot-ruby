@@ -67,7 +67,7 @@ public class MainMenuState implements SessionState {
             case "start-session" -> {
                 hud.setGlobalLoadingText("loading");
                 hud.setGlobalLoadingVisible(true);
-                context.getCommands().startScenario(false);
+                context.getCommands().startScenario(context.isDebugProfile());
             }
             case "exit-app" -> {
                 hud.setGlobalLoadingText("loading");

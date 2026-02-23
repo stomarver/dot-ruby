@@ -87,6 +87,7 @@ public class SessionScenarioState implements SessionState {
         hud.setGlobalLoadingText("loading");
         hud.setGlobalLoadingVisible(false);
         hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
+        hud.putUiState("debugMode", debugProfile);
         syncDebugDialogState();
 
         cursor = new Cursor();
@@ -141,19 +142,19 @@ public class SessionScenarioState implements SessionState {
 
         if (hud != null) {
             hud.setVirtualCursor(mouseX, mouseY);
-            if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
-                if (debugProfile) {
-                    syncDebugDialogState();
-                    hud.applyDialogLayout("debug.info");
-                    hud.setDialogOpacity(1.0f, 1.0f);
-                    hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
-                            Dialog.SelectionBlockMode.NONE);
-                } else {
-                    hud.applyDialogLayout("session.pause");
-                    hud.setDialogOpacity(1.0f, 1.0f);
-                    hud.toggleDialogAtPivot("", "screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 200,
-                            Dialog.SelectionBlockMode.NONE);
-                }
+            if (hud.consumeBaseButtonClick("primary-button", leftMouseHeld)) {
+                hud.applyDialogLayout("session.pause");
+                hud.setDialogOpacity(1.0f, 1.0f);
+                hud.toggleDialogAtPivot("", "screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 360, 200,
+                        Dialog.SelectionBlockMode.NONE);
+            }
+
+            if (hud.consumeBaseButtonClick("debug-button", leftMouseHeld)) {
+                syncDebugDialogState();
+                hud.applyDialogLayout("debug.info");
+                hud.setDialogOpacity(1.0f, 1.0f);
+                hud.toggleDialogAtPivot("", "debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0, 310, 165,
+                        Dialog.SelectionBlockMode.NONE);
             }
 
             String dialogButton = hud.pollDialogButtonClick(leftMouseHeld);

@@ -10,7 +10,8 @@
                             [text: 'unit.name', pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 2, scale: 1.0]
                     ],
                     buttons: [
-                            [id: 'primary-button', label: (ctx?.primaryButtonText ?: ''), pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 170, width: 100, height: 28, scale: 1.0, active: true]
+                            [id: 'primary-button', label: (ctx?.primaryButtonText ?: ''), pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 170, width: 100, height: 28, scale: 1.0, active: true],
+                            [id: 'debug-button', label: 'deb...ug', pivot: 'screen.left.top', alignX: 'LEFT', alignY: 'TOP', x: 10, y: 204, width: 100, height: 28, scale: 1.0, active: (state.debugMode == true)]
                     ]
             ]
         },
