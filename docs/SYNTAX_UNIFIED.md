@@ -43,7 +43,7 @@ List<Dialog.ButtonSlot> buttons = List.of(
 );
 
 hud.setDialogContent(List.of(), buttons);
-hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330, Dialog.SelectionBlockMode.DIALOG_AREA);
+hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330, Dialog.SelectionBlockMode.NONE);
 ```
 
 This keeps dialog content declarative and mod-friendly (id + active flag + anchor offsets).

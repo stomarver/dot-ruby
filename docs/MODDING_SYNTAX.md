@@ -142,14 +142,14 @@ GameplaySyn.object("obj_relic_sun", "Relic of the Sun")
 
 `Dialog` поддерживает:
 - позиционирование через `Anchor`.
-- режимы блокировки выделения (`NONE`, `DIALOG_AREA`, `FULL_SCREEN`).
+- режимы выделения (`NONE` — обычное выделение, `FULL_SCREEN` — полное отключение выделения).
 - слоты текста и кнопок.
 - кнопки с `id` и флагом `active`.
 
 ### 7.1 Открытие
 ```java
 hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330,
-        Dialog.SelectionBlockMode.DIALOG_AREA);
+        Dialog.SelectionBlockMode.NONE);
 ```
 
 ### 7.2 Контент (рекомендуемый краткий синтаксис)

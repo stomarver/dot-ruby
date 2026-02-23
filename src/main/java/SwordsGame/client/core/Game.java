@@ -109,7 +109,7 @@ public class Game {
                 hud.setVirtualCursor(mouseX, mouseY);
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     hud.toggleDialog("^3dialog\ntech wiki overlay", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 420, 220,
-                            Dialog.SelectionBlockMode.DIALOG_AREA);
+                            Dialog.SelectionBlockMode.NONE);
                 }
                 hud.renderBaseInterface();
             }

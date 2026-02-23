@@ -21,7 +21,6 @@ public class Dialog {
 
     public enum SelectionBlockMode {
         NONE,
-        DIALOG_AREA,
         FULL_SCREEN
     }
 
@@ -36,7 +35,7 @@ public class Dialog {
     private float width = 260;
     private float height = 120;
     private String text = "";
-    private SelectionBlockMode selectionBlockMode = SelectionBlockMode.DIALOG_AREA;
+    private SelectionBlockMode selectionBlockMode = SelectionBlockMode.NONE;
 
     private final List<TextSlot> textSlots = new ArrayList<>();
     private final List<ButtonSlot> buttonSlots = new ArrayList<>();
@@ -65,7 +64,7 @@ public class Dialog {
         this.width = Math.max(1f, width);
         this.height = Math.max(1f, height);
         this.text = text == null ? "" : text;
-        this.selectionBlockMode = blockMode == null ? SelectionBlockMode.DIALOG_AREA : blockMode;
+        this.selectionBlockMode = blockMode == null ? SelectionBlockMode.NONE : blockMode;
         this.visible = true;
     }
 
@@ -93,14 +92,7 @@ public class Dialog {
     }
 
     public boolean blocksSelection(float cursorX, float cursorY) {
-        if (!visible) {
-            return false;
-        }
-        return switch (selectionBlockMode) {
-            case NONE -> false;
-            case FULL_SCREEN -> true;
-            case DIALOG_AREA -> resolveRect(anchorX, anchorY, offsetX, offsetY, width, height).contains(cursorX, cursorY);
-        };
+        return visible && selectionBlockMode == SelectionBlockMode.FULL_SCREEN;
     }
 
     public Anchor resolveLocalAnchor(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y) {
@@ -211,7 +203,7 @@ public class Dialog {
         if (anchor.ty == Anchor.TypeY.CENTER) buttonY -= slot.height / 2f;
         else if (anchor.ty == Anchor.TypeY.BOTTOM) buttonY -= slot.height;
 
-        return new Rect(buttonX, buttonY, slot.width, slot.height);
+        return new Rect(snapToGrid(buttonX), snapToGrid(buttonY), snapToGrid(slot.width), snapToGrid(slot.height));
     }
 
     private Rect resolveRect(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y, float w, float h) {
@@ -227,7 +219,12 @@ public class Dialog {
         if (ay == Anchor.TypeY.CENTER) top -= h / 2f;
         else if (ay == Anchor.TypeY.BOTTOM) top -= h;
 
-        return new Rect(left, top, w, h);
+        return new Rect(snapToGrid(left), snapToGrid(top), snapToGrid(w), snapToGrid(h));
+    }
+
+
+    private float snapToGrid(float value) {
+        return (float) Math.floor(value);
     }
 
     private void drawBorderInside(float x, float y, float w, float h, float t) {
@@ -278,8 +275,5 @@ public class Dialog {
     }
 
     private record Rect(float x, float y, float w, float h) {
-        private boolean contains(float px, float py) {
-            return px >= x && px <= (x + w) && py >= y && py <= (y + h);
-        }
     }
 }

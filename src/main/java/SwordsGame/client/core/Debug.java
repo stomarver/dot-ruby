@@ -136,8 +136,8 @@ public class Debug {
                 if (hud.consumePrimaryButtonClick(leftMouseHeld)) {
                     rebuildDebugDialogContent();
                     hud.setDialogOpacity(1.0f, 1.0f);
-                    hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 310, 165,
-                            Dialog.SelectionBlockMode.DIALOG_AREA);
+                    hud.toggleDialog("", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0, 310, 165,
+                            Dialog.SelectionBlockMode.NONE);
                 }
 
                 String dialogButton = hud.pollDialogButtonClick(leftMouseHeld);
