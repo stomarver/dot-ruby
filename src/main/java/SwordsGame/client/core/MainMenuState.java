@@ -46,11 +46,13 @@ public class MainMenuState implements SessionState {
     }
 
     @Override
-    public void onExit() {
+    public void onExit(SessionState nextState) {
         if (cursor != null) cursor.destroy();
         if (hud != null) hud.cleanup();
         if (font != null) font.destroy();
-        TexLoad.finishCleanup();
+        if (nextState == null) {
+            TexLoad.finishCleanup();
+        }
     }
 
     @Override
