@@ -103,7 +103,7 @@ public class Dialog {
         };
     }
 
-    public Anchor localAnchor(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y) {
+    public Anchor resolveLocalAnchor(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y) {
         Rect rect = resolveRect(anchorX, anchorY, offsetX, offsetY, width, height);
         float baseX = switch (ax == null ? Anchor.LEFT : ax) {
             case LEFT -> rect.x;
@@ -118,7 +118,7 @@ public class Dialog {
         return new Anchor(ax == null ? Anchor.LEFT : ax, ay == null ? Anchor.TOP : ay, baseX + x, baseY + y);
     }
 
-    public void setContent(List<TextSlot> textSlots, List<ButtonSlot> buttonSlots) {
+    public void setLayout(List<TextSlot> textSlots, List<ButtonSlot> buttonSlots) {
         this.textSlots.clear();
         this.buttonSlots.clear();
         if (textSlots != null) {
@@ -140,7 +140,7 @@ public class Dialog {
         this.borderAlpha = BORDER_A;
     }
 
-    public String findHoveredButtonId(Button buttonRenderer, float cursorX, float cursorY) {
+    public String getHoveredButtonId(Button buttonRenderer, float cursorX, float cursorY) {
         if (!visible || buttonRenderer == null) {
             return null;
         }
@@ -151,6 +151,20 @@ public class Dialog {
             }
         }
         return null;
+    }
+
+
+    // Compatibility wrappers for older call-sites.
+    public Anchor localAnchor(Anchor.TypeX ax, Anchor.TypeY ay, float x, float y) {
+        return resolveLocalAnchor(ax, ay, x, y);
+    }
+
+    public void setContent(List<TextSlot> textSlots, List<ButtonSlot> buttonSlots) {
+        setLayout(textSlots, buttonSlots);
+    }
+
+    public String findHoveredButtonId(Button buttonRenderer, float cursorX, float cursorY) {
+        return getHoveredButtonId(buttonRenderer, cursorX, cursorY);
     }
 
     public void renderBackground() {
@@ -181,12 +195,12 @@ public class Dialog {
             return;
         }
         if (textRenderer != null && !text.isEmpty()) {
-            textRenderer.draw(text, localAnchor(Anchor.LEFT, Anchor.TOP, 10, 10), 0f, 0f, 1.0f);
+            textRenderer.draw(text, resolveLocalAnchor(Anchor.LEFT, Anchor.TOP, 10, 10), 0f, 0f, 1.0f);
         }
 
         if (textRenderer != null) {
             for (TextSlot slot : textSlots) {
-                Anchor anchor = localAnchor(slot.anchorX, slot.anchorY, slot.offsetX, slot.offsetY);
+                Anchor anchor = resolveLocalAnchor(slot.anchorX, slot.anchorY, slot.offsetX, slot.offsetY);
                 textRenderer.draw(slot.value, anchor, 0f, 0f, slot.scale);
             }
         }
@@ -200,7 +214,7 @@ public class Dialog {
     }
 
     private Rect resolveButtonRect(ButtonSlot slot) {
-        Anchor anchor = localAnchor(slot.anchorX, slot.anchorY, slot.offsetX, slot.offsetY);
+        Anchor anchor = resolveLocalAnchor(slot.anchorX, slot.anchorY, slot.offsetX, slot.offsetY);
         float buttonX = anchor.x;
         float buttonY = anchor.y;
 

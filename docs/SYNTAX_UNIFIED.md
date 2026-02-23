@@ -47,3 +47,22 @@ hud.toggleDialog("", Anchor.CENTER, Anchor.CENTER_Y, 0, 0, 620, 330, Dialog.Sele
 ```
 
 This keeps dialog content declarative and mod-friendly (id + active flag + anchor offsets).
+
+
+## Text effects
+
+```java
+text.draw("^3info", Anchor.LEFT, Anchor.TOP, 16, 16, 1.0f, Text.Wave.SLOW);
+```
+
+Available enums: `Text.Shake`, `Text.Wave`, `Text.Crit` with `NONE/SLOW/MEDIUM/FAST`.
+
+
+## Naming style (UI subsystem)
+
+Refactored naming in dialog/HUD path follows short verb-based style:
+- `setLayout(...)` for slot payloads
+- `getHoveredButtonId(...)` for hit-testing
+- `resolveLocalAnchor(...)` for internal anchor resolution
+
+Compatibility wrappers are preserved (`setContent`, `findHoveredButtonId`, `localAnchor`) to avoid breaking existing call-sites/mod code.

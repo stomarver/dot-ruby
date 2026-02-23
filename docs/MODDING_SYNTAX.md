@@ -197,3 +197,44 @@ text.draw("unit.name", Anchor.LEFT, Anchor.TOP, 10, 2, 1.0f);
 3. Зарегистрировать через `Syn`/`GameplaySyn`.
 4. Привязать к UI/HUD при необходимости.
 5. Проверить `./gradlew compileJava`.
+
+
+---
+
+## 10) Модификаторы текста (Shake / Wave / Crit)
+
+В `Text` есть встроенные модификаторы анимации текста:
+
+- `Text.Shake`: `NONE`, `SLOW`, `MEDIUM`, `FAST`
+- `Text.Wave`: `NONE`, `SLOW`, `MEDIUM`, `FAST`
+- `Text.Crit`: `NONE`, `SLOW`, `MEDIUM`, `FAST`
+
+Пример `Wave`:
+```java
+text.draw("^4warning", Anchor.LEFT, Anchor.TOP, 20, 20, 1.0f, Text.Wave.MEDIUM);
+```
+
+Цвет-коды (`^1..^5`) и модификаторы можно комбинировать в одной строке.
+
+---
+
+## 11) Чего не хватает текущей системе диалогов
+
+Чтобы на текущей базе строить полноценно подменю/уведомления/wiki/древо навыков, не хватает:
+
+1. **Контейнеров layout** (vertical/horizontal stack, grid, auto-size).
+2. **Скролла** (включая инерцию/колёсико/scrollbar).
+3. **Постоянных виджетов** (checkbox, tab, input, slider, icon button).
+4. **Навигации по страницам** (history back/forward, breadcrumbs).
+5. **Событийной модели** (onClick/onHover/onFocus без ручного polling).
+6. **Tooltip/Popup API** (для уведомлений и справки по tech tree).
+7. **Горячих клавиш и фокуса** (keyboard-first UX).
+8. **Сериализуемых UI-схем** (JSON/Groovy DSL для модов без Java-кода).
+9. **Состояний переходов/анимаций** (open/close/fade/slide).
+10. **Виртуализации длинных списков** (wiki-страницы и большие ветки дерева).
+
+---
+
+## 12) Краткий анализ по релизам/истории
+
+В локальной копии репозитория git-теги релизов отсутствуют, поэтому ориентир был взят по последним коммитам ветки (HUD/dialog/debug evolution). При появлении тегов имеет смысл вынести changelog по версиям в отдельный `docs/RELEASE_NOTES_SYNTAX.md`.

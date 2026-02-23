@@ -143,10 +143,19 @@ public class Hud {
     }
 
     public String consumeDialogButtonClick(boolean mouseDown) {
-        String hoveredId = dialog.findHoveredButtonId(primaryButton, virtualCursorX, virtualCursorY);
+        String hoveredId = dialog.getHoveredButtonId(primaryButton, virtualCursorX, virtualCursorY);
         boolean clicked = hoveredId != null && mouseDown && !dialogButtonHeld;
         dialogButtonHeld = mouseDown;
         return clicked ? hoveredId : null;
+    }
+
+
+    public String pollDialogButtonClick(boolean mouseDown) {
+        return consumeDialogButtonClick(mouseDown);
+    }
+
+    public boolean isSelectionBlockedByDialog() {
+        return blocksSelectionAtCursor();
     }
 
     public boolean blocksSelectionAtCursor() {
@@ -182,7 +191,7 @@ public class Hud {
     }
 
     public void setDialogContent(List<Dialog.TextSlot> textSlots, List<Dialog.ButtonSlot> buttonSlots) {
-        dialog.setContent(textSlots, buttonSlots);
+        dialog.setLayout(textSlots, buttonSlots);
     }
 
     public void cleanup() {

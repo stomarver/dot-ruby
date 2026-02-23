@@ -70,7 +70,7 @@ public class Game {
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
             selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
-            boolean selectionBlockedByDialog = hud != null && hud.blocksSelectionAtCursor();
+            boolean selectionBlockedByDialog = hud != null && hud.isSelectionBlockedByDialog();
             selectionRectangle.update(mouseX, mouseY, leftMouseHeld, selectionBlockedByDialog, selArea);
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selectionRectangle.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());

@@ -90,7 +90,7 @@ public class Debug {
             boolean leftMouseHeld = glfwGetMouseButton(window.getHandle(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
             selArea.update(window.getVirtualWidth(), window.getVirtualHeight());
-            boolean selectionBlockedByDialog = hud != null && hud.blocksSelectionAtCursor();
+            boolean selectionBlockedByDialog = hud != null && hud.isSelectionBlockedByDialog();
             selection.update(mouseX, mouseY, leftMouseHeld, selectionBlockedByDialog, selArea);
 
             boolean blockVerticalEdgeScroll = leftMouseHeld && selection.isActive() && camera.isInVerticalEdgeZone(mouseY, window.getVirtualHeight());
@@ -140,7 +140,7 @@ public class Debug {
                             Dialog.SelectionBlockMode.DIALOG_AREA);
                 }
 
-                String dialogButton = hud.consumeDialogButtonClick(leftMouseHeld);
+                String dialogButton = hud.pollDialogButtonClick(leftMouseHeld);
                 handleDialogButton(dialogButton);
                 hud.renderBaseInterface();
             }
