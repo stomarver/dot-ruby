@@ -128,16 +128,20 @@ public class MeshBuilder {
 
         float[][] topVerts = FACE_VERTS[2];
         float[] yOffsets = new float[4];
-        float[] displaced = topology.displacedOffsets();
+        float[] proposed = topology.proposedOffsets();
         for (int i = 0; i < 4; i++) {
-            yOffsets[i] = reconcileTopCornerOffset(wx, wy, wz, i, topVerts[i], displaced[i]);
+            yOffsets[i] = reconcileTopCornerOffset(wx, wy, wz, i, topVerts[i], proposed[i]);
         }
 
         if (!topOnly) {
-            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 0, faces[0], yOffsets[1], yOffsets[2]);
-            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 1, faces[1], yOffsets[0], yOffsets[3]);
-            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 4, faces[4], yOffsets[3], yOffsets[2]);
-            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 5, faces[5], yOffsets[0], yOffsets[1]);
+            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 0, faces[0],
+                    new float[] {0.0f, 0.0f, yOffsets[2], yOffsets[1]});
+            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 1, faces[1],
+                    new float[] {0.0f, yOffsets[0], yOffsets[3], 0.0f});
+            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 4, faces[4],
+                    new float[] {0.0f, yOffsets[3], yOffsets[2], 0.0f});
+            appendSmoothedVerticalFace(target, block, rot, baseX, baseY, baseZ, baseTint, 5, faces[5],
+                    new float[] {0.0f, 0.0f, yOffsets[1], yOffsets[0]});
         }
 
         if (!faces[2]) {
@@ -185,7 +189,7 @@ public class MeshBuilder {
 
     private void appendSmoothedVerticalFace(Map<Integer, FloatCollector> target, Block block, int rot,
                                             float baseX, float baseY, float baseZ, float[] baseTint,
-                                            int face, boolean exposed, float leftYOffset, float rightYOffset) {
+                                            int face, boolean exposed, float[] vertexYOffsets) {
         if (!exposed) {
             return;
         }
@@ -202,13 +206,13 @@ public class MeshBuilder {
         float[] normal = FACE_NORMALS[face];
         float[][] verts = FACE_VERTS[face];
 
-        addSmoothedVertexWithYOffset(collector, verts[0], 0.0f, baseX, baseY, baseZ, normal, uv[0], uv[1], color);
-        addSmoothedVertexWithYOffset(collector, verts[1], leftYOffset, baseX, baseY, baseZ, normal, uv[2], uv[3], color);
-        addSmoothedVertexWithYOffset(collector, verts[2], rightYOffset, baseX, baseY, baseZ, normal, uv[4], uv[5], color);
+        addSmoothedVertexWithYOffset(collector, verts[0], vertexYOffsets[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color);
+        addSmoothedVertexWithYOffset(collector, verts[1], vertexYOffsets[1], baseX, baseY, baseZ, normal, uv[2], uv[3], color);
+        addSmoothedVertexWithYOffset(collector, verts[2], vertexYOffsets[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color);
 
-        addSmoothedVertexWithYOffset(collector, verts[2], rightYOffset, baseX, baseY, baseZ, normal, uv[4], uv[5], color);
-        addSmoothedVertexWithYOffset(collector, verts[3], 0.0f, baseX, baseY, baseZ, normal, uv[6], uv[7], color);
-        addSmoothedVertexWithYOffset(collector, verts[0], 0.0f, baseX, baseY, baseZ, normal, uv[0], uv[1], color);
+        addSmoothedVertexWithYOffset(collector, verts[2], vertexYOffsets[2], baseX, baseY, baseZ, normal, uv[4], uv[5], color);
+        addSmoothedVertexWithYOffset(collector, verts[3], vertexYOffsets[3], baseX, baseY, baseZ, normal, uv[6], uv[7], color);
+        addSmoothedVertexWithYOffset(collector, verts[0], vertexYOffsets[0], baseX, baseY, baseZ, normal, uv[0], uv[1], color);
     }
 
     private void addSmoothedTriangleWithCenter(FloatCollector collector,

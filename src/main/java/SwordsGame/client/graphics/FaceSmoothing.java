@@ -43,15 +43,9 @@ public class FaceSmoothing {
 
         closeLoneCorner(proposed, loweredY);
 
-        // 6) Displacement pass: deterministic world-space jitter per shared vertex.
-        float[] displaced = new float[4];
-        displaced[0] = proposed[0] + computeJitter(wx, wy, wz, 0, loweredY * 0.14f);
-        displaced[1] = proposed[1] + computeJitter(wx, wy, wz, 1, loweredY * 0.14f);
-        displaced[2] = proposed[2] + computeJitter(wx, wy, wz, 2, loweredY * 0.14f);
-        displaced[3] = proposed[3] + computeJitter(wx, wy, wz, 3, loweredY * 0.14f);
-
-        float center = (displaced[0] + displaced[1] + displaced[2] + displaced[3]) * 0.25f;
-        return new Topology(proposed, displaced, center);
+        // 6) Displacement pass is intentionally disabled for stable DK-style ramps.
+        float center = (proposed[0] + proposed[1] + proposed[2] + proposed[3]) * 0.25f;
+        return new Topology(proposed, center);
     }
 
     private void closeLoneCorner(float[] offsets, float loweredY) {
@@ -69,19 +63,6 @@ public class FaceSmoothing {
                 offsets[i] = loweredY;
             }
         }
-    }
-
-    private float computeJitter(int wx, int wy, int wz, int cornerIndex, float amplitude) {
-        if (Math.abs(amplitude) <= CHECK_EPSILON) {
-            return 0.0f;
-        }
-
-        int vx = wx + ((cornerIndex == 2 || cornerIndex == 3) ? 1 : 0);
-        int vz = wz + ((cornerIndex == 1 || cornerIndex == 2) ? 1 : 0);
-
-        float phaseA = (vx * 0.73f) + (vz * 1.11f) + (wy * 0.31f);
-        float phaseB = (vx * 1.37f) - (vz * 0.57f) + (wy * 0.19f);
-        return (float) ((Math.sin(phaseA) + Math.cos(phaseB)) * 0.5f * amplitude);
     }
 
     private void propagateLoweredEdge(boolean edgeExposed,
@@ -102,6 +83,6 @@ public class FaceSmoothing {
         return Math.abs(value - target) <= CHECK_EPSILON;
     }
 
-    public record Topology(float[] proposedOffsets, float[] displacedOffsets, float centerOffset) {
+    public record Topology(float[] proposedOffsets, float centerOffset) {
     }
 }
