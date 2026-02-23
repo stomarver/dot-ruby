@@ -27,6 +27,7 @@ public class Hud {
     private final Info info;
     private final Button button;
     private final Dialog dialog;
+    private final Dialog loadingDialog;
     private String primaryButtonText = "Butt...on";
     private float virtualCursorX = -1f;
     private float virtualCursorY = -1f;
@@ -38,6 +39,8 @@ public class Hud {
     private final Map<String, UiButtonBounds> baseButtons = new HashMap<>();
 
     private final HudScriptRunner uiScript;
+    private boolean loadingVisible = true;
+    private String loadingText = "loading...";
 
     public Hud(Font font, int w, int h) {
         this.virtualWidth = w;
@@ -50,6 +53,7 @@ public class Hud {
         this.info = new Info(text);
         this.button = new Button(text, w, h);
         this.dialog = new Dialog(w, h);
+        this.loadingDialog = new Dialog(w, h);
         this.uiScript = new HudScriptRunner();
 
         loadAliased("char-frame", Paths.UI_CHAR_FRAME);
@@ -59,6 +63,9 @@ public class Hud {
         setPivot("screen.left.top", Anchor.LEFT, Anchor.TOP, 0, 0);
         setPivot("screen.center", Anchor.CENTER, Anchor.CENTER_Y, 0, 0);
         setPivot("screen.right.center", Anchor.RIGHT, Anchor.CENTER_Y, 0, 0);
+
+        loadingDialog.show("", Anchor.CENTER, Anchor.BOTTOM, 0, -8, 320, 42, Dialog.SelectionBlockMode.NONE);
+        loadingDialog.setOpacity(0.8f, 0.95f);
     }
 
     private void startTerminalThread() {
@@ -101,6 +108,15 @@ public class Hud {
     public void renderDialogOverlay() {
         dialog.renderBackground();
         dialog.renderContent(text, button, virtualCursorX, virtualCursorY);
+
+        if (loadingVisible) {
+            loadingDialog.setLayout(
+                    List.of(new Dialog.TextSlot(loadingText == null ? "" : loadingText, Anchor.CENTER, Anchor.TOP, 0, 10, 1.0f)),
+                    List.of()
+            );
+            loadingDialog.renderBackground();
+            loadingDialog.renderContent(text, button, virtualCursorX, virtualCursorY);
+        }
     }
 
     private void drawBorders() {
@@ -355,6 +371,14 @@ public class Hud {
                                     float height,
                                     Dialog.SelectionBlockMode blockMode) {
         dialog.toggle(body, getPivot(pivotId), alignX, alignY, x, y, width, height, blockMode);
+    }
+
+    public void setGlobalLoadingText(String value) {
+        this.loadingText = (value == null || value.isBlank()) ? "loading..." : value;
+    }
+
+    public void setGlobalLoadingVisible(boolean visible) {
+        this.loadingVisible = visible;
     }
 
     public void cleanup() {

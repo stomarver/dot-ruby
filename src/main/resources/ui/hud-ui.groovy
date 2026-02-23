@@ -19,7 +19,7 @@
                     [
                             texts  : [
                                     [text: '^2DotRuby^0\nMain Menu', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 20, scale: 1.0],
-                                    [text: 'Use buttons to start or exit', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 62, scale: 0.8]
+                                    [text: 'Use buttons to start or exit', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 62, scale: 1.0]
                             ],
                             buttons: [
                                     [id: 'start-session', label: 'start session', alignX: 'CENTER', alignY: 'TOP', x: 0, y: 108, width: 200, height: 28, active: true],

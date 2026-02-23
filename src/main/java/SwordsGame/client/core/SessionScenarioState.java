@@ -84,12 +84,15 @@ public class SessionScenarioState implements SessionState {
         font = new Font(Paths.FONT_MAIN);
         hud = new Hud(font, 960, 540);
         hud.setPrimaryButtonText(debugProfile ? "deb...ug" : "menu");
+        hud.setGlobalLoadingVisible(true);
+        hud.setGlobalLoadingText("loading session...");
         hud.setPivot("debug.info.dialog", Anchor.RIGHT, Anchor.CENTER_Y, -20, 0);
         syncDebugDialogState();
 
         cursor = new Cursor();
         selection = new SelectionBox();
         TexLoad.finishLoading();
+        hud.setGlobalLoadingText(debugProfile ? "debug session ready" : "session ready");
     }
 
     @Override
